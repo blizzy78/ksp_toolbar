@@ -101,7 +101,8 @@ namespace Toolbar {
 					try {
 						texture_ = GameDatabase.Instance.GetTexture(TexturePath, false);
 					} catch {
-						texturePath_ = null;
+						Debug.LogError("error loading button texture: " + TexturePath);
+						TexturePath = null;
 					}
 				}
 				return texture_;
