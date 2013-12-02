@@ -48,8 +48,10 @@
     <Compile Include="Button.cs" />
     <Compile Include="ClickHandler.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="GameScenesVisibility.cs" />
     <Compile Include="IButton.cs" />
     <Compile Include="IToolbarManager.cs" />
+    <Compile Include="IVisibility.cs" />
     <Compile Include="KSPAddonFixed.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ToolbarManager.cs" />

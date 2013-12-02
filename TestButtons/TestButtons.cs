@@ -38,5 +38,13 @@ class TestButtons : MonoBehaviour {
 			state4 = !state4;
 			button2.Visible = !button2.Visible;
 		};
+
+		IButton button5 = ToolbarManager.Instance.add("test2", "button5");
+		button5.Text = "Visible in Editors";
+		button5.Visibility = new GameScenesVisibility(GameScenes.EDITOR, GameScenes.SPH);
+
+		IButton button6 = ToolbarManager.Instance.add("test2", "button6");
+		button6.Text = "Visible in Flight";
+		button6.Visibility = new GameScenesVisibility(GameScenes.FLIGHT);
 	}
 }

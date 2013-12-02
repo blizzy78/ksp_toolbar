@@ -129,7 +129,7 @@ namespace Toolbar {
 
 		private void drawButtons() {
 			foreach (Button button in buttons.Values) {
-				if (button.Visible) {
+				if (button.EffectivelyVisible) {
 					Rect buttonRect = button.Rect;
 					if (button.Rotated) {
 						GUI.matrix = ROTATE_MATRIX;
@@ -157,7 +157,7 @@ namespace Toolbar {
 		private void handleButtonDrag() {
 			if (Input.GetMouseButtonDown(0) && (draggedButton == null)) {
 				Vector2 mousePos = getMousePosition();
-				draggedButton = buttons.Values.FirstOrDefault(b => b.Visible && !b.PositionLocked && b.contains(mousePos));
+				draggedButton = buttons.Values.FirstOrDefault(b => b.EffectivelyVisible && !b.PositionLocked && b.contains(mousePos));
 			}
 
 			if (draggedButton != null) {
@@ -184,7 +184,7 @@ namespace Toolbar {
 		private void handleButtonLockToggle() {
 			if (Input.GetMouseButtonUp(1)) {
 				Vector2 mousePos = getMousePosition();
-				Button button = buttons.Values.FirstOrDefault(b => b.Visible && b.contains(mousePos));
+				Button button = buttons.Values.FirstOrDefault(b => b.EffectivelyVisible && b.contains(mousePos));
 				if (button != null) {
 					button.PositionLocked = !button.PositionLocked;
 				}
@@ -249,6 +249,10 @@ namespace Toolbar {
 			} else {
 				buttons.Add(ns + "." + id, button);
 			}
+
+			// re-load saved button positions
+			settingsLoaded = false;
+
 			return button;
 		}
 	}

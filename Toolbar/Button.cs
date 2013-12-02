@@ -97,8 +97,12 @@ namespace Toolbar {
 		private Texture2D texture_;
 		private Texture2D Texture {
 			get {
-				if (texture_ == null) {
-					texture_ = GameDatabase.Instance.GetTexture(TexturePath, false);
+				if ((texture_ == null) && (texturePath_ != null)) {
+					try {
+						texture_ = GameDatabase.Instance.GetTexture(TexturePath, false);
+					} catch {
+						texturePath_ = null;
+					}
 				}
 				return texture_;
 			}
@@ -113,6 +117,18 @@ namespace Toolbar {
 		public bool Visible {
 			get;
 			set;
+		}
+
+		public IVisibility Visibility {
+			get;
+			set;
+		}
+
+		internal bool EffectivelyVisible {
+			get {
+				return Visible &&
+					((Visibility == null) || Visibility.Visible);
+			}
 		}
 
 		public bool Enabled {

@@ -73,9 +73,17 @@ namespace Toolbar {
 		}
 
 		/// <summary>
-		/// Whether this button is currently visible or not.
+		/// Whether this button is currently visible or not. Can be used in addition to or as a replacement for <see cref="Visibility"/>.
 		/// </summary>
 		bool Visible {
+			set;
+			get;
+		}
+
+		/// <summary>
+		/// Determines this button's visibility. Can be used in addition to or as a replacement for <see cref="Visible"/>.
+		/// </summary>
+		IVisibility Visibility {
 			set;
 			get;
 		}
