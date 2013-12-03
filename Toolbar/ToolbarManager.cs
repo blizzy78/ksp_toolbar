@@ -110,6 +110,10 @@ namespace Toolbar {
 						size.y += button.Style.padding.top + button.Style.padding.bottom;
 						button.Size = size;
 					}
+
+					if (button.Position.x >= 0) {
+						button.Position = clampButtonPositionToScreen(button.Position, button);
+					}
 				}
 			}
 		}
@@ -170,8 +174,7 @@ namespace Toolbar {
 						newButtonPos = new Vector2(mousePos.x - draggedButton.Size.y / 2, mousePos.y + draggedButton.Size.x / 2);
 					}
 					// prevent moving button off screen edges
-					newButtonPos.x = Mathf.Clamp(newButtonPos.x, 0, Screen.width - (draggedButton.Rotated ? draggedButton.Size.y : draggedButton.Size.x));
-					newButtonPos.y = Mathf.Clamp(newButtonPos.y, draggedButton.Rotated ? draggedButton.Size.x : 0, Screen.height - (draggedButton.Rotated ? 0 : draggedButton.Size.y));
+					newButtonPos = clampButtonPositionToScreen(newButtonPos, draggedButton);
 					draggedButton.Position = newButtonPos;
 				} else {
 					draggedButton = null;
@@ -179,6 +182,12 @@ namespace Toolbar {
 					saveSettings();
 				}
 			}
+		}
+
+		private Vector2 clampButtonPositionToScreen(Vector2 buttonPos, Button button) {
+			buttonPos.x = Mathf.Clamp(buttonPos.x, 0, Screen.width - (button.Rotated ? button.Size.y : button.Size.x));
+			buttonPos.y = Mathf.Clamp(buttonPos.y, button.Rotated ? button.Size.x : 0, Screen.height - (button.Rotated ? 0 : button.Size.y));
+			return buttonPos;
 		}
 
 		private void handleButtonLockToggle() {
@@ -236,12 +245,8 @@ namespace Toolbar {
 		}
 
 		public IButton add(string ns, string id) {
-			if (ns.Contains('.')) {
-				throw new ArgumentException("namespace must not contain '.': " + ns);
-			}
-			if (id.Contains('.')) {
-				throw new ArgumentException("ID must not contain '.': " + id);
-			}
+			checkId(ns, "namespace");
+			checkId(id, "ID");
 
 			Button button = new Button(ns, id, this);
 			if (buttons.ContainsKey(ns + "." + id)) {
@@ -254,6 +259,12 @@ namespace Toolbar {
 			settingsLoaded = false;
 
 			return button;
+		}
+
+		private void checkId(string id, string label) {
+			if (id.Contains('.') || id.Contains(' ') || id.Contains('/') || id.Contains(':')) {
+				throw new ArgumentException(label + " contains invalid characters: " + id);
+			}
 		}
 	}
 }
