@@ -24,6 +24,6 @@ namespace Toolbar {
 	/// <summary>
 	/// An event handler that is invoked whenever a button has been clicked.
 	/// </summary>
-	/// <param name="button">The button that has been clicked.</param>
-	public delegate void ClickHandler(IButton button);
+	/// <param name="e">An event describing the button click.</param>
+	public delegate void ClickHandler(ClickEvent e);
 }

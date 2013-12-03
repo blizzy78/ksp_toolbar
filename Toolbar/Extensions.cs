@@ -38,5 +38,13 @@ namespace Toolbar {
 			pos.y = newY;
 			return pos;
 		}
+
+		internal static Rect clampToScreen(this Rect rect) {
+			rect.width = Mathf.Clamp(rect.width, 0, Screen.width);
+			rect.height = Mathf.Clamp(rect.height, 0, Screen.height);
+			rect.x = Mathf.Clamp(rect.x, 0, Screen.width - rect.width);
+			rect.y = Mathf.Clamp(rect.y, 0, Screen.height - rect.height);
+			return rect;
+		}
 	}
 }

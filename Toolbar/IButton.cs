@@ -57,7 +57,7 @@ namespace Toolbar {
 		/// have been set on a button, the button will show the texture, not the text.
 		/// </para>
 		/// <para>
-		/// The texture will be resized to 32x32 pixels, even if it is larger than that.
+		/// The texture will be resized to 24x24 pixels, even if it is larger than that.
 		/// </para>
 		/// <para>
 		/// The texture path must be relative to the "GameData" directory, and must not specify a file name suffix.
@@ -69,6 +69,13 @@ namespace Toolbar {
 		/// </remarks>
 		/// <seealso cref="Text"/>
 		string TexturePath {
+			set;
+		}
+
+		/// <summary>
+		/// The button's tool tip text. Set to null if no tool tip is desired.
+		/// </summary>
+		string ToolTip {
 			set;
 		}
 
@@ -103,11 +110,17 @@ namespace Toolbar {
 		/// <example>
 		/// <code>
 		/// IButton button = ...
-		/// button.OnClick += (button) => {
-		///     ... do stuff ...
+		/// button.OnClick += (e) => {
+		///     Debug.Log("button clicked, mouseButton: " + e.MouseButton);
 		/// };
 		/// </code>
 		/// </example>
 		event ClickHandler OnClick;
+
+		/// <summary>
+		/// Permanently destroys this button so that it is no longer displayed.
+		/// Should be used when a plugin is stopped to remove leftover buttons.
+		/// </summary>
+		void Destroy();
 	}
 }

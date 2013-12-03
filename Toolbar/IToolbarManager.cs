@@ -32,8 +32,8 @@ namespace Toolbar {
 		/// To replace an existing button, just add a new button using the old button's namespace and ID.
 		/// Note that the new button will inherit the screen position of the old button.
 		/// </remarks>
-		/// <param name="ns">The new button's namespace. This is usually the plugin's name. Must not include a dot.</param>
-		/// <param name="id">The new button's ID. This ID must be unique across all buttons in the namespace. Must not include a dot.</param>
+		/// <param name="ns">The new button's namespace. This is usually the plugin's name. Must not include special characters like '.'</param>
+		/// <param name="id">The new button's ID. This ID must be unique across all buttons in the namespace. Must not include special characters like '.'</param>
 		/// <returns>The button created.</returns>
 		IButton add(string ns, string id);
 	}

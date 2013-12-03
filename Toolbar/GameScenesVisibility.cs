@@ -7,6 +7,13 @@ namespace Toolbar {
 	/// <summary>
 	/// Determines visibility of a button in relation to the currently running game scene.
 	/// </summary>
+	/// <example>
+	/// <code>
+	/// IButton button = ...
+	/// button.Visibility = new GameScenesVisibility(GameScenes.EDITOR, GameScenes.SPH);
+	/// </code>
+	/// </example>
+	/// <seealso cref="IButton.Visibility"/>
 	public class GameScenesVisibility : IVisibility {
 		private GameScenes[] gameScenes;
 

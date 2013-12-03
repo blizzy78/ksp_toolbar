@@ -23,6 +23,8 @@ using UnityEngine;
 
 namespace Toolbar {
 	internal class Button : IButton {
+		private static readonly Vector2 UNSIZED = new Vector2(float.NaN, float.NaN);
+
 		private string text_;
 		public string Text {
 			set {
@@ -34,7 +36,8 @@ namespace Toolbar {
 
 					// clear caches
 					content_ = null;
-					Size = new Vector2(-1, -1);
+					style_ = null;
+					size_ = UNSIZED;
 				}
 			}
 			get {
@@ -49,7 +52,7 @@ namespace Toolbar {
 					textColor_ = value;
 
 					// clear caches
-					Style = null;
+					style_ = null;
 				}
 			}
 			get {
@@ -70,7 +73,8 @@ namespace Toolbar {
 					// clear caches
 					texture_ = null;
 					content_ = null;
-					Size = new Vector2(-1, -1);
+					style_ = null;
+					size_ = UNSIZED;
 				}
 			}
 			get {
@@ -88,30 +92,34 @@ namespace Toolbar {
 			}
 		}
 
-		internal bool IsTextured {
-			get {
-				return TexturePath != null;
-			}
-		}
-
 		private Texture2D texture_;
 		private Texture2D Texture {
 			get {
 				if ((texture_ == null) && (texturePath_ != null)) {
 					try {
 						texture_ = GameDatabase.Instance.GetTexture(TexturePath, false);
+
+						if ((texture_.width > 24) || (texture_.height > 24)) {
+							Debug.LogError("button texture exceeds 24x24 pixels, ignoring texture: " + ns + "." + id);
+							texture_ = null;
+							texturePath_ = null;
+						}
 					} catch {
 						Debug.LogError("error loading button texture: " + TexturePath);
-						TexturePath = null;
+						texturePath_ = null;
 					}
 				}
 				return texture_;
 			}
 		}
 
-		internal Rect Rect {
-			get {
-				return new Rect(Position.x, Position.y, Size.x, Size.y);
+		private string tooltip_;
+		public string ToolTip {
+			set {
+				tooltip_ = value;
+			}
+			private get {
+				return tooltip_;
 			}
 		}
 
@@ -127,8 +135,48 @@ namespace Toolbar {
 
 		internal bool EffectivelyVisible {
 			get {
-				return Visible &&
-					((Visibility == null) || Visibility.Visible);
+				return Visible && ((Visibility == null) || Visibility.Visible);
+			}
+		}
+
+		private GUIStyle style_;
+		internal GUIStyle Style {
+			get {
+				if (style_ == null) {
+					style_ = new GUIStyle(GUI.skin.button);
+					style_.alignment = TextAnchor.MiddleCenter;
+					style_.normal.textColor = TextColor;
+					style_.onHover.textColor = TextColor;
+					style_.hover.textColor = TextColor;
+					style_.onActive.textColor = TextColor;
+					style_.active.textColor = TextColor;
+					style_.onFocused.textColor = TextColor;
+					style_.focused.textColor = TextColor;
+					if (IsTextured) {
+						style_.padding = new RectOffset(0, 0, 0, 0);
+					}
+				}
+				return style_;
+			}
+
+			private set {
+				style_ = value;
+			}
+		}
+
+		private Vector2 size_ = UNSIZED;
+		internal Vector2 Size {
+			get {
+				if (size_.Equals(UNSIZED)) {
+					if (IsTextured) {
+						size_ = new Vector2(32, 32);
+					} else {
+						size_ = Style.CalcSize(Content);
+						size_.x += Style.padding.left + Style.padding.right;
+						size_.y += Style.padding.top + Style.padding.bottom;
+					}
+				}
+				return size_;
 			}
 		}
 
@@ -137,51 +185,58 @@ namespace Toolbar {
 			set;
 		}
 
+		private bool IsTextured {
+			get {
+				return TexturePath != null;
+			}
+		}
+
 		public event ClickHandler OnClick;
+		public event Action OnDestroy;
 
 		internal readonly string ns;
 		internal readonly string id;
-		internal Vector2 Position = new Vector2(-1, -1);
-		internal Vector2 Size = new Vector2(-1, -1);
-		internal bool PositionLocked = true;
-		internal bool Rotated;
-		internal GUIStyle Style;
 
-		private ToolbarManager toolbar;
-
-		internal Button(string ns, string id, ToolbarManager toolbar) {
+		internal Button(string ns, string id) {
 			this.ns = ns;
 			this.id = id;
-			this.toolbar = toolbar;
 
 			Visible = true;
 			Enabled = true;
 		}
 
-		internal bool contains(Vector2 pos) {
-			return Rotated ? Rect.rotate().Contains(pos.rotate()) : Rect.Contains(pos);
-		}
+		internal void draw(Rect rect) {
+			bool oldEnabled = GUI.enabled;
+			GUI.enabled = Enabled;
 
-		internal void save(ConfigNode node) {
-			node.AddValue("x", Position.x.ToString("F0"));
-			node.AddValue("y", Position.y.ToString("F0"));
-			if (Rotated) {
-				node.AddValue("rotated", Rotated.ToString());
+			bool clicked = GUI.Button(rect, Content, Style);
+
+			GUI.enabled = oldEnabled;
+
+			if (clicked && (OnClick != null)) {
+				OnClick(new ClickEvent(this, Event.current.button));
 			}
 		}
 
-		internal void load(ConfigNode node) {
-			float x = float.Parse(node.GetValue("x"));
-			float y = float.Parse(node.GetValue("y"));
-			Position = new Vector2(x, y);
-			if (node.HasValue("rotated")) {
-				Rotated = bool.Parse(node.GetValue("rotated"));
+		internal void drawToolTip() {
+			if (ToolTip != null) {
+				Vector2 mousePos = Utils.getMousePosition();
+				Vector2 size = GUI.skin.box.CalcSize(new GUIContent(ToolTip));
+				Rect rect = new Rect(mousePos.x, mousePos.y + 20, size.x, size.y);
+				rect = rect.clampToScreen();
+
+				int oldDepth = GUI.depth;
+				GUI.depth = -1000;
+				GUILayout.BeginArea(rect);
+				GUILayout.Label(ToolTip, GUI.skin.box);
+				GUILayout.EndArea();
+				GUI.depth = oldDepth;
 			}
 		}
 
-		internal void clicked() {
-			if (OnClick != null) {
-				OnClick(this);
+		public void Destroy() {
+			if (OnDestroy != null) {
+				OnDestroy();
 			}
 		}
 	}
