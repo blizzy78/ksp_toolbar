@@ -75,6 +75,9 @@ namespace Toolbar {
 		/// <summary>
 		/// The button's tool tip text. Set to null if no tool tip is desired.
 		/// </summary>
+		/// <remarks>
+		/// Tool Tip Text Should Always Use Headline Style Like This.
+		/// </remarks>
 		string ToolTip {
 			set;
 		}
