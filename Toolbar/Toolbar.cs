@@ -103,7 +103,7 @@ namespace Toolbar {
 			float y = PADDING;
 			float lineHeight = float.MinValue;
 			foreach (Button button in buttons) {
-				if (button.EffectivelyVisible) {
+				if (button.EffectivelyVisible && button.IsTextured) {
 					if (((x + button.Size.x) > (rect.width - PADDING)) && (lineHeight > 0)) {
 						x = PADDING;
 						y += lineHeight + BUTTON_SPACING;

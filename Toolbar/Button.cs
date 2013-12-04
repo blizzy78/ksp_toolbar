@@ -185,7 +185,7 @@ namespace Toolbar {
 			set;
 		}
 
-		private bool IsTextured {
+		internal bool IsTextured {
 			get {
 				return TexturePath != null;
 			}

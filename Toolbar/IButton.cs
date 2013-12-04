@@ -57,7 +57,7 @@ namespace Toolbar {
 		/// have been set on a button, the button will show the texture, not the text.
 		/// </para>
 		/// <para>
-		/// The texture will be resized to 24x24 pixels, even if it is larger than that.
+		/// The texture size must not exceed 24x24 pixels.
 		/// </para>
 		/// <para>
 		/// The texture path must be relative to the "GameData" directory, and must not specify a file name suffix.
