@@ -75,6 +75,8 @@ namespace Toolbar {
 			if (rect.height < 0) {
 				rect.height = getMinHeightForButtons();
 			}
+
+			rect.clampToScreen();
 		}
 
 		private float getMinWidthForButtons() {

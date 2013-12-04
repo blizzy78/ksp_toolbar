@@ -62,5 +62,9 @@ namespace Toolbar {
 		internal bool contains(Vector2 pos) {
 			return Rect.Contains(pos);
 		}
+
+		internal void clampToScreen() {
+			rect_ = rect_.clampToScreen();
+		}
 	}
 }
