@@ -224,6 +224,7 @@ namespace Toolbar {
 			button.OnDestroy += () => buttonDestroyed(button);
 
 			buttons.Add(button);
+			buttons.Sort((b1, b2) => StringComparer.CurrentCultureIgnoreCase.Compare(b1.ns + "." + b1.id, b2.ns + "." + b2.id));
 		}
 
 		private void buttonDestroyed(Button button) {
