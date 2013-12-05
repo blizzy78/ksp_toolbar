@@ -1,5 +1,5 @@
 ﻿/*
-Toolbar - Common API for GUI Buttons for Kerbal Space Program.
+Toolbar - Common API for GUI toolbars for Kerbal Space Program.
 Copyright (C) 2013 Maik Schreiber
 
 This program is free software: you can redistribute it and/or modify
