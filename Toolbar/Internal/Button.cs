@@ -206,11 +206,20 @@ namespace Toolbar {
 		internal readonly string id;
 
 		internal Button(string ns, string id) {
+			checkId(ns, "namespace");
+			checkId(id, "ID");
+
 			this.ns = ns;
 			this.id = id;
 
 			Visible = true;
 			Enabled = true;
+		}
+
+		private void checkId(string id, string label) {
+			if (id.Contains('.') || id.Contains(' ') || id.Contains('/') || id.Contains(':')) {
+				throw new ArgumentException(label + " contains invalid characters: " + id);
+			}
 		}
 
 		internal void draw(Rect rect) {

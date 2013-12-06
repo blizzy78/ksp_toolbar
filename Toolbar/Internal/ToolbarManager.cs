@@ -101,19 +101,10 @@ namespace Toolbar {
 		}
 
 		public IButton add(string ns, string id) {
-			checkId(ns, "namespace");
-			checkId(id, "ID");
-
 			Button button = new Button(ns, id);
 			toolbar.add(button);
 
 			return button;
-		}
-
-		private void checkId(string id, string label) {
-			if (id.Contains('.') || id.Contains(' ') || id.Contains('/') || id.Contains(':')) {
-				throw new ArgumentException(label + " contains invalid characters: " + id);
-			}
 		}
 	}
 }
