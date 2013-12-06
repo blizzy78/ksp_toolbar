@@ -45,22 +45,23 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Button.cs" />
+    <Compile Include="Internal\Button.cs" />
     <Compile Include="ClickEvent.cs" />
     <Compile Include="ClickHandler.cs" />
-    <Compile Include="Draggable.cs" />
-    <Compile Include="Extensions.cs" />
+    <Compile Include="Internal\Draggable.cs" />
+    <Compile Include="Internal\Extensions.cs" />
     <Compile Include="GameScenesVisibility.cs" />
     <Compile Include="IButton.cs" />
+    <Compile Include="Internal\ToolbarManager.cs" />
     <Compile Include="IToolbarManager.cs" />
     <Compile Include="IVisibility.cs" />
-    <Compile Include="Rectangle.cs" />
-    <Compile Include="Resizable.cs" />
-    <Compile Include="KSPAddonFixed.cs" />
+    <Compile Include="Internal\Rectangle.cs" />
+    <Compile Include="Internal\Resizable.cs" />
+    <Compile Include="Internal\KSPAddonFixed.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Toolbar.cs" />
+    <Compile Include="Internal\Toolbar.cs" />
     <Compile Include="ToolbarManager.cs" />
-    <Compile Include="Utils.cs" />
+    <Compile Include="Internal\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="LICENSE.txt" />
