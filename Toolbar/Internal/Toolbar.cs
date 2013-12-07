@@ -42,9 +42,14 @@ namespace Toolbar {
 		private Resizable resizable;
 		private List<Button> buttons = new List<Button>();
 		private Dictionary<Button, bool> buttonVisibility = new Dictionary<Button, bool>();
+		private Button dropdownButton;
 
 		internal Toolbar() {
 			rect = new Rectangle(new Rect(300, 300, float.MinValue, float.MinValue));
+
+			dropdownButton = Button.createToolbarDropdown();
+			dropdownButton.OnClick += (e) => Debug.Log("dropdown clicked");
+			buttons.Add(dropdownButton);
 
 			draggable = new Draggable(rect, true, (pos) => !anyButtonContains(pos) && !resizable.HandleRect.Contains(pos));
 			resizable = new Resizable(rect, true, (pos) => !anyButtonContains(pos));
@@ -77,7 +82,8 @@ namespace Toolbar {
 		}
 
 		internal void draw() {
-			if (buttons.Count > 0) {
+			// check for >1 because of dropdown button
+			if (buttons.Count > 1) {
 				forceAutoSizeIfButtonVisibilitiesChanged();
 				autoSize();
 
@@ -119,7 +125,10 @@ namespace Toolbar {
 		private float getMinHeightForButtons() {
 			float height = 0;
 			calculateButtonPositions((button, x, y) => {
-				height = y + button.Size.y;
+				float currentHeight = y + button.Size.y;
+				if (currentHeight > height) {
+					height = currentHeight;
+				}
 			});
 			height += PADDING;
 			return height;
@@ -129,12 +138,18 @@ namespace Toolbar {
 			float x = PADDING;
 			float y = PADDING;
 			float lineHeight = float.MinValue;
+			float widestLineWidth = float.MinValue;
+			float currentLineWidth = 0;
 			foreach (Button button in buttons) {
-				if (button.EffectivelyVisible && button.IsTextured) {
+				if (button.EffectivelyVisible && button.IsTextured && !button.Equals(dropdownButton)) {
 					if (((x + button.Size.x) > (rect.width - PADDING)) && (lineHeight > 0)) {
 						x = PADDING;
 						y += lineHeight + BUTTON_SPACING;
 						lineHeight = float.MinValue;
+						if (currentLineWidth > widestLineWidth) {
+							widestLineWidth = currentLineWidth;
+						}
+						currentLineWidth = 0;
 					}
 					if (button.Size.y > lineHeight) {
 						lineHeight = button.Size.y;
@@ -142,7 +157,19 @@ namespace Toolbar {
 					buttonPositionCalculatedHandler(button, x, y);
 
 					x += button.Size.x + BUTTON_SPACING;
+					currentLineWidth += ((currentLineWidth > 0) ? BUTTON_SPACING : 0) + button.Size.x;
 				}
+			}
+			if (currentLineWidth > widestLineWidth) {
+				widestLineWidth = currentLineWidth;
+			}
+
+			if (y == PADDING) {
+				// all buttons on a single line
+				buttonPositionCalculatedHandler(dropdownButton, x + 2, (lineHeight - dropdownButton.Size.y) / 2 + PADDING);
+			} else {
+				// multiple lines
+				buttonPositionCalculatedHandler(dropdownButton, (widestLineWidth - dropdownButton.Size.x) / 2 + PADDING, y + lineHeight + BUTTON_SPACING + 2);
 			}
 		}
 
@@ -203,6 +230,19 @@ namespace Toolbar {
 			return rect.height <= (maxButtonHeight + PADDING * 2);
 		}
 
+		internal Vector2 getPosition(Button button) {
+			Vector2 position = new Vector2(float.MinValue, float.MinValue);
+			bool done = false;
+			calculateButtonPositions((b, x, y) => {
+				if (!done && b.Equals(button)) {
+					position.x = x - PADDING;
+					position.y = y - PADDING;
+					done = true;
+				}
+			});
+			return position;
+		}
+
 		private void drawButtonToolTips() {
 			Vector2 mousePos = Utils.getMousePosition();
 			bool done = false;
@@ -232,7 +272,10 @@ namespace Toolbar {
 			button.OnDestroy += () => buttonDestroyed(button);
 
 			buttons.Add(button);
+
+			buttons.Remove(dropdownButton);
 			buttons.Sort((b1, b2) => StringComparer.CurrentCultureIgnoreCase.Compare(b1.ns + "." + b1.id, b2.ns + "." + b2.id));
+			buttons.Add(dropdownButton);
 		}
 
 		private void buttonDestroyed(Button button) {

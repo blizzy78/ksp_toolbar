@@ -32,6 +32,13 @@ using UnityEngine;
 namespace Toolbar {
 	internal class Button : IButton {
 		private static readonly Vector2 UNSIZED = new Vector2(float.NaN, float.NaN);
+		private const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
+		private const string TEXTURE_PATH_DROPDOWN = "000_Toolbar/toolbar-dropdown";
+		private const int MAX_WIDTH = 24;
+		private const int MAX_HEIGHT = 24;
+		private const int DROPDOWN_TEX_WIDTH = 8;
+		private const int DROPDOWN_TEX_HEIGHT = 6;
+		private const int PADDING = 4;
 
 		private string text_;
 		public string Text {
@@ -107,8 +114,8 @@ namespace Toolbar {
 					try {
 						texture_ = GameDatabase.Instance.GetTexture(TexturePath, false);
 
-						if ((texture_.width > 24) || (texture_.height > 24)) {
-							Debug.LogError("button texture exceeds 24x24 pixels, ignoring texture: " + ns + "." + id);
+						if ((texture_.width > MAX_WIDTH) || (texture_.height > MAX_HEIGHT)) {
+							Debug.LogError("button texture exceeds " + MAX_WIDTH + "x" + MAX_HEIGHT + " pixels, ignoring texture: " + ns + "." + id);
 							texture_ = null;
 							texturePath_ = null;
 						}
@@ -163,7 +170,7 @@ namespace Toolbar {
 		internal GUIStyle Style {
 			get {
 				if (style_ == null) {
-					style_ = new GUIStyle(GUI.skin.button);
+					style_ = new GUIStyle(toolbarDropdown ? GUIStyle.none : GUI.skin.button);
 					style_.alignment = TextAnchor.MiddleCenter;
 					style_.normal.textColor = TextColor;
 					style_.onHover.textColor = TextColor;
@@ -188,8 +195,10 @@ namespace Toolbar {
 		internal Vector2 Size {
 			get {
 				if (size_.Equals(UNSIZED)) {
-					if (IsTextured) {
-						size_ = new Vector2(32, 32);
+					if (toolbarDropdown) {
+						size_ = new Vector2(DROPDOWN_TEX_WIDTH, DROPDOWN_TEX_HEIGHT);
+					} else if (IsTextured) {
+						size_ = new Vector2(MAX_WIDTH + PADDING * 2, MAX_HEIGHT + PADDING * 2);
 					} else {
 						size_ = Style.CalcSize(Content);
 						size_.x += Style.padding.left + Style.padding.right;
@@ -217,6 +226,8 @@ namespace Toolbar {
 		internal readonly string ns;
 		internal readonly string id;
 
+		private bool toolbarDropdown;
+
 		internal Button(string ns, string id) {
 			checkId(ns, "namespace");
 			checkId(id, "ID");
@@ -225,6 +236,13 @@ namespace Toolbar {
 			this.id = id;
 
 			Enabled = true;
+		}
+
+		internal static Button createToolbarDropdown() {
+			Button button = new Button(NAMESPACE_INTERNAL, "dropdown");
+			button.toolbarDropdown = true;
+			button.TexturePath = TEXTURE_PATH_DROPDOWN;
+			return button;
 		}
 
 		private void checkId(string id, string label) {
