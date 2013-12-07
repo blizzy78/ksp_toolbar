@@ -131,9 +131,21 @@ namespace Toolbar {
 			}
 		}
 
+		private bool visible_ = true;
 		public bool Visible {
-			get;
-			set;
+			set {
+				visible_ = value;
+
+				if (!visible_) {
+					// we don't need these for now
+					texture_ = null;
+					content_ = null;
+					style_ = null;
+				}
+			}
+			get {
+				return visible_;
+			}
 		}
 
 		public IVisibility Visibility {
@@ -212,7 +224,6 @@ namespace Toolbar {
 			this.ns = ns;
 			this.id = id;
 
-			Visible = true;
 			Enabled = true;
 		}
 
