@@ -245,6 +245,12 @@ namespace Toolbar {
 			return button;
 		}
 
+		internal static Button createMenuOption(string text) {
+			Button button = new Button("dummy", "dummy");
+			button.Text = text;
+			return button;
+		}
+
 		private void checkId(string id, string label) {
 			if (id.Contains('.') || id.Contains(' ') || id.Contains('/') || id.Contains(':')) {
 				throw new ArgumentException(label + " contains invalid characters: " + id);

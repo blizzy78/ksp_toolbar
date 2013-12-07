@@ -42,14 +42,15 @@ namespace Toolbar {
 		private Resizable resizable;
 		private List<Button> buttons = new List<Button>();
 		private Dictionary<Button, bool> buttonVisibility = new Dictionary<Button, bool>();
-		private Button dropdownButton;
+		private Button dropdownMenuButton;
+		private Menu dropdownMenu;
 
 		internal Toolbar() {
 			rect = new Rectangle(new Rect(300, 300, float.MinValue, float.MinValue));
 
-			dropdownButton = Button.createToolbarDropdown();
-			dropdownButton.OnClick += (e) => Debug.Log("dropdown clicked");
-			buttons.Add(dropdownButton);
+			dropdownMenuButton = Button.createToolbarDropdown();
+			dropdownMenuButton.OnClick += (e) => toggleDropdownMenu();
+			buttons.Add(dropdownMenuButton);
 
 			draggable = new Draggable(rect, true, (pos) => !anyButtonContains(pos) && !resizable.HandleRect.Contains(pos));
 			resizable = new Resizable(rect, true, (pos) => !anyButtonContains(pos));
@@ -94,7 +95,13 @@ namespace Toolbar {
 				drawButtons();
 				GUI.depth = oldDepth;
 
-				drawButtonToolTips();
+				if (!draggable.Dragging && !resizable.Resizing && (dropdownMenu == null)) {
+					drawButtonToolTips();
+				}
+
+				if (dropdownMenu != null) {
+					dropdownMenu.draw();
+				}
 			}
 		}
 
@@ -141,7 +148,7 @@ namespace Toolbar {
 			float widestLineWidth = float.MinValue;
 			float currentLineWidth = 0;
 			foreach (Button button in buttons) {
-				if (button.EffectivelyVisible && button.IsTextured && !button.Equals(dropdownButton)) {
+				if (button.EffectivelyVisible && button.IsTextured && !button.Equals(dropdownMenuButton)) {
 					if (((x + button.Size.x) > (rect.width - PADDING)) && (lineHeight > 0)) {
 						x = PADDING;
 						y += lineHeight + BUTTON_SPACING;
@@ -166,10 +173,10 @@ namespace Toolbar {
 
 			if (y == PADDING) {
 				// all buttons on a single line
-				buttonPositionCalculatedHandler(dropdownButton, x + 2, (lineHeight - dropdownButton.Size.y) / 2 + PADDING);
+				buttonPositionCalculatedHandler(dropdownMenuButton, x + 2, (lineHeight - dropdownMenuButton.Size.y) / 2 + PADDING);
 			} else {
 				// multiple lines
-				buttonPositionCalculatedHandler(dropdownButton, (widestLineWidth - dropdownButton.Size.x) / 2 + PADDING, y + lineHeight + BUTTON_SPACING + 2);
+				buttonPositionCalculatedHandler(dropdownMenuButton, (widestLineWidth - dropdownMenuButton.Size.x) / 2 + PADDING, y + lineHeight + BUTTON_SPACING + 2);
 			}
 		}
 
@@ -260,6 +267,13 @@ namespace Toolbar {
 		internal void update() {
 			draggable.update();
 			resizable.update();
+
+			if ((dropdownMenu != null) &&
+				(Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2)) &&
+				!dropdownMenu.contains(Utils.getMousePosition())) {
+
+				dropdownMenu = null;
+			}
 		}
 
 		internal void add(Button button) {
@@ -273,9 +287,9 @@ namespace Toolbar {
 
 			buttons.Add(button);
 
-			buttons.Remove(dropdownButton);
+			buttons.Remove(dropdownMenuButton);
 			buttons.Sort((b1, b2) => StringComparer.CurrentCultureIgnoreCase.Compare(b1.ns + "." + b1.id, b2.ns + "." + b2.id));
-			buttons.Add(dropdownButton);
+			buttons.Add(dropdownMenuButton);
 		}
 
 		private void buttonDestroyed(Button button) {
@@ -314,6 +328,17 @@ namespace Toolbar {
 		private void fireChange() {
 			if (onChange != null) {
 				onChange();
+			}
+		}
+
+		private void toggleDropdownMenu() {
+			if (dropdownMenu == null) {
+				dropdownMenu = new Menu(new Vector2(rect.x + PADDING + getPosition(dropdownMenuButton).x, rect.y + rect.height + BUTTON_SPACING));
+				dropdownMenu += Button.createMenuOption("Lorem Ipsum");
+				dropdownMenu += Button.createMenuOption("Dolor Sit Amet");
+				dropdownMenu += Button.createMenuOption("Consectetur");
+			} else {
+				dropdownMenu = null;
 			}
 		}
 	}
