@@ -53,9 +53,9 @@ namespace Toolbar {
 			dropdownMenuButton.OnClick += (e) => toggleDropdownMenu();
 			buttons.Add(dropdownMenuButton);
 
-			draggable = new Draggable(rect,
+			draggable = new Draggable(rect, PADDING,
 				(pos) => !getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos) && !resizable.HandleRect.Contains(pos));
-			resizable = new Resizable(rect,
+			resizable = new Resizable(rect, PADDING,
 				(pos) => !getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos));
 
 			draggable.onChange += dragged;
@@ -117,7 +117,7 @@ namespace Toolbar {
 				rect.height = getMinHeightForButtons();
 			}
 
-			rect.clampToScreen();
+			rect.clampToScreen(PADDING);
 		}
 
 		private float getMinWidthForButtons() {

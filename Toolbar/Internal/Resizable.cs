@@ -71,13 +71,15 @@ namespace Toolbar {
 		}
 
 		private Rectangle rect;
+		private float clampOverscan;
 		private Func<Vector2, bool> handleAreaCheck;
 		private Rect resizingStartRect;
 		private Vector2 resizingStartMousePos;
 		private bool cursorActive;
 
-		internal Resizable(Rectangle initialPosition, Func<Vector2, bool> handleAreaCheck) {
+		internal Resizable(Rectangle initialPosition, float clampOverscan, Func<Vector2, bool> handleAreaCheck) {
 			this.rect = initialPosition;
+			this.clampOverscan = clampOverscan;
 			this.handleAreaCheck = handleAreaCheck;
 		}
 
@@ -107,7 +109,7 @@ namespace Toolbar {
 				if (Input.GetMouseButton(0)) {
 					rect.Rect = new Rect(rect.x, rect.y,
 						resizingStartRect.width + mousePos.x - resizingStartMousePos.x,
-						resizingStartRect.height + mousePos.y - resizingStartMousePos.y).clampToScreen();
+						resizingStartRect.height + mousePos.y - resizingStartMousePos.y).clampToScreen(clampOverscan);
 				} else {
 					Resizing = false;
 					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);

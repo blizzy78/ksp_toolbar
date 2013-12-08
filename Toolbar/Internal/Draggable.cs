@@ -64,11 +64,13 @@ namespace Toolbar {
 		}
 
 		private Rectangle rect;
+		private float clampOverscan;
 		private Func<Vector2, bool> handleAreaCheck;
 		private bool cursorActive;
 
-		internal Draggable(Rectangle initialPosition, Func<Vector2, bool> handleAreaCheck) {
+		internal Draggable(Rectangle initialPosition, float clampOverscan, Func<Vector2, bool> handleAreaCheck) {
 			this.rect = initialPosition;
+			this.clampOverscan = clampOverscan;
 			this.handleAreaCheck = handleAreaCheck;
 		}
 
@@ -94,7 +96,7 @@ namespace Toolbar {
 
 			if (Dragging) {
 				if (Input.GetMouseButton(0)) {
-					rect.Rect = new Rect(mousePos.x - rect.width / 2, mousePos.y - rect.height / 2, rect.width, rect.height).clampToScreen();
+					rect.Rect = new Rect(mousePos.x - rect.width / 2, mousePos.y - rect.height / 2, rect.width, rect.height).clampToScreen(clampOverscan);
 				} else {
 					Dragging = false;
 					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);

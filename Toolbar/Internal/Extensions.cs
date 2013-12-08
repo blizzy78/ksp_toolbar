@@ -48,10 +48,14 @@ namespace Toolbar {
 		}
 
 		internal static Rect clampToScreen(this Rect rect) {
+			return rect.clampToScreen(0);
+		}
+
+		internal static Rect clampToScreen(this Rect rect, float overscan) {
 			rect.width = Mathf.Clamp(rect.width, 0, Screen.width);
 			rect.height = Mathf.Clamp(rect.height, 0, Screen.height);
-			rect.x = Mathf.Clamp(rect.x, 0, Screen.width - rect.width);
-			rect.y = Mathf.Clamp(rect.y, 0, Screen.height - rect.height);
+			rect.x = Mathf.Clamp(rect.x, -overscan, Screen.width - rect.width + overscan);
+			rect.y = Mathf.Clamp(rect.y, -overscan, Screen.height - rect.height + overscan);
 			return rect;
 		}
 
