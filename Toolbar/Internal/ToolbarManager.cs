@@ -37,6 +37,7 @@ namespace Toolbar {
 		private RenderingManager renderingManager;
 		private bool settingsLoaded;
 		private Toolbar toolbar = new Toolbar();
+		private MouseCursor mouseCursor = new MouseCursor();
 
 		internal ToolbarManager() {
 			Instance = this;
@@ -54,6 +55,7 @@ namespace Toolbar {
 			loadSettings();
 
 			toolbar.draw();
+			mouseCursor.draw();
 		}
 
 		internal void Update() {

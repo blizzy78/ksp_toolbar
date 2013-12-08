@@ -98,10 +98,11 @@ namespace Toolbar {
 				resizingStartMousePos = mousePos;
 			}
 			if (inArea || Resizing) {
-				Cursor.SetCursor(CursorTexture, CURSOR_HOTSPOT, CursorMode.Auto);
+				MouseCursor.Texture = CursorTexture;
+				MouseCursor.HotSpot = CURSOR_HOTSPOT;
 				cursorActive = true;
 			} else if (cursorActive) {
-				Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+				MouseCursor.Texture = null;
 				cursorActive = false;
 			}
 
@@ -112,7 +113,7 @@ namespace Toolbar {
 						resizingStartRect.height + mousePos.y - resizingStartMousePos.y).clampToScreen(clampOverscan);
 				} else {
 					Resizing = false;
-					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+					MouseCursor.Texture = null;
 					cursorActive = false;
 				}
 				if (onChange != null) {
