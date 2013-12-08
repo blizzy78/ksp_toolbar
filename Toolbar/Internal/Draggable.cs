@@ -87,11 +87,10 @@ namespace Toolbar {
 				Dragging = true;
 			}
 			if (inArea || Dragging) {
-				MouseCursor.Texture = CursorTexture;
-				MouseCursor.HotSpot = CURSOR_HOTSPOT;
+				Cursor.SetCursor(CursorTexture, CURSOR_HOTSPOT, CursorMode.ForceSoftware);
 				cursorActive = true;
 			} else if (cursorActive) {
-				MouseCursor.Texture = null;
+				Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
 				cursorActive = false;
 			}
 
@@ -100,7 +99,7 @@ namespace Toolbar {
 					rect.Rect = new Rect(mousePos.x - rect.width / 2, mousePos.y - rect.height / 2, rect.width, rect.height).clampToScreen(clampOverscan);
 				} else {
 					Dragging = false;
-					MouseCursor.Texture = null;
+					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
 					cursorActive = false;
 				}
 				if (onChange != null) {

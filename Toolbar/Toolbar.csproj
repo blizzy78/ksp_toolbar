@@ -53,7 +53,6 @@
     <Compile Include="GameScenesVisibility.cs" />
     <Compile Include="IButton.cs" />
     <Compile Include="Internal\Menu.cs" />
-    <Compile Include="Internal\MouseCursor.cs" />
     <Compile Include="Internal\ToolbarManager.cs" />
     <Compile Include="IToolbarManager.cs" />
     <Compile Include="IVisibility.cs" />
@@ -66,13 +65,13 @@
     <Compile Include="Internal\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="etc\move-cursor.png" />
-    <Content Include="etc\resize-cursor.png" />
     <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="etc\move-cursor.psd" />
+    <None Include="etc\move-cursor.tga" />
     <None Include="etc\resize-cursor.psd" />
+    <None Include="etc\resize-cursor.tga" />
     <None Include="etc\toolbar-dropdown.psd" />
     <None Include="etc\toolbar-dropdown.tga" />
   </ItemGroup>
