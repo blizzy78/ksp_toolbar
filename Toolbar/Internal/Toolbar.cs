@@ -89,8 +89,9 @@ namespace Toolbar {
 		}
 
 		internal void draw() {
-			// check for >1 because of dropdown button
-			if (buttons.Count > 1) {
+			// only show toolbar if there is at least one visible button
+			// that is not the drop-down menu button
+			if (buttons.Any((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyVisible)) {
 				forceAutoSizeIfButtonVisibilitiesChanged();
 				autoSize();
 
