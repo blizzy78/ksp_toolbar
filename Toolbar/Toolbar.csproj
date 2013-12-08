@@ -68,6 +68,10 @@
     <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="etc\move.psd" />
+    <None Include="etc\move.tga" />
+    <None Include="etc\resize.psd" />
+    <None Include="etc\resize.tga" />
     <None Include="etc\toolbar-dropdown.psd" />
     <None Include="etc\toolbar-dropdown.tga" />
   </ItemGroup>

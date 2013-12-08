@@ -54,5 +54,9 @@ namespace Toolbar {
 			rect.y = Mathf.Clamp(rect.y, 0, Screen.height - rect.height);
 			return rect;
 		}
+
+		internal static Rect shift(this Rect rect, Vector2 shiftBy) {
+			return new Rect(rect.x + shiftBy.x, rect.y + shiftBy.y, rect.width, rect.height);
+		}
 	}
 }

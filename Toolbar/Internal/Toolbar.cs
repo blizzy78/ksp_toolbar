@@ -44,6 +44,7 @@ namespace Toolbar {
 		private Dictionary<Button, bool> buttonVisibility = new Dictionary<Button, bool>();
 		private Button dropdownMenuButton;
 		private Menu dropdownMenu;
+		private bool locked = true;
 
 		internal Toolbar() {
 			rect = new Rectangle(new Rect(300, 300, float.MinValue, float.MinValue));
@@ -52,8 +53,10 @@ namespace Toolbar {
 			dropdownMenuButton.OnClick += (e) => toggleDropdownMenu();
 			buttons.Add(dropdownMenuButton);
 
-			draggable = new Draggable(rect, true, (pos) => !anyButtonContains(pos) && !resizable.HandleRect.Contains(pos));
-			resizable = new Resizable(rect, true, (pos) => !anyButtonContains(pos));
+			draggable = new Draggable(rect,
+				(pos) => !getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos) && !resizable.HandleRect.Contains(pos));
+			resizable = new Resizable(rect,
+				(pos) => !getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos));
 
 			draggable.onChange += dragged;
 			resizable.onChange += resized;
@@ -95,7 +98,7 @@ namespace Toolbar {
 				drawButtons();
 				GUI.depth = oldDepth;
 
-				if (!draggable.Dragging && !resizable.Resizing && (dropdownMenu == null)) {
+				if (locked && !draggable.Dragging && !resizable.Resizing && (dropdownMenu == null)) {
 					drawButtonToolTips();
 				}
 
@@ -180,17 +183,6 @@ namespace Toolbar {
 			}
 		}
 
-		private bool anyButtonContains(Vector2 pos) {
-			bool result = false;
-			calculateButtonPositions((button, x, y) => {
-				if (!result) {
-					Rect buttonRect = new Rect(rect.x + x, rect.y + y, button.Size.x, button.Size.y);
-					result = buttonRect.Contains(pos);
-				}
-			});
-			return result;
-		}
-
 		private void drawToolbar() {
 			GUILayout.BeginArea(rect.Rect, GUI.skin.box);
 			GUILayout.EndArea();
@@ -199,7 +191,7 @@ namespace Toolbar {
 		private void drawButtons() {
 			calculateButtonPositions((button, x, y) => {
 				Rect buttonRect = new Rect(rect.x + x, rect.y + y, button.Size.x, button.Size.y);
-				button.draw(buttonRect);
+				button.draw(buttonRect, locked || button.Equals(dropdownMenuButton));
 			});
 		}
 
@@ -248,6 +240,18 @@ namespace Toolbar {
 				}
 			});
 			return position;
+		}
+
+		internal Rect getRect(Button button) {
+			Rect rect = new Rect(float.MinValue, float.MinValue, float.MinValue, float.MinValue);
+			bool done = false;
+			calculateButtonPositions((b, x, y) => {
+				if (!done && b.Equals(button)) {
+					rect = new Rect(x - PADDING, y - PADDING, b.Size.x, b.Size.y);
+					done = true;
+				}
+			});
+			return rect;
 		}
 
 		private void drawButtonToolTips() {
@@ -334,9 +338,20 @@ namespace Toolbar {
 		private void toggleDropdownMenu() {
 			if (dropdownMenu == null) {
 				dropdownMenu = new Menu(new Vector2(rect.x + PADDING + getPosition(dropdownMenuButton).x, rect.y + rect.height + BUTTON_SPACING));
-				dropdownMenu += Button.createMenuOption("Lorem Ipsum");
-				dropdownMenu += Button.createMenuOption("Dolor Sit Amet");
-				dropdownMenu += Button.createMenuOption("Consectetur");
+
+				Button toggleLockButton = Button.createMenuOption(locked ? "Unlock Position/Size" : "Lock Position/Size");
+				toggleLockButton.OnClick += (e) => {
+					Debug.Log("lock toggle clicked");
+					locked = !locked;
+					draggable.Enabled = !locked;
+					resizable.Enabled = !locked;
+				};
+				dropdownMenu += toggleLockButton;
+
+				// close drop-down menu when player clicks on an option
+				foreach (Button option in dropdownMenu.Options) {
+					option.OnClick += (e) => dropdownMenu = null;
+				}
 			} else {
 				dropdownMenu = null;
 			}

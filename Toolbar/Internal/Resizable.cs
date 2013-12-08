@@ -31,7 +31,8 @@ using UnityEngine;
 
 namespace Toolbar {
 	internal class Resizable {
-		private const float HANDLE_SIZE = 8;
+		private const float HANDLE_SIZE = 10;
+		private static readonly Vector2 CURSOR_HOTSPOT = new Vector2(7, 7);
 
 		internal bool Resizing {
 			get;
@@ -44,44 +45,73 @@ namespace Toolbar {
 			}
 		}
 
+		private bool enabled_;
+		internal bool Enabled {
+			set {
+				enabled_ = value;
+				if (!enabled_) {
+					cursorTexture_ = null;
+				}
+			}
+			get {
+				return enabled_;
+			}
+		}
+
 		internal event Action onChange;
 
+		private Texture2D cursorTexture_;
+		private Texture2D CursorTexture {
+			get {
+				if (cursorTexture_ == null) {
+					cursorTexture_ = GameDatabase.Instance.GetTexture("000_Toolbar/resize-cursor", false);
+				}
+				return cursorTexture_;
+			}
+		}
+
 		private Rectangle rect;
-		private bool clampToScreen;
 		private Func<Vector2, bool> handleAreaCheck;
 		private Rect resizingStartRect;
 		private Vector2 resizingStartMousePos;
+		private bool cursorActive;
 
-		internal Resizable(Rectangle initialPosition, bool clampToScreen, Func<Vector2, bool> handleAreaCheck) {
+		internal Resizable(Rectangle initialPosition, Func<Vector2, bool> handleAreaCheck) {
 			this.rect = initialPosition;
-			this.clampToScreen = clampToScreen;
 			this.handleAreaCheck = handleAreaCheck;
 		}
 
 		internal void update() {
-			handleResize();
+			if (Enabled) {
+				handleResize();
+			}
 		}
 
 		private void handleResize() {
-			if (Input.GetMouseButtonDown(0) && !Resizing) {
-				Vector2 mousePos = Utils.getMousePosition();
-				Resizing = HandleRect.Contains(mousePos) && ((handleAreaCheck == null) || handleAreaCheck(mousePos));
+			Vector2 mousePos = Utils.getMousePosition();
+			bool inArea = HandleRect.Contains(mousePos) && ((handleAreaCheck == null) || handleAreaCheck(mousePos));
+			if (inArea && Input.GetMouseButtonDown(0)) {
+				Resizing = true;
 				resizingStartRect = rect.Rect;
 				resizingStartMousePos = mousePos;
+			}
+			if (inArea || Resizing) {
+				Cursor.SetCursor(CursorTexture, CURSOR_HOTSPOT, CursorMode.Auto);
+				cursorActive = true;
+			} else if (cursorActive) {
+				Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+				cursorActive = false;
 			}
 
 			if (Resizing) {
 				if (Input.GetMouseButton(0)) {
-					Vector2 mousePos = Utils.getMousePosition();
-					Rect newRect = new Rect(rect.x, rect.y,
+					rect.Rect = new Rect(rect.x, rect.y,
 						resizingStartRect.width + mousePos.x - resizingStartMousePos.x,
-						resizingStartRect.height + mousePos.y - resizingStartMousePos.y);
-					if (clampToScreen) {
-						newRect = newRect.clampToScreen();
-					}
-					rect.Rect = newRect;
+						resizingStartRect.height + mousePos.y - resizingStartMousePos.y).clampToScreen();
 				} else {
 					Resizing = false;
+					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+					cursorActive = false;
 				}
 				if (onChange != null) {
 					onChange();

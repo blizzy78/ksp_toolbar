@@ -38,6 +38,12 @@ namespace Toolbar {
 			return menu;
 		}
 
+		internal IEnumerable<Button> Options {
+			get {
+				return options;
+			}
+		}
+
 		private Rect rect;
 		private List<Button> options = new List<Button>();
 
@@ -66,7 +72,7 @@ namespace Toolbar {
 
 			GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
 			foreach (Button option in options) {
-				GUILayout.Button(option.Text, optionStyle, GUILayout.ExpandWidth(true));
+				option.drawMenuOption(optionStyle);
 			}
 			GUILayout.EndVertical();
 		}

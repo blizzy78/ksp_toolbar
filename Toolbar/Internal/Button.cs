@@ -257,11 +257,24 @@ namespace Toolbar {
 			}
 		}
 
-		internal void draw(Rect rect) {
+		internal void draw(Rect rect, bool enabled) {
+			bool oldEnabled = GUI.enabled;
+			GUI.enabled = enabled && Enabled;
+
+			bool clicked = GUI.Button(rect, Content, Style);
+
+			GUI.enabled = oldEnabled;
+
+			if (clicked && (OnClick != null)) {
+				OnClick(new ClickEvent(this, Event.current.button));
+			}
+		}
+
+		internal void drawMenuOption(GUIStyle style) {
 			bool oldEnabled = GUI.enabled;
 			GUI.enabled = Enabled;
 
-			bool clicked = GUI.Button(rect, Content, Style);
+			bool clicked = GUILayout.Button(Text, style, GUILayout.ExpandWidth(true));
 
 			GUI.enabled = oldEnabled;
 

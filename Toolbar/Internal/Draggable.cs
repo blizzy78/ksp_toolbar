@@ -31,43 +31,74 @@ using UnityEngine;
 
 namespace Toolbar {
 	internal class Draggable {
+		private static readonly Vector2 CURSOR_HOTSPOT = new Vector2(10, 10);
+
 		internal bool Dragging {
 			get;
 			private set;
 		}
 
+		private bool enabled_;
+		internal bool Enabled {
+			set {
+				enabled_ = value;
+				if (!enabled_) {
+					cursorTexture_ = null;
+				}
+			}
+			get {
+				return enabled_;
+			}
+		}
+
 		internal event Action onChange;
 
-		private bool clampToScreen;
+		private Texture2D cursorTexture_;
+		private Texture2D CursorTexture {
+			get {
+				if (cursorTexture_ == null) {
+					cursorTexture_ = GameDatabase.Instance.GetTexture("000_Toolbar/move-cursor", false);
+				}
+				return cursorTexture_;
+			}
+		}
+
 		private Rectangle rect;
 		private Func<Vector2, bool> handleAreaCheck;
+		private bool cursorActive;
 
-		internal Draggable(Rectangle initialPosition, bool clampToScreen, Func<Vector2, bool> handleAreaCheck) {
+		internal Draggable(Rectangle initialPosition, Func<Vector2, bool> handleAreaCheck) {
 			this.rect = initialPosition;
-			this.clampToScreen = clampToScreen;
 			this.handleAreaCheck = handleAreaCheck;
 		}
 
 		internal void update() {
-			handleDrag();
+			if (Enabled) {
+				handleDrag();
+			}
 		}
 
 		private void handleDrag() {
-			if (Input.GetMouseButtonDown(0) && !Dragging) {
-				Vector2 mousePos = Utils.getMousePosition();
-				Dragging = rect.contains(mousePos) && ((handleAreaCheck == null) || handleAreaCheck(mousePos));
+			Vector2 mousePos = Utils.getMousePosition();
+			bool inArea = rect.contains(mousePos) && ((handleAreaCheck == null) || handleAreaCheck(mousePos));
+			if (inArea && Input.GetMouseButtonDown(0)) {
+				Dragging = true;
+			}
+			if (inArea || Dragging) {
+				Cursor.SetCursor(CursorTexture, CURSOR_HOTSPOT, CursorMode.Auto);
+				cursorActive = true;
+			} else if (cursorActive) {
+				Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+				cursorActive = false;
 			}
 
 			if (Dragging) {
 				if (Input.GetMouseButton(0)) {
-					Vector2 mousePos = Utils.getMousePosition();
-					Rect newRect = new Rect(mousePos.x - rect.width / 2, mousePos.y - rect.height / 2, rect.width, rect.height);
-					if (clampToScreen) {
-						newRect = newRect.clampToScreen();
-					}
-					rect.Rect = newRect;
+					rect.Rect = new Rect(mousePos.x - rect.width / 2, mousePos.y - rect.height / 2, rect.width, rect.height).clampToScreen();
 				} else {
 					Dragging = false;
+					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+					cursorActive = false;
 				}
 				if (onChange != null) {
 					onChange();
