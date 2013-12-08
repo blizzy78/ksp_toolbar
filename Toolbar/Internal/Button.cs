@@ -191,6 +191,17 @@ namespace Toolbar {
 			}
 		}
 
+		private GUIStyle tooltipStyle_;
+		private GUIStyle TooltipStyle {
+			get {
+				if (tooltipStyle_ == null) {
+					tooltipStyle_ = new GUIStyle(GUI.skin.box);
+					tooltipStyle_.wordWrap = false;
+				}
+				return tooltipStyle_;
+			}
+		}
+
 		private Vector2 size_ = UNSIZED;
 		internal Vector2 Size {
 			get {
@@ -286,14 +297,14 @@ namespace Toolbar {
 		internal void drawToolTip() {
 			if (ToolTip != null) {
 				Vector2 mousePos = Utils.getMousePosition();
-				Vector2 size = GUI.skin.box.CalcSize(new GUIContent(ToolTip));
+				Vector2 size = TooltipStyle.CalcSize(new GUIContent(ToolTip));
 				Rect rect = new Rect(mousePos.x, mousePos.y + 20, size.x, size.y);
 				rect = rect.clampToScreen();
 
 				int oldDepth = GUI.depth;
 				GUI.depth = -1000;
 				GUILayout.BeginArea(rect);
-				GUILayout.Label(ToolTip, GUI.skin.box);
+				GUILayout.Label(ToolTip, TooltipStyle);
 				GUILayout.EndArea();
 				GUI.depth = oldDepth;
 			}
