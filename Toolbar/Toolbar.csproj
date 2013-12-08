@@ -65,6 +65,7 @@
     <Compile Include="Internal\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="CHANGES.txt" />
     <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>

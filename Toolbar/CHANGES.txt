@@ -1,0 +1,10 @@
+﻿1.1.0, 2013-12-08
+- Added a new toolbar-specific drop-down menu where players can configure
+  the toolbar.
+- Repositioning and resizing the toolbar should now be considerably easier.
+- Added the ability to auto-hide the toolbar when it is positioned at the
+  screen edge.
+- Plugin authors: No API changes were made in this version.
+
+1.0.0, 2013-12-06
+- Initial public release.
