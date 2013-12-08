@@ -36,7 +36,6 @@ namespace Toolbar {
 			get {
 				return rect_;
 			}
-
 			set {
 				rect_ = value;
 			}

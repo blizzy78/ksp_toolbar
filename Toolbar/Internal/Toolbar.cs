@@ -45,6 +45,9 @@ namespace Toolbar {
 		private Button dropdownMenuButton;
 		private Menu dropdownMenu;
 		private bool locked = true;
+		private bool autoHide;
+		private bool autoHidden;
+		private Vector2 rectPositionBeforeAutoHide;
 
 		internal Toolbar() {
 			rect = new Rectangle(new Rect(300, 300, float.MinValue, float.MinValue));
@@ -91,6 +94,10 @@ namespace Toolbar {
 				forceAutoSizeIfButtonVisibilitiesChanged();
 				autoSize();
 
+				if (autoHide && (dropdownMenu == null)) {
+					handleAutoHide();
+				}
+
 				int oldDepth = GUI.depth;
 				GUI.depth = -99;
 				drawToolbar();
@@ -108,6 +115,36 @@ namespace Toolbar {
 			}
 		}
 
+		private void handleAutoHide() {
+			if (rect.contains(Utils.getMousePosition())) {
+				if (autoHidden) {
+					rect.x = rectPositionBeforeAutoHide.x;
+					rect.y = rectPositionBeforeAutoHide.y;
+					autoHidden = false;
+				}
+			} else {
+				if (!autoHidden) {
+					if (rect.x <= 0) {
+						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
+						rect.x = -rect.width + PADDING;
+						autoHidden = true;
+					} else if (rect.x >= (Screen.width - rect.width)) {
+						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
+						rect.x = Screen.width - PADDING;
+						autoHidden = true;
+					} else if (rect.y <= 0) {
+						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
+						rect.y = -rect.height + PADDING;
+						autoHidden = true;
+					} else if (rect.y >= (Screen.height - rect.height)) {
+						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
+						rect.y = Screen.height - PADDING;
+						autoHidden = true;
+					}
+				}
+			}
+		}
+
 		private void autoSize() {
 			if (rect.width < 0) {
 				rect.width = Screen.width;
@@ -117,7 +154,9 @@ namespace Toolbar {
 				rect.height = getMinHeightForButtons();
 			}
 
-			rect.clampToScreen(PADDING);
+			if (!autoHidden) {
+				rect.clampToScreen(PADDING);
+			}
 		}
 
 		private float getMinWidthForButtons() {
@@ -318,6 +357,9 @@ namespace Toolbar {
 				if (toolbarNode.HasValue("height")) {
 					rect.height = float.Parse(toolbarNode.GetValue("height"));
 				}
+				if (toolbarNode.HasValue("autoHide")) {
+					autoHide = bool.Parse(toolbarNode.GetValue("autoHide"));
+				}
 			}
 		}
 
@@ -327,6 +369,7 @@ namespace Toolbar {
 			toolbarNode.AddValue("y", rect.y.ToString("F0"));
 			toolbarNode.AddValue("width", rect.width.ToString("F0"));
 			toolbarNode.AddValue("height", rect.height.ToString("F0"));
+			toolbarNode.AddValue("autoHide", autoHide.ToString());
 		}
 
 		private void fireChange() {
@@ -339,14 +382,23 @@ namespace Toolbar {
 			if (dropdownMenu == null) {
 				dropdownMenu = new Menu(new Vector2(rect.x + PADDING + getPosition(dropdownMenuButton).x, rect.y + rect.height + BUTTON_SPACING));
 
-				Button toggleLockButton = Button.createMenuOption(locked ? "Unlock Position/Size" : "Lock Position/Size");
+				Button toggleLockButton = Button.createMenuOption(locked ? "Unlock Position and Size" : "Lock Position and Size");
 				toggleLockButton.OnClick += (e) => {
-					Debug.Log("lock toggle clicked");
 					locked = !locked;
 					draggable.Enabled = !locked;
 					resizable.Enabled = !locked;
+					autoHide = false;
+					fireChange();
 				};
 				dropdownMenu += toggleLockButton;
+
+				Button toggleAutoHideButton = Button.createMenuOption(autoHide ? "Deactivate Auto-Hide" : "Activate Auto-Hide");
+				toggleAutoHideButton.OnClick += (e) => {
+					autoHide = !autoHide;
+					fireChange();
+				};
+				toggleAutoHideButton.Enabled = locked;
+				dropdownMenu += toggleAutoHideButton;
 
 				// close drop-down menu when player clicks on an option
 				foreach (Button option in dropdownMenu.Options) {
