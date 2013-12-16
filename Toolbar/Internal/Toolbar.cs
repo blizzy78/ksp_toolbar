@@ -36,7 +36,7 @@ namespace Toolbar {
 
 		internal event Action onChange;
 
-		private delegate void ButtonPositionCalculatedHandler(Button button, float x, float y);
+		private delegate void ButtonPositionCalculatedHandler(Button button, Vector2 position);
 		private Rectangle rect;
 		private Draggable draggable;
 		private Resizable resizable;
@@ -48,8 +48,11 @@ namespace Toolbar {
 		private bool autoHide;
 		private bool autoHidden;
 		private Vector2 rectPositionBeforeAutoHide;
+		private Color autoHideUnimportantButtonAlpha = Color.white;
 
 		internal Toolbar() {
+			autoHideUnimportantButtonAlpha.a = 0.4f;
+
 			rect = new Rectangle(new Rect(300, 300, float.MinValue, float.MinValue));
 
 			dropdownMenuButton = Button.createToolbarDropdown();
@@ -117,7 +120,8 @@ namespace Toolbar {
 		}
 
 		private void handleAutoHide() {
-			if (rect.contains(Utils.getMousePosition())) {
+			bool anyButtonImportant = buttons.Any(b => b.Important);
+			if (rect.contains(Utils.getMousePosition()) || anyButtonImportant) {
 				if (autoHidden) {
 					rect.x = rectPositionBeforeAutoHide.x;
 					rect.y = rectPositionBeforeAutoHide.y;
@@ -146,6 +150,11 @@ namespace Toolbar {
 			}
 		}
 
+		private bool shouldAutoHide() {
+			return autoHide && !autoHidden && !rect.contains(Utils.getMousePosition()) &&
+				((rect.x <= 0) || (rect.x >= (Screen.width - rect.width)) || (rect.y <= 0) || (rect.y >= (Screen.height - rect.height)));
+		}
+
 		private void autoSize() {
 			if (rect.width < 0) {
 				rect.width = Screen.width;
@@ -162,8 +171,8 @@ namespace Toolbar {
 
 		private float getMinWidthForButtons() {
 			float width = 0;
-			calculateButtonPositions((button, x, y) => {
-				float currentWidth = x + button.Size.x;
+			calculateButtonPositions((button, pos) => {
+				float currentWidth = pos.x + button.Size.x;
 				if (currentWidth > width) {
 					width = currentWidth;
 				}
@@ -174,8 +183,8 @@ namespace Toolbar {
 
 		private float getMinHeightForButtons() {
 			float height = 0;
-			calculateButtonPositions((button, x, y) => {
-				float currentHeight = y + button.Size.y;
+			calculateButtonPositions((button, pos) => {
+				float currentHeight = pos.y + button.Size.y;
 				if (currentHeight > height) {
 					height = currentHeight;
 				}
@@ -204,7 +213,7 @@ namespace Toolbar {
 					if (button.Size.y > lineHeight) {
 						lineHeight = button.Size.y;
 					}
-					buttonPositionCalculatedHandler(button, x, y);
+					buttonPositionCalculatedHandler(button, new Vector2(x, y));
 
 					x += button.Size.x + BUTTON_SPACING;
 					currentLineWidth += ((currentLineWidth > 0) ? BUTTON_SPACING : 0) + button.Size.x;
@@ -217,22 +226,33 @@ namespace Toolbar {
 			// calculate position of drop-down menu button
 			if (y == PADDING) {
 				// all buttons on a single line
-				buttonPositionCalculatedHandler(dropdownMenuButton, x + 2, (lineHeight - dropdownMenuButton.Size.y) / 2 + PADDING);
+				buttonPositionCalculatedHandler(dropdownMenuButton, new Vector2(x + 2, (lineHeight - dropdownMenuButton.Size.y) / 2 + PADDING));
 			} else {
 				// multiple lines
-				buttonPositionCalculatedHandler(dropdownMenuButton, (widestLineWidth - dropdownMenuButton.Size.x) / 2 + PADDING, y + lineHeight + BUTTON_SPACING + 2);
+				buttonPositionCalculatedHandler(dropdownMenuButton, new Vector2((widestLineWidth - dropdownMenuButton.Size.x) / 2 + PADDING, y + lineHeight + BUTTON_SPACING + 2));
 			}
 		}
 
 		private void drawToolbar() {
+			Color oldColor = GUI.color;
+			if (shouldAutoHide() && !autoHidden) {
+				GUI.color = autoHideUnimportantButtonAlpha;
+			}
 			GUILayout.BeginArea(rect.Rect, GUI.skin.box);
 			GUILayout.EndArea();
+			GUI.color = oldColor;
 		}
 
 		private void drawButtons() {
-			calculateButtonPositions((button, x, y) => {
-				Rect buttonRect = new Rect(rect.x + x, rect.y + y, button.Size.x, button.Size.y);
+			bool shouldHide = shouldAutoHide();
+			calculateButtonPositions((button, pos) => {
+				Rect buttonRect = new Rect(rect.x + pos.x, rect.y + pos.y, button.Size.x, button.Size.y);
+				Color oldColor = GUI.color;
+				if (shouldHide && !autoHidden && !button.Important) {
+					GUI.color = autoHideUnimportantButtonAlpha;
+				}
 				button.draw(buttonRect, locked || button.Equals(dropdownMenuButton));
+				GUI.color = oldColor;
 			});
 		}
 
@@ -283,10 +303,10 @@ namespace Toolbar {
 		internal Vector2 getPosition(Button button) {
 			Vector2 position = new Vector2(float.MinValue, float.MinValue);
 			bool done = false;
-			calculateButtonPositions((b, x, y) => {
+			calculateButtonPositions((b, pos) => {
 				if (!done && b.Equals(button)) {
-					position.x = x - PADDING;
-					position.y = y - PADDING;
+					position.x = pos.x - PADDING;
+					position.y = pos.y - PADDING;
 					done = true;
 				}
 			});
@@ -296,9 +316,9 @@ namespace Toolbar {
 		internal Rect getRect(Button button) {
 			Rect rect = new Rect(float.MinValue, float.MinValue, float.MinValue, float.MinValue);
 			bool done = false;
-			calculateButtonPositions((b, x, y) => {
+			calculateButtonPositions((b, pos) => {
 				if (!done && b.Equals(button)) {
-					rect = new Rect(x - PADDING, y - PADDING, b.Size.x, b.Size.y);
+					rect = new Rect(pos.x - PADDING, pos.y - PADDING, b.Size.x, b.Size.y);
 					done = true;
 				}
 			});
@@ -308,9 +328,9 @@ namespace Toolbar {
 		private void drawButtonToolTips() {
 			Vector2 mousePos = Utils.getMousePosition();
 			bool done = false;
-			calculateButtonPositions((button, x, y) => {
+			calculateButtonPositions((button, pos) => {
 				if (!done) {
-					Rect buttonRect = new Rect(rect.x + x, rect.y + y, button.Size.x, button.Size.y);
+					Rect buttonRect = new Rect(rect.x + pos.x, rect.y + pos.y, button.Size.x, button.Size.y);
 					if (buttonRect.Contains(mousePos)) {
 						button.drawToolTip();
 						done = true;

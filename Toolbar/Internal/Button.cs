@@ -225,6 +225,11 @@ namespace Toolbar {
 			set;
 		}
 
+		public bool Important {
+			get;
+			set;
+		}
+
 		internal bool IsTextured {
 			get {
 				return TexturePath != null;

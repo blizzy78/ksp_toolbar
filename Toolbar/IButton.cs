@@ -116,6 +116,29 @@ namespace Toolbar {
 		}
 
 		/// <summary>
+		/// Whether this button is currently "important." Set to false to return to normal button behaviour.
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// This can be used to temporarily force the button to be shown on screen regardless of the toolbar being
+		/// currently in auto-hidden mode. For example, a button that signals the arrival of a private message in
+		/// a chat room could mark itself as "important" as long as the message has not been read.
+		/// </para>
+		/// <para>
+		/// Setting this property does not change the appearance of the button. Use <see cref="TexturePath"/> to
+		/// change the button's icon.
+		/// </para>
+		/// <para>
+		/// This feature should be used only sparingly, if at all, since it forces the button to be displayed on
+		/// screen even when it normally wouldn't.
+		/// </para>
+		/// </remarks>
+		bool Important {
+			set;
+			get;
+		}
+
+		/// <summary>
 		/// Event handler that can be registered with to receive "on click" events.
 		/// </summary>
 		/// <example>
