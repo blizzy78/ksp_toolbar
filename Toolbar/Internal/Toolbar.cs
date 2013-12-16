@@ -244,16 +244,25 @@ namespace Toolbar {
 		}
 
 		private void drawButtons() {
-			bool shouldHide = shouldAutoHide();
+			// must create a copy because Button.draw() also handles the button click,
+			// which can potentially modify our list of buttons
+			Dictionary<Button, Rect> buttonsToDraw = new Dictionary<Button, Rect>();
 			calculateButtonPositions((button, pos) => {
 				Rect buttonRect = new Rect(rect.x + pos.x, rect.y + pos.y, button.Size.x, button.Size.y);
+				buttonsToDraw.Add(button, buttonRect);
+			});
+			
+			bool shouldHide = shouldAutoHide();
+			foreach (KeyValuePair<Button, Rect> entry in buttonsToDraw) {
+				Button button = entry.Key;
+				Rect buttonRect = entry.Value;
 				Color oldColor = GUI.color;
 				if (shouldHide && !autoHidden && !button.Important) {
 					GUI.color = autoHideUnimportantButtonAlpha;
 				}
 				button.draw(buttonRect, locked || button.Equals(dropdownMenuButton));
 				GUI.color = oldColor;
-			});
+			}
 		}
 
 		private void forceAutoSizeIfButtonVisibilitiesChanged() {
