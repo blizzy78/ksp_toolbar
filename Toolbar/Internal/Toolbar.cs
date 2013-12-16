@@ -252,10 +252,20 @@ namespace Toolbar {
 			if (anyButtonVisibilityChanged) {
 				Debug.Log("button visibilities have changed, forcing auto-size ");
 				if (isSingleLine()) {
+					if (rect.x >= (Screen.width - rect.width)) {
+						// docked at right screen edge -> keep it that way by moving to screen edge
+						rect.x = Screen.width;
+					}
+
 					// expand width to fit new button
 					rect.width = Screen.width;
 					rect.width = getMinWidthForButtons();
 				} else {
+					if (rect.y >= (Screen.height - rect.height)) {
+						// docked at bottom screen edge -> keep it that way by moving to screen edge
+						rect.y = Screen.height;
+					}
+
 					// keep width (removing excess space), and expand height instead
 					rect.width = getMinWidthForButtons();
 				}
