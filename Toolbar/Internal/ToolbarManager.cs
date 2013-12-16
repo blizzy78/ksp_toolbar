@@ -35,23 +35,27 @@ namespace Toolbar {
 		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 
 		private RenderingManager renderingManager;
-		private bool settingsLoaded;
 		private Toolbar toolbar = new Toolbar();
+		private ConfigNode settings;
 
 		internal ToolbarManager() {
 			Instance = this;
 
 			toolbar.onChange += toolbarChanged;
 
+			GameEvents.onGameSceneLoadRequested.Add(gameSceneLoadRequested);
+
 			GameObject.DontDestroyOnLoad(this);
+		}
+
+		internal void OnDestroy() {
+			GameEvents.onGameSceneLoadRequested.Remove(gameSceneLoadRequested);
 		}
 
 		internal void OnGUI() {
 			if (!showGUI()) {
 				return;
 			}
-
-			loadSettings();
 
 			toolbar.draw();
 		}
@@ -64,26 +68,32 @@ namespace Toolbar {
 			saveSettings();
 		}
 
-		private void loadSettings() {
-			if (!settingsLoaded) {
-				Debug.Log("loading toolbar settings");
+		private void gameSceneLoadRequested(GameScenes scene) {
+			loadSettings(scene);
+		}
 
-				ConfigNode root = ConfigNode.Load(settingsFile) ?? new ConfigNode();
-				if (root.HasNode("toolbars")) {
-					ConfigNode toolbarsNode = root.GetNode("toolbars");
-					toolbar.loadSettings(toolbarsNode);
-				}
+		private void loadSettings(GameScenes scene) {
+			Debug.Log("loading toolbar settings (" + scene + ")");
 
-				settingsLoaded = true;
+			ConfigNode root = loadSettings();
+			if (root.HasNode("toolbars")) {
+				toolbar.loadSettings(root.GetNode("toolbars"), scene);
 			}
 		}
 
-		private void saveSettings() {
-			Debug.Log("saving toolbar settings");
+		private ConfigNode loadSettings() {
+			if (settings == null) {
+				settings = ConfigNode.Load(settingsFile) ?? new ConfigNode();
+			}
+			return settings;
+		}
 
-			ConfigNode root = new ConfigNode();
-			ConfigNode toolbarsNode = root.AddNode("toolbars");
-			toolbar.saveSettings(toolbarsNode);
+		private void saveSettings() {
+			GameScenes scene = HighLogic.LoadedScene;
+			Debug.Log("saving toolbar settings (" + scene + ")");
+
+			ConfigNode root = loadSettings();
+			toolbar.saveSettings(root.getOrCreateNode("toolbars"), scene);
 			root.Save(settingsFile);
 		}
 

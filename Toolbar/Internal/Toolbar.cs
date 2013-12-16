@@ -214,6 +214,7 @@ namespace Toolbar {
 				widestLineWidth = currentLineWidth;
 			}
 
+			// calculate position of drop-down menu button
 			if (y == PADDING) {
 				// all buttons on a single line
 				buttonPositionCalculatedHandler(dropdownMenuButton, x + 2, (lineHeight - dropdownMenuButton.Size.y) / 2 + PADDING);
@@ -353,34 +354,34 @@ namespace Toolbar {
 			}
 		}
 
-		internal void loadSettings(ConfigNode parentNode) {
+		internal void loadSettings(ConfigNode parentNode, GameScenes scene) {
+			// hide this
+			dropdownMenu = null;
+			// deactivate these
+			draggable.Enabled = false;
+			resizable.Enabled = false;
+			// pretend we're not auto-hidden right now
+			autoHidden = false;
+
 			if (parentNode.HasNode("toolbar")) {
 				ConfigNode toolbarNode = parentNode.GetNode("toolbar");
-				if (toolbarNode.HasValue("x")) {
-					rect.x = float.Parse(toolbarNode.GetValue("x"));
-				}
-				if (toolbarNode.HasValue("y")) {
-					rect.y = float.Parse(toolbarNode.GetValue("y"));
-				}
-				if (toolbarNode.HasValue("width")) {
-					rect.width = float.Parse(toolbarNode.GetValue("width"));
-				}
-				if (toolbarNode.HasValue("height")) {
-					rect.height = float.Parse(toolbarNode.GetValue("height"));
-				}
-				if (toolbarNode.HasValue("autoHide")) {
-					autoHide = bool.Parse(toolbarNode.GetValue("autoHide"));
-				}
+				ConfigNode settingsNode = toolbarNode.HasNode(scene.ToString()) ? toolbarNode.GetNode(scene.ToString()) : toolbarNode;
+				rect.x = settingsNode.get("x", 0f);
+				rect.y = settingsNode.get("y", 0f);
+				rect.width = settingsNode.get("width", 0f);
+				rect.height = settingsNode.get("height", 0f);
+				autoHide = settingsNode.get("autoHide", false);
 			}
 		}
 
-		internal void saveSettings(ConfigNode parentNode) {
-			ConfigNode toolbarNode = parentNode.AddNode("toolbar");
-			toolbarNode.AddValue("x", rect.x.ToString("F0"));
-			toolbarNode.AddValue("y", rect.y.ToString("F0"));
-			toolbarNode.AddValue("width", rect.width.ToString("F0"));
-			toolbarNode.AddValue("height", rect.height.ToString("F0"));
-			toolbarNode.AddValue("autoHide", autoHide.ToString());
+		internal void saveSettings(ConfigNode parentNode, GameScenes scene) {
+			ConfigNode toolbarNode = parentNode.getOrCreateNode("toolbar");
+			ConfigNode settingsNode = toolbarNode.getOrCreateNode(scene.ToString());
+			settingsNode.overwrite("x", rect.x.ToString("F0"));
+			settingsNode.overwrite("y", rect.y.ToString("F0"));
+			settingsNode.overwrite("width", rect.width.ToString("F0"));
+			settingsNode.overwrite("height", rect.height.ToString("F0"));
+			settingsNode.overwrite("autoHide", autoHide.ToString());
 		}
 
 		private void fireChange() {

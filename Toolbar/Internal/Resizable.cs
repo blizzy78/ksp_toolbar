@@ -48,9 +48,17 @@ namespace Toolbar {
 		private bool enabled_;
 		internal bool Enabled {
 			set {
-				enabled_ = value;
-				if (!enabled_) {
-					cursorTexture_ = null;
+				if (value != enabled_) {
+					enabled_ = value;
+
+					if (!enabled_) {
+						if (Resizing) {
+							stopResizing();
+							fireChange();
+						}
+
+						cursorTexture_ = null;
+					}
 				}
 			}
 			get {
@@ -111,13 +119,21 @@ namespace Toolbar {
 						resizingStartRect.width + mousePos.x - resizingStartMousePos.x,
 						resizingStartRect.height + mousePos.y - resizingStartMousePos.y).clampToScreen(clampOverscan);
 				} else {
-					Resizing = false;
-					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-					cursorActive = false;
+					stopResizing();
 				}
-				if (onChange != null) {
-					onChange();
-				}
+				fireChange();
+			}
+		}
+
+		private void stopResizing() {
+			Resizing = false;
+			Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+			cursorActive = false;
+		}
+
+		private void fireChange() {
+			if (onChange != null) {
+				onChange();
 			}
 		}
 	}

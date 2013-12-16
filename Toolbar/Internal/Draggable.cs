@@ -41,9 +41,17 @@ namespace Toolbar {
 		private bool enabled_;
 		internal bool Enabled {
 			set {
-				enabled_ = value;
-				if (!enabled_) {
-					cursorTexture_ = null;
+				if (value != enabled_) {
+					enabled_ = value;
+
+					if (!enabled_) {
+						if (Dragging) {
+							stopDragging();
+							fireChange();
+						}
+
+						cursorTexture_ = null;
+					}
 				}
 			}
 			get {
@@ -98,13 +106,21 @@ namespace Toolbar {
 				if (Input.GetMouseButton(0)) {
 					rect.Rect = new Rect(mousePos.x - rect.width / 2, mousePos.y - rect.height / 2, rect.width, rect.height).clampToScreen(clampOverscan);
 				} else {
-					Dragging = false;
-					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-					cursorActive = false;
+					stopDragging();
 				}
-				if (onChange != null) {
-					onChange();
-				}
+				fireChange();
+			}
+		}
+
+		private void stopDragging() {
+			Dragging = false;
+			Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+			cursorActive = false;
+		}
+
+		private void fireChange() {
+			if (onChange != null) {
+				onChange();
 			}
 		}
 	}

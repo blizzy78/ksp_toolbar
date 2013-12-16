@@ -25,6 +25,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using UnityEngine;
@@ -61,6 +62,21 @@ namespace Toolbar {
 
 		internal static Rect shift(this Rect rect, Vector2 shiftBy) {
 			return new Rect(rect.x + shiftBy.x, rect.y + shiftBy.y, rect.width, rect.height);
+		}
+
+		internal static ConfigNode getOrCreateNode(this ConfigNode configNode, string nodeName) {
+			return configNode.HasNode(nodeName) ? configNode.GetNode(nodeName) : configNode.AddNode(nodeName);
+		}
+
+		internal static void overwrite(this ConfigNode configNode, string name, object value) {
+			if (configNode.HasValue(name)) {
+				configNode.RemoveValue(name);
+			}
+			configNode.AddValue(name, value);
+		}
+
+		internal static T get<T>(this ConfigNode configNode, string name, T defaultValue) {
+			return configNode.HasValue(name) ? (T) TypeDescriptor.GetConverter(defaultValue.GetType()).ConvertFromInvariantString(configNode.GetValue(name)) : defaultValue;
 		}
 	}
 }
