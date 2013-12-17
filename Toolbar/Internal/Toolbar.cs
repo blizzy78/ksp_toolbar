@@ -395,8 +395,8 @@ namespace Toolbar {
 			if (parentNode.HasNode("toolbar")) {
 				ConfigNode toolbarNode = parentNode.GetNode("toolbar");
 				ConfigNode settingsNode = toolbarNode.HasNode(scene.ToString()) ? toolbarNode.GetNode(scene.ToString()) : toolbarNode;
-				rect.x = settingsNode.get("x", 0f);
-				rect.y = settingsNode.get("y", 0f);
+				rect.x = settingsNode.get("x", 300f);
+				rect.y = settingsNode.get("y", 300f);
 				rect.width = settingsNode.get("width", 0f);
 				rect.height = settingsNode.get("height", 0f);
 				autoHide = settingsNode.get("autoHide", false);
