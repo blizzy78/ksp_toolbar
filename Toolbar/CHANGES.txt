@@ -1,4 +1,11 @@
-﻿1.1.0, 2013-12-08
+﻿1.2.0, 2013-12-17
+- Toolbar position and size are stored in relation to the current scene now.
+  For example, you can place it at different positions in the vehicle assembly
+  building, the spaceplane hangar, and the actual flight scene.
+- Plugin authors: There is a new property IButton.Important now. See the
+  documentation of that property for details.
+
+1.1.0, 2013-12-08
 - Added a new toolbar-specific drop-down menu where players can configure
   the toolbar.
 - Repositioning and resizing the toolbar should now be considerably easier.
