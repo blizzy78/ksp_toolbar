@@ -33,6 +33,8 @@ namespace Toolbar {
 	internal class Toolbar {
 		private const float BUTTON_SPACING = 1;
 		private const float PADDING = 3;
+		private const float DEFAULT_X = 300;
+		private const float DEFAULT_Y = 300;
 
 		internal event Action onChange;
 
@@ -53,7 +55,7 @@ namespace Toolbar {
 		internal Toolbar() {
 			autoHideUnimportantButtonAlpha.a = 0.4f;
 
-			rect = new Rectangle(new Rect(300, 300, float.MinValue, float.MinValue));
+			rect = new Rectangle(new Rect(DEFAULT_X, DEFAULT_Y, float.MinValue, float.MinValue));
 
 			dropdownMenuButton = Button.createToolbarDropdown();
 			dropdownMenuButton.OnClick += (e) => toggleDropdownMenu();
@@ -395,8 +397,8 @@ namespace Toolbar {
 			if (parentNode.HasNode("toolbar")) {
 				ConfigNode toolbarNode = parentNode.GetNode("toolbar");
 				ConfigNode settingsNode = toolbarNode.HasNode(scene.ToString()) ? toolbarNode.GetNode(scene.ToString()) : toolbarNode;
-				rect.x = settingsNode.get("x", 300f);
-				rect.y = settingsNode.get("y", 300f);
+				rect.x = settingsNode.get("x", DEFAULT_X);
+				rect.y = settingsNode.get("y", DEFAULT_Y);
 				rect.width = settingsNode.get("width", 0f);
 				rect.height = settingsNode.get("height", 0f);
 				autoHide = settingsNode.get("autoHide", false);
