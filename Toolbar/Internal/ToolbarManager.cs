@@ -69,7 +69,9 @@ namespace Toolbar {
 		}
 
 		private void gameSceneLoadRequested(GameScenes scene) {
-			loadSettings(scene);
+			if (isRelevantGameScene(scene)) {
+				loadSettings(scene);
+			}
 		}
 
 		private void loadSettings(GameScenes scene) {
@@ -98,6 +100,10 @@ namespace Toolbar {
 		}
 
 		private bool showGUI() {
+			if (!isRelevantGameScene(HighLogic.LoadedScene)) {
+				return false;
+			}
+
 			if (renderingManager == null) {
 				renderingManager = (RenderingManager) GameObject.FindObjectOfType(typeof(RenderingManager));
 			}
@@ -108,6 +114,11 @@ namespace Toolbar {
 			}
 
 			return false;
+		}
+
+		private bool isRelevantGameScene(GameScenes scene) {
+			return (scene != GameScenes.LOADING) && (scene != GameScenes.LOADINGBUFFER) &&
+				(scene != GameScenes.PSYSTEM) && (scene != GameScenes.CREDITS);
 		}
 
 		public IButton add(string ns, string id) {
