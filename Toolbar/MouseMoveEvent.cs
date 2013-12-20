@@ -30,20 +30,12 @@ using System.Text;
 
 namespace Toolbar {
 	/// <summary>
-	/// Event describing a click on a button.
+	/// Event describing the mouse pointer moving about a button.
 	/// </summary>
-	public partial class ClickEvent : EventArgs {
+	public abstract partial class MouseMoveEvent {
 		/// <summary>
-		/// The button that has been clicked.
+		/// The button in question.
 		/// </summary>
-		public readonly IButton Button;
-
-		/// <summary>
-		/// The mouse button which the button was clicked with.
-		/// </summary>
-		/// <remarks>
-		/// Is 0 for left mouse button, 1 for right mouse button, and 2 for middle mouse button.
-		/// </remarks>
-		public readonly int MouseButton;
+		public readonly IButton button;
 	}
 }

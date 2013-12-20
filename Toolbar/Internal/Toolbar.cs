@@ -51,6 +51,7 @@ namespace Toolbar {
 		private bool autoHidden;
 		private Vector2 rectPositionBeforeAutoHide;
 		private Color autoHideUnimportantButtonAlpha = Color.white;
+		private Button mouseHoverButton;
 
 		internal Toolbar() {
 			autoHideUnimportantButtonAlpha.a = 0.4f;
@@ -255,6 +256,8 @@ namespace Toolbar {
 			});
 			
 			bool shouldHide = shouldAutoHide();
+			Button currentMouseHoverButton = null;
+			Vector2 mousePos = Utils.getMousePosition();
 			foreach (KeyValuePair<Button, Rect> entry in buttonsToDraw) {
 				Button button = entry.Key;
 				Rect buttonRect = entry.Value;
@@ -264,7 +267,25 @@ namespace Toolbar {
 				}
 				button.draw(buttonRect, (locked || button.Equals(dropdownMenuButton)) && !isPauseMenuOpen());
 				GUI.color = oldColor;
+
+				if (buttonRect.Contains(mousePos)) {
+					currentMouseHoverButton = button;
+				}
 			}
+
+			handleMouseHover(currentMouseHoverButton);
+		}
+
+		private void handleMouseHover(Button currentMouseHoverButton) {
+			if ((mouseHoverButton == null) && (currentMouseHoverButton != null)) {
+				currentMouseHoverButton.mouseEnter();
+			} else if ((mouseHoverButton != null) && (currentMouseHoverButton == null)) {
+				mouseHoverButton.mouseLeave();
+			} else if ((mouseHoverButton != null) && (currentMouseHoverButton != null) && !currentMouseHoverButton.Equals(mouseHoverButton)) {
+				mouseHoverButton.mouseLeave();
+				currentMouseHoverButton.mouseEnter();
+			}
+			mouseHoverButton = currentMouseHoverButton;
 		}
 
 		private bool isPauseMenuOpen() {
@@ -360,17 +381,9 @@ namespace Toolbar {
 		}
 
 		private void drawButtonToolTips() {
-			Vector2 mousePos = Utils.getMousePosition();
-			bool done = false;
-			calculateButtonPositions((button, pos) => {
-				if (!done) {
-					Rect buttonRect = new Rect(rect.x + pos.x, rect.y + pos.y, button.Size.x, button.Size.y);
-					if (buttonRect.Contains(mousePos)) {
-						button.drawToolTip();
-						done = true;
-					}
-				}
-			});
+			foreach (Button button in buttons) {
+				button.drawToolTip();
+			}
 		}
 
 		internal void update() {

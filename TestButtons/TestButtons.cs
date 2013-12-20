@@ -49,6 +49,8 @@ class TestButtons : MonoBehaviour {
 		button4.TexturePath = "000_Toolbar/img_buttonTypeMNode";
 		button4.ToolTip = "Regular Button";
 		button4.OnClick += (e) => Debug.Log("button4 clicked");
+		button4.OnMouseEnter += (e) => Debug.Log("button4 mouse enter");
+		button4.OnMouseLeave += (e) => Debug.Log("button4 mouse leave");
 
 		// button that toggles visibility of the previous button
 		button5 = ToolbarManager.Instance.add("test", "button5");

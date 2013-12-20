@@ -128,14 +128,9 @@ namespace Toolbar {
 			}
 		}
 
-		private string tooltip_;
 		public string ToolTip {
-			set {
-				tooltip_ = value;
-			}
-			private get {
-				return tooltip_;
-			}
+			set;
+			get;
 		}
 
 		private bool visible_ = true;
@@ -237,12 +232,15 @@ namespace Toolbar {
 		}
 
 		public event ClickHandler OnClick;
+		public event MouseEnterHandler OnMouseEnter;
+		public event MouseLeaveHandler OnMouseLeave;
 		public event Action OnDestroy;
 
 		internal readonly string ns;
 		internal readonly string id;
 
 		private bool toolbarDropdown;
+		private bool showTooltip;
 
 		internal Button(string ns, string id) {
 			checkId(ns, "namespace");
@@ -252,6 +250,9 @@ namespace Toolbar {
 			this.id = id;
 
 			Enabled = true;
+
+			OnMouseEnter += (e) => showTooltip = true;
+			OnMouseLeave += (e) => showTooltip = false;
 		}
 
 		internal static Button createToolbarDropdown() {
@@ -300,7 +301,7 @@ namespace Toolbar {
 		}
 
 		internal void drawToolTip() {
-			if (ToolTip != null) {
+			if (showTooltip && (ToolTip != null)) {
 				Vector2 mousePos = Utils.getMousePosition();
 				Vector2 size = TooltipStyle.CalcSize(new GUIContent(ToolTip));
 				Rect rect = new Rect(mousePos.x, mousePos.y + 20, size.x, size.y);
@@ -312,6 +313,18 @@ namespace Toolbar {
 				GUILayout.Label(ToolTip, TooltipStyle);
 				GUILayout.EndArea();
 				GUI.depth = oldDepth;
+			}
+		}
+
+		internal void mouseEnter() {
+			if (OnMouseEnter != null) {
+				OnMouseEnter(new MouseEnterEvent(this));
+			}
+		}
+
+		internal void mouseLeave() {
+			if (OnMouseLeave != null) {
+				OnMouseLeave(new MouseLeaveEvent(this));
 			}
 		}
 

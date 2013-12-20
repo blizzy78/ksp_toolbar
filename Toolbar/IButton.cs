@@ -152,6 +152,32 @@ namespace Toolbar {
 		event ClickHandler OnClick;
 
 		/// <summary>
+		/// Event handler that can be registered with to receive "on mouse enter" events.
+		/// </summary>
+		/// <example>
+		/// <code>
+		/// IButton button = ...
+		/// button.OnMouseEnter += (e) => {
+		///     Debug.Log("mouse entered button");
+		/// };
+		/// </code>
+		/// </example>
+		event MouseEnterHandler OnMouseEnter;
+
+		/// <summary>
+		/// Event handler that can be registered with to receive "on mouse leave" events.
+		/// </summary>
+		/// <example>
+		/// <code>
+		/// IButton button = ...
+		/// button.OnMouseLeave += (e) => {
+		///     Debug.Log("mouse left button");
+		/// };
+		/// </code>
+		/// </example>
+		event MouseLeaveHandler OnMouseLeave;
+
+		/// <summary>
 		/// Permanently destroys this button so that it is no longer displayed.
 		/// Should be used when a plugin is stopped to remove leftover buttons.
 		/// </summary>
