@@ -390,11 +390,13 @@ namespace Toolbar {
 			draggable.update();
 			resizable.update();
 
-			if ((dropdownMenu != null) &&
-				(Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2)) &&
-				!dropdownMenu.contains(Utils.getMousePosition())) {
-
-				dropdownMenu = null;
+			if (dropdownMenu != null) {
+				if ((Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2)) && !dropdownMenu.contains(Utils.getMousePosition())) {
+					dropdownMenu = null;
+				}
+				if (isPauseMenuOpen()) {
+					dropdownMenu = null;
+				}
 			}
 		}
 
