@@ -34,18 +34,27 @@ namespace Toolbar {
 	public partial class ToolbarManager : MonoBehaviour, IToolbarManager {
 		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 
+		private const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
+		private const int VERSION = 1;
+
+		private static WWW versionWWW;
+		private static bool? newVersionAvailable = null;
+
 		private RenderingManager renderingManager;
 		private Toolbar toolbar = new Toolbar();
 		private ConfigNode settings;
 
 		internal ToolbarManager() {
 			Instance = this;
+			GameObject.DontDestroyOnLoad(this);
+
+			if (versionWWW == null) {
+				versionWWW = new WWW("http://blizzy.de/toolbar/version.txt");
+			}
 
 			toolbar.onChange += toolbarChanged;
 
 			GameEvents.onGameSceneLoadRequested.Add(gameSceneLoadRequested);
-
-			GameObject.DontDestroyOnLoad(this);
 		}
 
 		internal void OnDestroy() {
@@ -62,6 +71,8 @@ namespace Toolbar {
 
 		internal void Update() {
 			toolbar.update();
+
+			checkForNewVersion();
 		}
 
 		private void toolbarChanged() {
@@ -119,6 +130,31 @@ namespace Toolbar {
 		private bool isRelevantGameScene(GameScenes scene) {
 			return (scene != GameScenes.LOADING) && (scene != GameScenes.LOADINGBUFFER) &&
 				(scene != GameScenes.PSYSTEM) && (scene != GameScenes.CREDITS);
+		}
+
+		private void checkForNewVersion() {
+			if ((newVersionAvailable == null) && String.IsNullOrEmpty(versionWWW.error) && versionWWW.isDone) {
+				try {
+					long ver = long.Parse(versionWWW.text);
+					newVersionAvailable = ver > VERSION;
+					if (newVersionAvailable == true) {
+						addUpdateAvailableButton();
+					}
+				} catch (Exception) {
+					// ignore
+				}
+			}
+		}
+
+		private void addUpdateAvailableButton() {
+			IButton button = add(Button.NAMESPACE_INTERNAL, "updateAvailable");
+			button.TexturePath = "000_Toolbar/update-available";
+			button.ToolTip = "Toolbar Plugin Update Available";
+			button.Important = true;
+			button.OnClick += (e) => {
+				Application.OpenURL(FORUM_THREAD_URL);
+				button.Important = false;
+			};
 		}
 
 		public IButton add(string ns, string id) {

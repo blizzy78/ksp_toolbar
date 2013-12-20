@@ -31,8 +31,9 @@ using UnityEngine;
 
 namespace Toolbar {
 	internal class Button : IButton {
+		internal const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
+		
 		private static readonly Vector2 UNSIZED = new Vector2(float.NaN, float.NaN);
-		private const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
 		private const string TEXTURE_PATH_DROPDOWN = "000_Toolbar/toolbar-dropdown";
 		private const int MAX_WIDTH = 24;
 		private const int MAX_HEIGHT = 24;
