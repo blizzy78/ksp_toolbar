@@ -1,4 +1,13 @@
-﻿1.2.0, 2013-12-17
+﻿1.2.1, 2013-12-20
+- Increased the size of the triangle button that opens the toolbar-specific
+  drop-down menu.
+- Fixed a bug that could make the toolbar completely invisible under
+  certain circumstances.
+- The toolbar should now no longer be visible during loading screens.
+- Plugin authors: Added new events IButton.OnMouseEnter/OnMouseLeave.
+  See the documentation of those events for details.
+
+1.2.0, 2013-12-17
 - Toolbar position and size are stored in relation to the current scene now.
   For example, you can place it at different positions in the vehicle assembly
   building, the spaceplane hangar, and the actual flight scene.
