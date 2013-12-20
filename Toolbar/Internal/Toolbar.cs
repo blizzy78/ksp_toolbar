@@ -262,8 +262,17 @@ namespace Toolbar {
 				if (shouldHide && !autoHidden && !button.Important) {
 					GUI.color = autoHideUnimportantButtonAlpha;
 				}
-				button.draw(buttonRect, locked || button.Equals(dropdownMenuButton));
+				button.draw(buttonRect, (locked || button.Equals(dropdownMenuButton)) && !isPauseMenuOpen());
 				GUI.color = oldColor;
+			}
+		}
+
+		private bool isPauseMenuOpen() {
+			// PauseMenu.isOpen may throw NullReferenceException on occasion, even if HighLogic.LoadedScene==GameScenes.FLIGHT
+			try {
+				return (HighLogic.LoadedScene == GameScenes.FLIGHT) && PauseMenu.isOpen;
+			} catch {
+				return false;
 			}
 		}
 
