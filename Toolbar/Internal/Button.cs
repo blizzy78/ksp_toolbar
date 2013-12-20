@@ -36,8 +36,8 @@ namespace Toolbar {
 		private const string TEXTURE_PATH_DROPDOWN = "000_Toolbar/toolbar-dropdown";
 		private const int MAX_WIDTH = 24;
 		private const int MAX_HEIGHT = 24;
-		private const int DROPDOWN_TEX_WIDTH = 8;
-		private const int DROPDOWN_TEX_HEIGHT = 6;
+		private const int DROPDOWN_TEX_WIDTH = 10;
+		private const int DROPDOWN_TEX_HEIGHT = 7;
 		private const int PADDING = 4;
 
 		private string text_;
