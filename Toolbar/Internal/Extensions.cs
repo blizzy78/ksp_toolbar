@@ -60,6 +60,12 @@ namespace Toolbar {
 			return rect;
 		}
 
+		internal static Vector2 clampToScreen(this Vector2 pos) {
+			pos.x = Mathf.Clamp(pos.x, 0, Screen.width - 1);
+			pos.y = Mathf.Clamp(pos.y, 0, Screen.height - 1);
+			return pos;
+		}
+
 		internal static Rect shift(this Rect rect, Vector2 shiftBy) {
 			return new Rect(rect.x + shiftBy.x, rect.y + shiftBy.y, rect.width, rect.height);
 		}
