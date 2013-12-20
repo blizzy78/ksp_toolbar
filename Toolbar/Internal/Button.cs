@@ -122,6 +122,7 @@ namespace Toolbar {
 						}
 					} catch {
 						Debug.LogError("error loading button texture: " + TexturePath);
+						texture_ = null;
 						texturePath_ = null;
 					}
 				}
@@ -158,7 +159,7 @@ namespace Toolbar {
 
 		internal bool EffectivelyVisible {
 			get {
-				return Visible && ((Visibility == null) || Visibility.Visible);
+				return Visible && ((Visibility == null) || Visibility.Visible) && (TexturePath != null);
 			}
 		}
 
