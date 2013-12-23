@@ -52,6 +52,7 @@ namespace Toolbar {
 		private Vector2 rectPositionBeforeAutoHide;
 		private Color autoHideUnimportantButtonAlpha = Color.white;
 		private Button mouseHoverButton;
+		private float savedMaxWidth;
 
 		internal Toolbar() {
 			autoHideUnimportantButtonAlpha.a = 0.4f;
@@ -90,6 +91,7 @@ namespace Toolbar {
 			} else {
 				rect.width = getMinWidthForButtons();
 				rect.height = getMinHeightForButtons();
+				savedMaxWidth = rect.width;
 				fireChange();
 			}
 		}
@@ -162,6 +164,7 @@ namespace Toolbar {
 			if (rect.width < 0) {
 				rect.width = Screen.width;
 				rect.width = getMinWidthForButtons();
+				savedMaxWidth = rect.width;
 			}
 			if (rect.height < 0) {
 				rect.height = getMinHeightForButtons();
@@ -325,10 +328,6 @@ namespace Toolbar {
 							rect.x = Screen.width;
 						}
 					}
-
-					// expand width to fit new button
-					rect.width = Screen.width;
-					rect.width = getMinWidthForButtons();
 				} else {
 					if (autoHidden) {
 						// docked at bottom screen edge -> keep it that way by moving to screen edge
@@ -341,10 +340,11 @@ namespace Toolbar {
 							rect.y = Screen.height;
 						}
 					}
-
-					// keep width (removing excess space), and expand height instead
-					rect.width = getMinWidthForButtons();
 				}
+
+				// expand width to last saved width, then resize for buttons, and expand height to fit new buttons
+				rect.width = savedMaxWidth;
+				rect.width = getMinWidthForButtons();
 				rect.height = getMinHeightForButtons();
 				fireChange();
 			}
@@ -440,6 +440,7 @@ namespace Toolbar {
 				rect.width = settingsNode.get("width", 0f);
 				rect.height = settingsNode.get("height", 0f);
 				autoHide = settingsNode.get("autoHide", false);
+				savedMaxWidth = rect.width;
 			}
 		}
 
