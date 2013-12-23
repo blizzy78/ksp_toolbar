@@ -330,6 +330,10 @@ namespace Toolbar {
 			}
 		}
 
+		internal void resetStyle() {
+			style_ = null;
+		}
+
 		public void Destroy() {
 			if (OnDestroy != null) {
 				OnDestroy();

@@ -55,6 +55,7 @@ namespace Toolbar {
 		private Button mouseHoverButton;
 		private float savedMaxWidth = DEFAULT_WIDTH;
 		private bool drawBox = true;
+		private bool useKSPSkin;
 
 		internal Toolbar() {
 			autoHideUnimportantButtonAlpha.a = 0.4f;
@@ -110,10 +111,18 @@ namespace Toolbar {
 				}
 
 				int oldDepth = GUI.depth;
+
 				GUI.depth = -99;
 				drawToolbar();
+
 				GUI.depth = -100;
+				GUISkin oldSkin = GUI.skin;
+				if (useKSPSkin) {
+					GUI.skin = HighLogic.Skin;
+				}
 				drawButtons();
+				GUI.skin = oldSkin;
+
 				GUI.depth = oldDepth;
 
 				if (locked && !draggable.Dragging && !resizable.Resizing && (dropdownMenu == null)) {
@@ -445,6 +454,7 @@ namespace Toolbar {
 				rect.height = settingsNode.get("height", 0f);
 				autoHide = settingsNode.get("autoHide", false);
 				drawBox = settingsNode.get("drawBox", true);
+				useKSPSkin = settingsNode.get("useKSPSkin", false);
 			}
 
 			savedMaxWidth = rect.width;
@@ -459,6 +469,7 @@ namespace Toolbar {
 			settingsNode.overwrite("height", rect.height.ToString("F0"));
 			settingsNode.overwrite("autoHide", autoHide.ToString());
 			settingsNode.overwrite("drawBox", drawBox.ToString());
+			settingsNode.overwrite("useKSPSkin", useKSPSkin.ToString());
 		}
 
 		private void fireChange() {
@@ -496,6 +507,17 @@ namespace Toolbar {
 				};
 				toggleBoxButton.Enabled = locked;
 				dropdownMenu += toggleBoxButton;
+
+				Button toggleKSPSkinButton = Button.createMenuOption(useKSPSkin ? "Use Unity 'Smoke' Skin" : "Use KSP Skin");
+				toggleKSPSkinButton.OnClick += (e) => {
+					useKSPSkin = !useKSPSkin;
+					foreach (Button button in buttons) {
+						button.resetStyle();
+					}
+					fireChange();
+				};
+				toggleKSPSkinButton.Enabled = locked;
+				dropdownMenu += toggleKSPSkinButton;
 
 				// close drop-down menu when player clicks on an option
 				foreach (Button option in dropdownMenu.Options) {
