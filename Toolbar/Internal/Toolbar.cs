@@ -35,6 +35,7 @@ namespace Toolbar {
 		private const float PADDING = 3;
 		private const float DEFAULT_X = 300;
 		private const float DEFAULT_Y = 300;
+		private const float DEFAULT_WIDTH = 500;
 
 		internal event Action onChange;
 
@@ -52,12 +53,12 @@ namespace Toolbar {
 		private Vector2 rectPositionBeforeAutoHide;
 		private Color autoHideUnimportantButtonAlpha = Color.white;
 		private Button mouseHoverButton;
-		private float savedMaxWidth;
+		private float savedMaxWidth = DEFAULT_WIDTH;
 
 		internal Toolbar() {
 			autoHideUnimportantButtonAlpha.a = 0.4f;
 
-			rect = new Rectangle(new Rect(DEFAULT_X, DEFAULT_Y, float.MinValue, float.MinValue));
+			rect = new Rectangle(new Rect(DEFAULT_X, DEFAULT_Y, DEFAULT_WIDTH, float.MinValue));
 
 			dropdownMenuButton = Button.createToolbarDropdown();
 			dropdownMenuButton.OnClick += (e) => toggleDropdownMenu();
@@ -162,7 +163,7 @@ namespace Toolbar {
 
 		private void autoSize() {
 			if (rect.width < 0) {
-				rect.width = Screen.width;
+				rect.width = DEFAULT_WIDTH;
 				rect.width = getMinWidthForButtons();
 				savedMaxWidth = rect.width;
 			}
@@ -437,11 +438,12 @@ namespace Toolbar {
 				ConfigNode settingsNode = toolbarNode.HasNode(scene.ToString()) ? toolbarNode.GetNode(scene.ToString()) : toolbarNode;
 				rect.x = settingsNode.get("x", DEFAULT_X);
 				rect.y = settingsNode.get("y", DEFAULT_Y);
-				rect.width = settingsNode.get("width", 0f);
+				rect.width = settingsNode.get("width", DEFAULT_WIDTH);
 				rect.height = settingsNode.get("height", 0f);
 				autoHide = settingsNode.get("autoHide", false);
-				savedMaxWidth = rect.width;
 			}
+
+			savedMaxWidth = rect.width;
 		}
 
 		internal void saveSettings(ConfigNode parentNode, GameScenes scene) {
