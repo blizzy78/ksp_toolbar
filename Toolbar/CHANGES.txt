@@ -1,4 +1,11 @@
-﻿1.2.1, 2013-12-20
+﻿1.2.2, 2013-12-23
+- You may now chose to use the KSP skin for buttons instead of Unity's
+  default 'Smoke' skin.
+- The toolbar border can now be hidden.
+- Improved the positioning/sizing of the toolbar after startup with respect
+  to the size that has been chosen previously by the player.
+
+1.2.1, 2013-12-20
 - Increased the size of the triangle button that opens the toolbar-specific
   drop-down menu.
 - Fixed a bug that could make the toolbar completely invisible under
