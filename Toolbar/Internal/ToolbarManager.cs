@@ -35,7 +35,7 @@ namespace Toolbar {
 		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 
 		private const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
-		private const int VERSION = 1;
+		private const int VERSION = 2;
 
 		private static WWW versionWWW;
 		private static bool? newVersionAvailable = null;
