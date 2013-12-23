@@ -241,20 +241,27 @@ namespace Toolbar {
 		internal readonly string ns;
 		internal readonly string id;
 
+		private Toolbar toolbar;
 		private bool toolbarDropdown;
 		private bool showTooltip;
 
-		internal Button(string ns, string id) {
+		internal Button(string ns, string id, Toolbar toolbar = null) {
 			checkId(ns, "namespace");
 			checkId(id, "ID");
 
 			this.ns = ns;
 			this.id = id;
+			this.toolbar = toolbar;
 
 			Enabled = true;
 
 			OnMouseEnter += (e) => showTooltip = true;
 			OnMouseLeave += (e) => showTooltip = false;
+
+			if (toolbar != null) {
+				// reset style when skin changes
+				toolbar.onSkinChange += skinChanged;
+			}
 		}
 
 		internal static Button createToolbarDropdown() {
@@ -298,7 +305,11 @@ namespace Toolbar {
 			GUI.enabled = oldEnabled;
 
 			if (clicked && (OnClick != null)) {
-				OnClick(new ClickEvent(this, Event.current.button));
+				try {
+					OnClick(new ClickEvent(this, Event.current.button));
+				} catch (Exception e) {
+					Debug.LogException(e);
+				}
 			}
 		}
 
@@ -330,14 +341,18 @@ namespace Toolbar {
 			}
 		}
 
-		internal void resetStyle() {
-			style_ = null;
-		}
-
 		public void Destroy() {
+			if (toolbar != null) {
+				toolbar.onSkinChange -= skinChanged;
+			}
+
 			if (OnDestroy != null) {
 				OnDestroy();
 			}
+		}
+
+		private void skinChanged() {
+			style_ = null;
 		}
 	}
 }

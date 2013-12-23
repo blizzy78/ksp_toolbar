@@ -158,7 +158,7 @@ namespace Toolbar {
 		}
 
 		public IButton add(string ns, string id) {
-			Button button = new Button(ns, id);
+			Button button = new Button(ns, id, toolbar);
 			toolbar.add(button);
 
 			return button;

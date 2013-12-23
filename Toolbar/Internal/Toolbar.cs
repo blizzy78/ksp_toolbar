@@ -38,6 +38,7 @@ namespace Toolbar {
 		private const float DEFAULT_WIDTH = 500;
 
 		internal event Action onChange;
+		internal event Action onSkinChange;
 
 		private delegate void ButtonPositionCalculatedHandler(Button button, Vector2 position);
 		private Rectangle rect;
@@ -54,7 +55,7 @@ namespace Toolbar {
 		private Color autoHideUnimportantButtonAlpha = Color.white;
 		private Button mouseHoverButton;
 		private float savedMaxWidth = DEFAULT_WIDTH;
-		private bool drawBox = true;
+		private bool drawBorder = true;
 		private bool useKSPSkin;
 
 		internal Toolbar() {
@@ -113,7 +114,7 @@ namespace Toolbar {
 				int oldDepth = GUI.depth;
 
 				GUI.depth = -99;
-				drawToolbar();
+				drawToolbarBorder();
 
 				GUI.depth = -100;
 				GUISkin oldSkin = GUI.skin;
@@ -250,8 +251,8 @@ namespace Toolbar {
 			}
 		}
 
-		private void drawToolbar() {
-			if (drawBox || !locked) {
+		private void drawToolbarBorder() {
+			if (drawBorder || !locked) {
 				Color oldColor = GUI.color;
 				if (shouldAutoHide() && !autoHidden) {
 					GUI.color = autoHideUnimportantButtonAlpha;
@@ -453,7 +454,7 @@ namespace Toolbar {
 				rect.width = settingsNode.get("width", DEFAULT_WIDTH);
 				rect.height = settingsNode.get("height", 0f);
 				autoHide = settingsNode.get("autoHide", false);
-				drawBox = settingsNode.get("drawBox", true);
+				drawBorder = settingsNode.get("drawBorder", true);
 				useKSPSkin = settingsNode.get("useKSPSkin", false);
 			}
 
@@ -468,13 +469,19 @@ namespace Toolbar {
 			settingsNode.overwrite("width", rect.width.ToString("F0"));
 			settingsNode.overwrite("height", rect.height.ToString("F0"));
 			settingsNode.overwrite("autoHide", autoHide.ToString());
-			settingsNode.overwrite("drawBox", drawBox.ToString());
+			settingsNode.overwrite("drawBorder", drawBorder.ToString());
 			settingsNode.overwrite("useKSPSkin", useKSPSkin.ToString());
 		}
 
 		private void fireChange() {
 			if (onChange != null) {
 				onChange();
+			}
+		}
+
+		private void fireSkinChange() {
+			if (onSkinChange != null) {
+				onSkinChange();
 			}
 		}
 
@@ -500,20 +507,18 @@ namespace Toolbar {
 				toggleAutoHideButton.Enabled = locked;
 				dropdownMenu += toggleAutoHideButton;
 
-				Button toggleBoxButton = Button.createMenuOption(drawBox ? "Hide Box Around Buttons" : "Show Box Around Buttons");
-				toggleBoxButton.OnClick += (e) => {
-					drawBox = !drawBox;
+				Button toggleDrawBorderButton = Button.createMenuOption(drawBorder ? "Hide Toolbar Border" : "Show Toolbar Border");
+				toggleDrawBorderButton.OnClick += (e) => {
+					drawBorder = !drawBorder;
 					fireChange();
 				};
-				toggleBoxButton.Enabled = locked;
-				dropdownMenu += toggleBoxButton;
+				toggleDrawBorderButton.Enabled = locked;
+				dropdownMenu += toggleDrawBorderButton;
 
 				Button toggleKSPSkinButton = Button.createMenuOption(useKSPSkin ? "Use Unity 'Smoke' Skin" : "Use KSP Skin");
 				toggleKSPSkinButton.OnClick += (e) => {
 					useKSPSkin = !useKSPSkin;
-					foreach (Button button in buttons) {
-						button.resetStyle();
-					}
+					fireSkinChange();
 					fireChange();
 				};
 				toggleKSPSkinButton.Enabled = locked;
