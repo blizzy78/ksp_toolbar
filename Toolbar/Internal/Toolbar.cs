@@ -54,6 +54,7 @@ namespace Toolbar {
 		private Color autoHideUnimportantButtonAlpha = Color.white;
 		private Button mouseHoverButton;
 		private float savedMaxWidth = DEFAULT_WIDTH;
+		private bool drawBox = true;
 
 		internal Toolbar() {
 			autoHideUnimportantButtonAlpha.a = 0.4f;
@@ -241,13 +242,15 @@ namespace Toolbar {
 		}
 
 		private void drawToolbar() {
-			Color oldColor = GUI.color;
-			if (shouldAutoHide() && !autoHidden) {
-				GUI.color = autoHideUnimportantButtonAlpha;
+			if (drawBox || !locked) {
+				Color oldColor = GUI.color;
+				if (shouldAutoHide() && !autoHidden) {
+					GUI.color = autoHideUnimportantButtonAlpha;
+				}
+				GUILayout.BeginArea(rect.Rect, GUI.skin.box);
+				GUILayout.EndArea();
+				GUI.color = oldColor;
 			}
-			GUILayout.BeginArea(rect.Rect, GUI.skin.box);
-			GUILayout.EndArea();
-			GUI.color = oldColor;
 		}
 
 		private void drawButtons() {
@@ -441,6 +444,7 @@ namespace Toolbar {
 				rect.width = settingsNode.get("width", DEFAULT_WIDTH);
 				rect.height = settingsNode.get("height", 0f);
 				autoHide = settingsNode.get("autoHide", false);
+				drawBox = settingsNode.get("drawBox", true);
 			}
 
 			savedMaxWidth = rect.width;
@@ -454,6 +458,7 @@ namespace Toolbar {
 			settingsNode.overwrite("width", rect.width.ToString("F0"));
 			settingsNode.overwrite("height", rect.height.ToString("F0"));
 			settingsNode.overwrite("autoHide", autoHide.ToString());
+			settingsNode.overwrite("drawBox", drawBox.ToString());
 		}
 
 		private void fireChange() {
@@ -483,6 +488,14 @@ namespace Toolbar {
 				};
 				toggleAutoHideButton.Enabled = locked;
 				dropdownMenu += toggleAutoHideButton;
+
+				Button toggleBoxButton = Button.createMenuOption(drawBox ? "Hide Box Around Buttons" : "Show Box Around Buttons");
+				toggleBoxButton.OnClick += (e) => {
+					drawBox = !drawBox;
+					fireChange();
+				};
+				toggleBoxButton.Enabled = locked;
+				dropdownMenu += toggleBoxButton;
 
 				// close drop-down menu when player clicks on an option
 				foreach (Button option in dropdownMenu.Options) {
