@@ -45,7 +45,7 @@ namespace Toolbar {
 		private Draggable draggable;
 		private Resizable resizable;
 		private List<Button> buttons = new List<Button>();
-		private Dictionary<Button, bool> buttonVisibility = new Dictionary<Button, bool>();
+		private HashSet<string> visibleButtonIds = new HashSet<string>();
 		private Button dropdownMenuButton;
 		private Menu dropdownMenu;
 		private bool locked = true;
@@ -218,7 +218,7 @@ namespace Toolbar {
 			float widestLineWidth = float.MinValue;
 			float currentLineWidth = 0;
 			foreach (Button button in buttons) {
-				if (button.EffectivelyVisible && button.IsTextured && !button.Equals(dropdownMenuButton)) {
+				if (button.EffectivelyVisible && !button.Equals(dropdownMenuButton)) {
 					if (((x + button.Size.x) > (rect.width - PADDING)) && (lineHeight > 0)) {
 						x = PADDING;
 						y += lineHeight + BUTTON_SPACING;
@@ -315,21 +315,14 @@ namespace Toolbar {
 		}
 
 		private void forceAutoSizeIfButtonVisibilitiesChanged() {
-			bool anyButtonVisibilityChanged = false;
-			foreach (Button button in buttons) {
-				bool newVisible = button.EffectivelyVisible;
-				if (buttonVisibility.ContainsKey(button)) {
-					if (buttonVisibility[button] != newVisible) {
-						anyButtonVisibilityChanged = true;
-					}
-					buttonVisibility[button] = newVisible;
-				} else {
-					anyButtonVisibilityChanged = true;
-					buttonVisibility.Add(button, newVisible);
-				}
+			HashSet<string> newVisibleButtonIds = new HashSet<string>();
+			foreach (Button button in buttons.Where(b => b.EffectivelyVisible)) {
+				newVisibleButtonIds.Add(button.ns + "." + button.id);
 			}
-			if (anyButtonVisibilityChanged) {
+			if (!newVisibleButtonIds.SetEquals(visibleButtonIds)) {
 				Debug.Log("button visibilities have changed, forcing auto-size ");
+				visibleButtonIds = newVisibleButtonIds;
+
 				if (isSingleLine()) {
 					if (autoHidden) {
 						// docked at right screen edge -> keep it that way by moving to screen edge
@@ -425,6 +418,7 @@ namespace Toolbar {
 
 			buttons.Add(button);
 
+			// re-sort all buttons
 			buttons.Remove(dropdownMenuButton);
 			buttons.Sort((b1, b2) => StringComparer.CurrentCultureIgnoreCase.Compare(b1.ns + "." + b1.id, b2.ns + "." + b2.id));
 			buttons.Add(dropdownMenuButton);
@@ -432,9 +426,6 @@ namespace Toolbar {
 
 		private void buttonDestroyed(Button button) {
 			buttons.Remove(button);
-			if (buttonVisibility.ContainsKey(button)) {
-				buttonVisibility.Remove(button);
-			}
 		}
 
 		internal void loadSettings(ConfigNode parentNode, GameScenes scene) {
@@ -466,7 +457,7 @@ namespace Toolbar {
 			ConfigNode settingsNode = toolbarNode.getOrCreateNode(scene.ToString());
 			settingsNode.overwrite("x", rect.x.ToString("F0"));
 			settingsNode.overwrite("y", rect.y.ToString("F0"));
-			settingsNode.overwrite("width", rect.width.ToString("F0"));
+			settingsNode.overwrite("width", savedMaxWidth.ToString("F0"));
 			settingsNode.overwrite("height", rect.height.ToString("F0"));
 			settingsNode.overwrite("autoHide", autoHide.ToString());
 			settingsNode.overwrite("drawBorder", drawBorder.ToString());
