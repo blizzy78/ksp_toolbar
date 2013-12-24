@@ -236,7 +236,8 @@ namespace Toolbar {
 		public event ClickHandler OnClick;
 		public event MouseEnterHandler OnMouseEnter;
 		public event MouseLeaveHandler OnMouseLeave;
-		public event Action OnDestroy;
+
+		internal event Action OnDestroy;
 
 		internal readonly string ns;
 		internal readonly string id;
