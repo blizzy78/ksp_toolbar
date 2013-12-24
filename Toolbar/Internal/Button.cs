@@ -338,13 +338,21 @@ namespace Toolbar {
 
 		internal void mouseEnter() {
 			if (OnMouseEnter != null) {
-				OnMouseEnter(new MouseEnterEvent(this));
+				try {
+					OnMouseEnter(new MouseEnterEvent(this));
+				} catch (Exception e) {
+					Debug.LogException(e);
+				}
 			}
 		}
 
 		internal void mouseLeave() {
 			if (OnMouseLeave != null) {
-				OnMouseLeave(new MouseLeaveEvent(this));
+				try {
+					OnMouseLeave(new MouseLeaveEvent(this));
+				} catch (Exception e) {
+					Debug.LogException(e);
+				}
 			}
 		}
 
