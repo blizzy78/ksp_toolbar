@@ -33,6 +33,10 @@ namespace Toolbar {
 	internal class Menu {
 		private readonly int id = new System.Random().Next(int.MaxValue);
 
+		private Texture2D orangeBgTex;
+		private GUIStyle optionStyle;
+		private bool stylesInitialized;
+
 		public static Menu operator +(Menu menu, Button option) {
 			menu.options.Add(option);
 			return menu;
@@ -52,29 +56,37 @@ namespace Toolbar {
 		}
 
 		internal void draw() {
+			initStyles();
+
 			rect = rect.clampToScreen();
 			rect = GUILayout.Window(id, rect, drawWindow, (string) null, GUI.skin.box, GUILayout.ExpandWidth(true));
 		}
 
 		private void drawWindow(int id) {
-			Texture2D orangeBgTex = new Texture2D(1, 1);
-			orangeBgTex.SetPixel(0, 0, XKCDColors.DarkOrange);
-			orangeBgTex.Apply();
-
-			GUIStyle optionStyle = new GUIStyle(GUI.skin.label);
-			optionStyle.hover.background = orangeBgTex;
-			optionStyle.hover.textColor = Color.white;
-			optionStyle.onHover.background = orangeBgTex;
-			optionStyle.onHover.textColor = Color.white;
-			optionStyle.wordWrap = false;
-			optionStyle.padding.left += 8;
-			optionStyle.padding.right += 8;
-
 			GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
 			foreach (Button option in options) {
 				option.drawMenuOption(optionStyle);
 			}
 			GUILayout.EndVertical();
+		}
+
+		private void initStyles() {
+			if (!stylesInitialized) {
+				orangeBgTex = new Texture2D(1, 1);
+				orangeBgTex.SetPixel(0, 0, XKCDColors.DarkOrange);
+				orangeBgTex.Apply();
+
+				optionStyle = new GUIStyle(GUI.skin.label);
+				optionStyle.hover.background = orangeBgTex;
+				optionStyle.hover.textColor = Color.white;
+				optionStyle.onHover.background = orangeBgTex;
+				optionStyle.onHover.textColor = Color.white;
+				optionStyle.wordWrap = false;
+				optionStyle.padding.left += 8;
+				optionStyle.padding.right += 8;
+
+				stylesInitialized = true;
+			}
 		}
 
 		internal bool contains(Vector2 pos) {
