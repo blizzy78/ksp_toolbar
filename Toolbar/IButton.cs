@@ -44,6 +44,7 @@ namespace Toolbar {
 		/// <seealso cref="TexturePath"/>
 		string Text {
 			set;
+			get;
 		}
 
 		/// <summary>
@@ -54,6 +55,7 @@ namespace Toolbar {
 		/// </remarks>
 		Color TextColor {
 			set;
+			get;
 		}
 
 		/// <summary>
@@ -78,6 +80,7 @@ namespace Toolbar {
 		/// <seealso cref="Text"/>
 		string TexturePath {
 			set;
+			get;
 		}
 
 		/// <summary>
@@ -88,6 +91,7 @@ namespace Toolbar {
 		/// </remarks>
 		string ToolTip {
 			set;
+			get;
 		}
 
 		/// <summary>
@@ -103,6 +107,18 @@ namespace Toolbar {
 		/// </summary>
 		IVisibility Visibility {
 			set;
+			get;
+		}
+
+		/// <summary>
+		/// Whether this button is currently effectively visible or not. This is a combination of
+		/// <see cref="Visible"/> and <see cref="Visibility"/>.
+		/// </summary>
+		/// <remarks>
+		/// Note that the toolbar is not visible in certain game scenes, for example the loading screens. This property
+		/// does not reflect button invisibility in those scenes.
+		/// </remarks>
+		bool EffectivelyVisible {
 			get;
 		}
 

@@ -157,7 +157,7 @@ namespace Toolbar {
 			set;
 		}
 
-		internal bool EffectivelyVisible {
+		public bool EffectivelyVisible {
 			get {
 				return Visible && ((Visibility == null) || Visibility.Visible) && (TexturePath != null);
 			}
