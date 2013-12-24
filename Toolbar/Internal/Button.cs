@@ -319,7 +319,13 @@ namespace Toolbar {
 				Vector2 mousePos = Utils.getMousePosition();
 				Vector2 size = TooltipStyle.CalcSize(new GUIContent(ToolTip));
 				Rect rect = new Rect(mousePos.x, mousePos.y + 20, size.x, size.y);
+				float origY = rect.y;
 				rect = rect.clampToScreen();
+				// clamping moved the tooltip up -> reposition above mouse cursor
+				if (rect.y < origY) {
+					rect.y = mousePos.y - size.y - 5;
+					rect = rect.clampToScreen();
+				}
 
 				int oldDepth = GUI.depth;
 				GUI.depth = -1000;
