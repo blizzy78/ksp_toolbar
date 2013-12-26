@@ -32,9 +32,10 @@ using UnityEngine;
 namespace Toolbar {
 	[KSPAddonFixed(KSPAddon.Startup.EveryScene, true, typeof(ToolbarManager))]
 	public partial class ToolbarManager : MonoBehaviour, IToolbarManager {
+		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
+
 		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 
-		private const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
 		private const int VERSION = 2;
 
 		private static WWW versionWWW;

@@ -549,12 +549,14 @@ namespace Toolbar {
 				toggleButtonOrderLockButton.Enabled = rectLocked;
 				dropdownMenu += toggleButtonOrderLockButton;
 
-				Button toggleAutoHideButton = Button.createMenuOption(autoHide ? "Deactivate Auto-Hide" : "Activate Auto-Hide");
+				bool regularEntriesEnabled = rectLocked && buttonOrderLocked;
+
+				Button toggleAutoHideButton = Button.createMenuOption(autoHide ? "Deactivate Auto-Hide at Screen Edge" : "Activate Auto-Hide at Screen Edge");
 				toggleAutoHideButton.OnClick += (e) => {
 					autoHide = !autoHide;
 					fireChange();
 				};
-				toggleAutoHideButton.Enabled = rectLocked && buttonOrderLocked;
+				toggleAutoHideButton.Enabled = regularEntriesEnabled;
 				dropdownMenu += toggleAutoHideButton;
 
 				Button toggleDrawBorderButton = Button.createMenuOption(drawBorder ? "Hide Border" : "Show Border");
@@ -562,7 +564,7 @@ namespace Toolbar {
 					drawBorder = !drawBorder;
 					fireChange();
 				};
-				toggleDrawBorderButton.Enabled = rectLocked && buttonOrderLocked;
+				toggleDrawBorderButton.Enabled = regularEntriesEnabled;
 				dropdownMenu += toggleDrawBorderButton;
 
 				Button toggleKSPSkinButton = Button.createMenuOption(useKSPSkin ? "Use Unity 'Smoke' Skin" : "Use KSP Skin");
@@ -571,8 +573,13 @@ namespace Toolbar {
 					fireSkinChange();
 					fireChange();
 				};
-				toggleKSPSkinButton.Enabled = rectLocked && buttonOrderLocked;
+				toggleKSPSkinButton.Enabled = regularEntriesEnabled;
 				dropdownMenu += toggleKSPSkinButton;
+
+				Button aboutButton = Button.createMenuOption("About the Toolbar Plugin");
+				aboutButton.OnClick += (e) => Application.OpenURL(ToolbarManager.FORUM_THREAD_URL);
+				aboutButton.Enabled = regularEntriesEnabled;
+				dropdownMenu += aboutButton;
 
 				// close drop-down menu when player clicks on an option
 				foreach (Button option in dropdownMenu.Options) {
