@@ -36,7 +36,7 @@ namespace Toolbar {
 
 		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 
-		private const int VERSION = 2;
+		private const int VERSION = 3;
 
 		private static WWW versionWWW;
 		private static bool? newVersionAvailable = null;
