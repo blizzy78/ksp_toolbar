@@ -266,7 +266,7 @@ namespace Toolbar {
 		private void drawToolbarBorder() {
 			if (drawBorder || !rectLocked || !buttonOrderLocked) {
 				Color oldColor = GUI.color;
-				if (shouldAutoHide() && !autoHidden) {
+				if (shouldAutoHide() && !autoHidden && (dropdownMenu == null)) {
 					GUI.color = autoHideUnimportantButtonAlpha;
 				}
 				GUILayout.BeginArea(rect.Rect, GUI.skin.box);
@@ -291,7 +291,7 @@ namespace Toolbar {
 				Button button = entry.Key;
 				Rect buttonRect = entry.Value;
 				Color oldColor = GUI.color;
-				if (shouldHide && !autoHidden && !button.Important) {
+				if (shouldHide && !autoHidden && !button.Important && (dropdownMenu == null)) {
 					GUI.color = autoHideUnimportantButtonAlpha;
 				}
 				button.draw(buttonRect, ((rectLocked && buttonOrderLocked) || button.Equals(dropdownMenuButton)) && !isPauseMenuOpen());
