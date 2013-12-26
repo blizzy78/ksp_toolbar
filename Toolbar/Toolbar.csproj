@@ -49,7 +49,10 @@
     <Compile Include="ClickEvent.cs" />
     <Compile Include="ClickHandler.cs" />
     <Compile Include="Internal\ClickEvent.cs" />
+    <Compile Include="Internal\DragEvent.cs" />
     <Compile Include="Internal\Draggable.cs" />
+    <Compile Include="Internal\DragHandler.cs" />
+    <Compile Include="Internal\DropMarker.cs" />
     <Compile Include="Internal\Extensions.cs" />
     <Compile Include="GameScenesVisibility.cs" />
     <Compile Include="IButton.cs" />

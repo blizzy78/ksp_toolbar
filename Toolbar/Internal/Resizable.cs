@@ -30,6 +30,7 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
+	// TODO: this class does almost the same as Draggable, it should subclass that
 	internal class Resizable {
 		private const float HANDLE_SIZE = 10;
 		private static readonly Vector2 CURSOR_HOTSPOT = new Vector2(7, 7);
@@ -66,7 +67,7 @@ namespace Toolbar {
 			}
 		}
 
-		internal event Action onChange;
+		internal event Action OnResize;
 
 		private Texture2D cursorTexture_;
 		private Texture2D CursorTexture {
@@ -104,6 +105,7 @@ namespace Toolbar {
 				Resizing = true;
 				resizingStartRect = rect.Rect;
 				resizingStartMousePos = mousePos;
+				fireChange();
 			}
 			if (inArea || Resizing) {
 				Cursor.SetCursor(CursorTexture, CURSOR_HOTSPOT, CursorMode.ForceSoftware);
@@ -132,8 +134,8 @@ namespace Toolbar {
 		}
 
 		private void fireChange() {
-			if (onChange != null) {
-				onChange();
+			if (OnResize != null) {
+				OnResize();
 			}
 		}
 	}

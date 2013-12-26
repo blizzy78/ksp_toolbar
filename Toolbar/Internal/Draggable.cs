@@ -59,7 +59,7 @@ namespace Toolbar {
 			}
 		}
 
-		internal event Action onChange;
+		internal event DragHandler OnDrag;
 
 		private Texture2D cursorTexture_;
 		private Texture2D CursorTexture {
@@ -93,6 +93,7 @@ namespace Toolbar {
 			bool inArea = rect.contains(mousePos) && ((handleAreaCheck == null) || handleAreaCheck(mousePos));
 			if (inArea && Input.GetMouseButtonDown(0)) {
 				Dragging = true;
+				fireChange();
 			}
 			if (inArea || Dragging) {
 				Cursor.SetCursor(CursorTexture, CURSOR_HOTSPOT, CursorMode.ForceSoftware);
@@ -119,8 +120,8 @@ namespace Toolbar {
 		}
 
 		private void fireChange() {
-			if (onChange != null) {
-				onChange();
+			if (OnDrag != null) {
+				OnDrag(new DragEvent(this));
 			}
 		}
 	}

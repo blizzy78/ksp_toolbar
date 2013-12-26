@@ -41,6 +41,7 @@ namespace Toolbar {
 		internal event Action onSkinChange;
 
 		private delegate void ButtonPositionCalculatedHandler(Button button, Vector2 position);
+
 		private Rectangle rect;
 		private Draggable draggable;
 		private Resizable resizable;
@@ -48,7 +49,8 @@ namespace Toolbar {
 		private HashSet<string> visibleButtonIds = new HashSet<string>();
 		private Button dropdownMenuButton;
 		private Menu dropdownMenu;
-		private bool locked = true;
+		private bool rectLocked = true;
+		private bool buttonOrderLocked = true;
 		private bool autoHide;
 		private bool autoHidden;
 		private Vector2 rectPositionBeforeAutoHide;
@@ -57,6 +59,12 @@ namespace Toolbar {
 		private float savedMaxWidth = DEFAULT_WIDTH;
 		private bool drawBorder = true;
 		private bool useKSPSkin;
+		private Dictionary<Draggable, Rectangle> buttonOrderDraggables = new Dictionary<Draggable, Rectangle>();
+		private DropMarker buttonOrderDropMarker;
+		private Button draggedButton;
+		private Rect draggedButtonRect;
+		private Button buttonOrderHoveredButton;
+		private List<string> savedButtonOrder = new List<string>();
 
 		internal Toolbar() {
 			autoHideUnimportantButtonAlpha.a = 0.4f;
@@ -72,17 +80,17 @@ namespace Toolbar {
 			resizable = new Resizable(rect, PADDING,
 				(pos) => !getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos));
 
-			draggable.onChange += dragged;
-			resizable.onChange += resized;
+			draggable.OnDrag += (e) => toolbarDrag();
+			resizable.OnResize += toolbarResize;
 		}
 
-		private void dragged() {
+		private void toolbarDrag() {
 			if (!draggable.Dragging) {
 				fireChange();
 			}
 		}
 
-		private void resized() {
+		private void toolbarResize() {
 			if (resizable.Resizing) {
 				float maxButtonWidth = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.x);
 				if (rect.width < (maxButtonWidth + PADDING * 2)) {
@@ -117,6 +125,10 @@ namespace Toolbar {
 				drawToolbarBorder();
 
 				GUI.depth = -100;
+				if (buttonOrderDropMarker != null) {
+					buttonOrderDropMarker.draw();
+				}
+
 				GUISkin oldSkin = GUI.skin;
 				if (useKSPSkin) {
 					GUI.skin = HighLogic.Skin;
@@ -124,15 +136,15 @@ namespace Toolbar {
 				drawButtons();
 				GUI.skin = oldSkin;
 
-				GUI.depth = oldDepth;
-
-				if (locked && !draggable.Dragging && !resizable.Resizing && (dropdownMenu == null)) {
+				if (rectLocked && buttonOrderLocked) {
 					drawButtonToolTips();
 				}
 
 				if (dropdownMenu != null) {
 					dropdownMenu.draw();
 				}
+
+				GUI.depth = oldDepth;
 			}
 		}
 
@@ -252,7 +264,7 @@ namespace Toolbar {
 		}
 
 		private void drawToolbarBorder() {
-			if (drawBorder || !locked) {
+			if (drawBorder || !rectLocked || !buttonOrderLocked) {
 				Color oldColor = GUI.color;
 				if (shouldAutoHide() && !autoHidden) {
 					GUI.color = autoHideUnimportantButtonAlpha;
@@ -268,7 +280,7 @@ namespace Toolbar {
 			// which can potentially modify our list of buttons
 			Dictionary<Button, Rect> buttonsToDraw = new Dictionary<Button, Rect>();
 			calculateButtonPositions((button, pos) => {
-				Rect buttonRect = new Rect(rect.x + pos.x, rect.y + pos.y, button.Size.x, button.Size.y);
+				Rect buttonRect = button.Equals(draggedButton) ? draggedButtonRect : new Rect(rect.x + pos.x, rect.y + pos.y, button.Size.x, button.Size.y);
 				buttonsToDraw.Add(button, buttonRect);
 			});
 			
@@ -282,7 +294,7 @@ namespace Toolbar {
 				if (shouldHide && !autoHidden && !button.Important) {
 					GUI.color = autoHideUnimportantButtonAlpha;
 				}
-				button.draw(buttonRect, (locked || button.Equals(dropdownMenuButton)) && !isPauseMenuOpen());
+				button.draw(buttonRect, ((rectLocked && buttonOrderLocked) || button.Equals(dropdownMenuButton)) && !isPauseMenuOpen());
 				GUI.color = oldColor;
 
 				if (buttonRect.Contains(mousePos)) {
@@ -405,6 +417,10 @@ namespace Toolbar {
 					dropdownMenu = null;
 				}
 			}
+
+			foreach (Draggable d in buttonOrderDraggables.Keys) {
+				d.update();
+			}
 		}
 
 		internal void add(Button button) {
@@ -418,9 +434,28 @@ namespace Toolbar {
 
 			buttons.Add(button);
 
-			// re-sort all buttons
+			sortButtons();
+		}
+
+		private void sortButtons() {
 			buttons.Remove(dropdownMenuButton);
-			buttons.Sort((b1, b2) => StringComparer.CurrentCultureIgnoreCase.Compare(b1.ns + "." + b1.id, b2.ns + "." + b2.id));
+
+			buttons.Sort((b1, b2) => {
+				string id1 = b1.ns + "." + b1.id;
+				string id2 = b2.ns + "." + b2.id;
+				int idx1 = savedButtonOrder.IndexOf(id1);
+				int idx2 = savedButtonOrder.IndexOf(id2);
+				if ((idx1 >= 0) && (idx2 >= 0)) {
+					return idx1 - idx2;
+				} else if ((idx1 >= 0) && (idx2 < 0)) {
+					return -1;
+				} else if ((idx1 < 0) && (idx2 >= 0)) {
+					return 1;
+				} else {
+					return StringComparer.CurrentCultureIgnoreCase.Compare(id1, id2);
+				}
+			});
+
 			buttons.Add(dropdownMenuButton);
 		}
 
@@ -447,9 +482,12 @@ namespace Toolbar {
 				autoHide = settingsNode.get("autoHide", false);
 				drawBorder = settingsNode.get("drawBorder", true);
 				useKSPSkin = settingsNode.get("useKSPSkin", false);
+				savedButtonOrder = settingsNode.get("buttonOrder", "").Split(new char[] { ',' }).ToList();
 			}
 
 			savedMaxWidth = rect.width;
+
+			sortButtons();
 		}
 
 		internal void saveSettings(ConfigNode parentNode, GameScenes scene) {
@@ -462,6 +500,7 @@ namespace Toolbar {
 			settingsNode.overwrite("autoHide", autoHide.ToString());
 			settingsNode.overwrite("drawBorder", drawBorder.ToString());
 			settingsNode.overwrite("useKSPSkin", useKSPSkin.ToString());
+			settingsNode.overwrite("buttonOrder", string.Join(",", savedButtonOrder.ToArray()));
 		}
 
 		private void fireChange() {
@@ -480,30 +519,50 @@ namespace Toolbar {
 			if (dropdownMenu == null) {
 				dropdownMenu = new Menu(new Vector2(rect.x + PADDING + getPosition(dropdownMenuButton).x, rect.y + rect.height + BUTTON_SPACING));
 
-				Button toggleLockButton = Button.createMenuOption(locked ? "Unlock Position and Size" : "Lock Position and Size");
-				toggleLockButton.OnClick += (e) => {
-					locked = !locked;
-					draggable.Enabled = !locked;
-					resizable.Enabled = !locked;
-					autoHide = false;
-					fireChange();
+				Button toggleRectLockButton = Button.createMenuOption(rectLocked ? "Unlock Position and Size" : "Lock Position and Size");
+				toggleRectLockButton.OnClick += (e) => {
+					rectLocked = !rectLocked;
+					draggable.Enabled = !rectLocked;
+					resizable.Enabled = !rectLocked;
+
+					if (rectLocked) {
+						fireChange();
+					} else {
+						autoHide = false;
+					}
 				};
-				dropdownMenu += toggleLockButton;
+				toggleRectLockButton.Enabled = buttonOrderLocked;
+				dropdownMenu += toggleRectLockButton;
+
+				Button toggleButtonOrderLockButton = Button.createMenuOption(buttonOrderLocked ? "Unlock Button Order" : "Lock Button Order");
+				toggleButtonOrderLockButton.OnClick += (e) => {
+					buttonOrderLocked = !buttonOrderLocked;
+
+					hookButtonOrderDraggables(!buttonOrderLocked);
+
+					if (buttonOrderLocked) {
+						fireChange();
+					} else {
+						autoHide = false;
+					}
+				};
+				toggleButtonOrderLockButton.Enabled = rectLocked;
+				dropdownMenu += toggleButtonOrderLockButton;
 
 				Button toggleAutoHideButton = Button.createMenuOption(autoHide ? "Deactivate Auto-Hide" : "Activate Auto-Hide");
 				toggleAutoHideButton.OnClick += (e) => {
 					autoHide = !autoHide;
 					fireChange();
 				};
-				toggleAutoHideButton.Enabled = locked;
+				toggleAutoHideButton.Enabled = rectLocked && buttonOrderLocked;
 				dropdownMenu += toggleAutoHideButton;
 
-				Button toggleDrawBorderButton = Button.createMenuOption(drawBorder ? "Hide Toolbar Border" : "Show Toolbar Border");
+				Button toggleDrawBorderButton = Button.createMenuOption(drawBorder ? "Hide Border" : "Show Border");
 				toggleDrawBorderButton.OnClick += (e) => {
 					drawBorder = !drawBorder;
 					fireChange();
 				};
-				toggleDrawBorderButton.Enabled = locked;
+				toggleDrawBorderButton.Enabled = rectLocked && buttonOrderLocked;
 				dropdownMenu += toggleDrawBorderButton;
 
 				Button toggleKSPSkinButton = Button.createMenuOption(useKSPSkin ? "Use Unity 'Smoke' Skin" : "Use KSP Skin");
@@ -512,7 +571,7 @@ namespace Toolbar {
 					fireSkinChange();
 					fireChange();
 				};
-				toggleKSPSkinButton.Enabled = locked;
+				toggleKSPSkinButton.Enabled = rectLocked && buttonOrderLocked;
 				dropdownMenu += toggleKSPSkinButton;
 
 				// close drop-down menu when player clicks on an option
@@ -521,6 +580,79 @@ namespace Toolbar {
 				}
 			} else {
 				dropdownMenu = null;
+			}
+		}
+
+		private void hookButtonOrderDraggables(bool enabled) {
+			if (enabled) {
+				calculateButtonPositions((button, pos) => {
+					if (!button.Equals(dropdownMenuButton)) {
+						Rectangle buttonRect = new Rectangle(new Rect(rect.x + pos.x, rect.y + pos.y, button.Size.x, button.Size.y));
+						Draggable draggable = new Draggable(buttonRect, 0, null);
+						buttonOrderDraggables.Add(draggable, buttonRect);
+
+						draggable.Enabled = true;
+						draggable.OnDrag += buttonDrag;
+					}
+				});
+
+				buttonOrderDropMarker = new DropMarker();
+			} else {
+				buttonOrderDraggables.Clear();
+				buttonOrderDropMarker = null;
+			}
+			draggedButton = null;
+		}
+
+		private void buttonDrag(DragEvent e) {
+			if (e.draggable.Dragging) {
+				Rectangle dragRect = buttonOrderDraggables[e.draggable];
+
+				if (draggedButton == null) {
+					draggedButton = buttons.SingleOrDefault(b => getRect(b).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Equals(dragRect.Rect));
+				}
+
+				if (draggedButton != null) {
+					draggedButtonRect = dragRect.Rect;
+
+					Vector2 mousePos = Utils.getMousePosition();
+					buttonOrderHoveredButton = buttons.SingleOrDefault(
+						b => !b.Equals(draggedButton) && !b.Equals(dropdownMenuButton) && getRect(b).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(mousePos));
+					if (buttonOrderHoveredButton != null) {
+						Rect hoveredButtonRect = getRect(buttonOrderHoveredButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING));
+						bool leftSide = new Rect(hoveredButtonRect.x, hoveredButtonRect.y, hoveredButtonRect.width / 2, hoveredButtonRect.height).Contains(mousePos);
+						buttonOrderDropMarker.Rect = new Rect(
+							leftSide ? (hoveredButtonRect.x - DropMarker.MARKER_WIDTH) : (hoveredButtonRect.x + hoveredButtonRect.width),
+							hoveredButtonRect.y,
+							DropMarker.MARKER_WIDTH, hoveredButtonRect.height);
+					}
+					buttonOrderDropMarker.Visible = buttonOrderHoveredButton != null;
+				}
+			} else {
+				if ((draggedButton != null) && (buttonOrderHoveredButton != null)) {
+					Rect hoveredButtonRect = getRect(buttonOrderHoveredButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING));
+					Vector2 mousePos = Utils.getMousePosition();
+					bool leftSide = new Rect(hoveredButtonRect.x, hoveredButtonRect.y, hoveredButtonRect.width / 2, hoveredButtonRect.height).Contains(mousePos);
+
+					int draggedButtonIdx = buttons.IndexOf(draggedButton);
+					int hoveredButtonIdx = buttons.IndexOf(buttonOrderHoveredButton);
+					if (!leftSide) {
+						hoveredButtonIdx++;
+					}
+
+					buttons.RemoveAt(draggedButtonIdx);
+					if (hoveredButtonIdx > draggedButtonIdx) {
+						hoveredButtonIdx--;
+					}
+					buttons.Insert(hoveredButtonIdx, draggedButton);
+
+					savedButtonOrder = buttons.Where(b => !b.Equals(dropdownMenuButton)).Select(b => b.ns + "." + b.id).ToList();
+					fireChange();
+				}
+
+				// reset draggables, drop marker, and dragged button
+				hookButtonOrderDraggables(false);
+				hookButtonOrderDraggables(true);
 			}
 		}
 	}

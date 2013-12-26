@@ -279,7 +279,7 @@ namespace Toolbar {
 		}
 
 		private void checkId(string id, string label) {
-			if (id.Contains('.') || id.Contains(' ') || id.Contains('/') || id.Contains(':')) {
+			if (id.Contains('.') || id.Contains(' ') || id.Contains('/') || id.Contains(':') || id.Contains(',') || id.Contains(';')) {
 				throw new ArgumentException(label + " contains invalid characters: " + id);
 			}
 		}
