@@ -47,7 +47,7 @@ namespace Toolbar {
 					if (!enabled_) {
 						if (Dragging) {
 							stopDragging();
-							fireChange();
+							fireDrag();
 						}
 
 						cursorTexture_ = null;
@@ -93,7 +93,7 @@ namespace Toolbar {
 			bool inArea = rect.contains(mousePos) && ((handleAreaCheck == null) || handleAreaCheck(mousePos));
 			if (inArea && Input.GetMouseButtonDown(0)) {
 				Dragging = true;
-				fireChange();
+				fireDrag();
 			}
 			if (inArea || Dragging) {
 				Cursor.SetCursor(CursorTexture, CURSOR_HOTSPOT, CursorMode.ForceSoftware);
@@ -109,7 +109,7 @@ namespace Toolbar {
 				} else {
 					stopDragging();
 				}
-				fireChange();
+				fireDrag();
 			}
 		}
 
@@ -119,7 +119,7 @@ namespace Toolbar {
 			cursorActive = false;
 		}
 
-		private void fireChange() {
+		private void fireDrag() {
 			if (OnDrag != null) {
 				OnDrag(new DragEvent(this));
 			}

@@ -55,7 +55,7 @@ namespace Toolbar {
 					if (!enabled_) {
 						if (Resizing) {
 							stopResizing();
-							fireChange();
+							fireResize();
 						}
 
 						cursorTexture_ = null;
@@ -105,7 +105,7 @@ namespace Toolbar {
 				Resizing = true;
 				resizingStartRect = rect.Rect;
 				resizingStartMousePos = mousePos;
-				fireChange();
+				fireResize();
 			}
 			if (inArea || Resizing) {
 				Cursor.SetCursor(CursorTexture, CURSOR_HOTSPOT, CursorMode.ForceSoftware);
@@ -123,7 +123,7 @@ namespace Toolbar {
 				} else {
 					stopResizing();
 				}
-				fireChange();
+				fireResize();
 			}
 		}
 
@@ -133,7 +133,7 @@ namespace Toolbar {
 			cursorActive = false;
 		}
 
-		private void fireChange() {
+		private void fireResize() {
 			if (OnResize != null) {
 				OnResize();
 			}
