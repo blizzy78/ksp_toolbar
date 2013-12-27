@@ -628,6 +628,7 @@ namespace Toolbar {
 					if (buttonOrderHoveredButton != null) {
 						Rect hoveredButtonRect = getRect(buttonOrderHoveredButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING));
 						bool leftSide = new Rect(hoveredButtonRect.x, hoveredButtonRect.y, hoveredButtonRect.width / 2, hoveredButtonRect.height).Contains(mousePos);
+						// TODO: improve this to show a horizontal drop marker instead of a vertical one for single-column toolbars
 						buttonOrderDropMarker.Rect = new Rect(
 							leftSide ? (hoveredButtonRect.x - DropMarker.MARKER_WIDTH) : (hoveredButtonRect.x + hoveredButtonRect.width),
 							hoveredButtonRect.y,
