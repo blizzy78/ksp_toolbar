@@ -30,14 +30,14 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal class Menu {
+	internal class PopupMenu {
 		private readonly int id = new System.Random().Next(int.MaxValue);
 
 		private Texture2D orangeBgTex;
 		private GUIStyle optionStyle;
 		private bool stylesInitialized;
 
-		public static Menu operator +(Menu menu, Button option) {
+		public static PopupMenu operator +(PopupMenu menu, Button option) {
 			menu.options.Add(option);
 			return menu;
 		}
@@ -51,7 +51,7 @@ namespace Toolbar {
 		private Rect rect;
 		private List<Button> options = new List<Button>();
 
-		internal Menu(Vector2 position) {
+		internal PopupMenu(Vector2 position) {
 			rect = new Rect(position.x, position.y, 0, 0);
 		}
 

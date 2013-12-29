@@ -48,7 +48,7 @@ namespace Toolbar {
 		private List<Button> buttons = new List<Button>();
 		private HashSet<string> visibleButtonIds = new HashSet<string>();
 		private Button dropdownMenuButton;
-		private Menu dropdownMenu;
+		private PopupMenu dropdownMenu;
 		private bool rectLocked = true;
 		private bool buttonOrderLocked = true;
 		private bool autoHide;
@@ -517,7 +517,7 @@ namespace Toolbar {
 
 		private void toggleDropdownMenu() {
 			if (dropdownMenu == null) {
-				dropdownMenu = new Menu(new Vector2(rect.x + PADDING + getPosition(dropdownMenuButton).x, rect.y + rect.height + BUTTON_SPACING));
+				dropdownMenu = new PopupMenu(new Vector2(rect.x + PADDING + getPosition(dropdownMenuButton).x, rect.y + rect.height + BUTTON_SPACING));
 
 				Button toggleRectLockButton = Button.createMenuOption(rectLocked ? "Unlock Position and Size" : "Lock Position and Size");
 				toggleRectLockButton.OnClick += (e) => {

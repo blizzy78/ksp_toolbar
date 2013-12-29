@@ -56,7 +56,7 @@
     <Compile Include="Internal\Extensions.cs" />
     <Compile Include="GameScenesVisibility.cs" />
     <Compile Include="IButton.cs" />
-    <Compile Include="Internal\Menu.cs" />
+    <Compile Include="Internal\PopupMenu.cs" />
     <Compile Include="Internal\MouseEnterEvent.cs" />
     <Compile Include="Internal\MouseMoveEvent.cs" />
     <Compile Include="Internal\MouseLeaveEvent.cs" />
