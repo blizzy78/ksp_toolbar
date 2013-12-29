@@ -48,18 +48,22 @@ namespace Toolbar {
 			}
 		}
 
-		private Rect rect;
+		internal Rect Rect {
+			get;
+			private set;
+		}
+
 		private List<Button> options = new List<Button>();
 
 		internal PopupMenu(Vector2 position) {
-			rect = new Rect(position.x, position.y, 0, 0);
+			Rect = new Rect(position.x, position.y, 0, 0);
 		}
 
 		internal void draw() {
 			initStyles();
 
-			rect = rect.clampToScreen();
-			rect = GUILayout.Window(id, rect, drawWindow, (string) null, GUI.skin.box, GUILayout.ExpandWidth(true));
+			Rect = Rect.clampToScreen();
+			Rect = GUILayout.Window(id, Rect, drawWindow, (string) null, GUI.skin.box, GUILayout.ExpandWidth(true));
 		}
 
 		private void drawWindow(int id) {
@@ -90,7 +94,7 @@ namespace Toolbar {
 		}
 
 		internal bool contains(Vector2 pos) {
-			return rect.Contains(pos);
+			return Rect.Contains(pos);
 		}
 	}
 }

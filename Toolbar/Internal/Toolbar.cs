@@ -65,6 +65,10 @@ namespace Toolbar {
 		private Rect draggedButtonRect;
 		private Button buttonOrderHoveredButton;
 		private List<string> savedButtonOrder = new List<string>();
+		private EditorLock editorLockToolbar = new EditorLock("ToolbarPlugin_toolbar");
+		private EditorLock editorLockMenu = new EditorLock("ToolbarPlugin_menu");
+		private EditorLock editorLockDrag = new EditorLock("ToolbarPlugin_drag");
+		private EditorLock editorLockReorder = new EditorLock("ToolbarPlugin_buttonReorder");
 
 		internal Toolbar() {
 			autoHideUnimportantButtonAlpha.a = 0.4f;
@@ -146,6 +150,12 @@ namespace Toolbar {
 
 				GUI.depth = oldDepth;
 			}
+
+			Vector2 mousePos = Utils.getMousePosition();
+			editorLockToolbar.draw(rect.contains(mousePos));
+			editorLockMenu.draw((dropdownMenu != null) && dropdownMenu.Rect.Contains(mousePos));
+			editorLockDrag.draw(!rectLocked);
+			editorLockReorder.draw(!buttonOrderLocked);
 		}
 
 		private void handleAutoHide() {

@@ -53,6 +53,7 @@
     <Compile Include="Internal\Draggable.cs" />
     <Compile Include="Internal\DragHandler.cs" />
     <Compile Include="Internal\DropMarker.cs" />
+    <Compile Include="Internal\EditorLock.cs" />
     <Compile Include="Internal\Extensions.cs" />
     <Compile Include="GameScenesVisibility.cs" />
     <Compile Include="IButton.cs" />
