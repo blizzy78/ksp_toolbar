@@ -36,7 +36,9 @@ namespace Toolbar {
 
 		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 
-		private const int VERSION = 4;
+		private const int VERSION = 1;
+
+		internal static bool? showUpdateAvailableButton = null;
 
 		private static WWW versionWWW;
 		private static bool? newVersionAvailable = null;
@@ -91,7 +93,10 @@ namespace Toolbar {
 
 			ConfigNode root = loadSettings();
 			if (root.HasNode("toolbars")) {
-				toolbar.loadSettings(root.GetNode("toolbars"), scene);
+				ConfigNode toolbarsNode = root.GetNode("toolbars");
+				showUpdateAvailableButton = toolbarsNode.get("showUpdateNotification", true);
+
+				toolbar.loadSettings(toolbarsNode, scene);
 			}
 		}
 
@@ -130,7 +135,7 @@ namespace Toolbar {
 
 		private bool isRelevantGameScene(GameScenes scene) {
 			return (scene != GameScenes.LOADING) && (scene != GameScenes.LOADINGBUFFER) &&
-				(scene != GameScenes.PSYSTEM) && (scene != GameScenes.CREDITS);
+				(scene != GameScenes.MAINMENU) && (scene != GameScenes.PSYSTEM) && (scene != GameScenes.CREDITS);
 		}
 
 		private void checkForNewVersion() {
@@ -152,6 +157,7 @@ namespace Toolbar {
 			button.TexturePath = "000_Toolbar/update-available";
 			button.ToolTip = "Toolbar Plugin Update Available";
 			button.Important = true;
+			button.Visibility = new UpdateAvailableVisibility();
 			button.OnClick += (e) => {
 				Application.OpenURL(FORUM_THREAD_URL);
 				button.Important = false;
@@ -163,6 +169,14 @@ namespace Toolbar {
 			toolbar.add(button);
 
 			return button;
+		}
+	}
+
+	internal class UpdateAvailableVisibility : IVisibility {
+		public bool Visible {
+			get {
+				return ToolbarManager.showUpdateAvailableButton == true;
+			}
 		}
 	}
 }
