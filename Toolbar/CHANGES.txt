@@ -1,4 +1,8 @@
-﻿1.3.0, 2013-12-26
+﻿1.4.0, 2014-01-01
+- You can now add custom folders to the toolbar, which can hold any number
+  of regular buttons for improved organization.
+
+1.3.0, 2013-12-26
 - You can now reorder the buttons on the toolbar. Button order is saved in
   relation to game scene (for example, you can have a different button order
   in the flight scene and the tracking station scene.)
