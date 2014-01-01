@@ -35,8 +35,8 @@ namespace Toolbar {
 		
 		private static readonly Vector2 UNSIZED = new Vector2(float.NaN, float.NaN);
 		private const string TEXTURE_PATH_DROPDOWN = "000_Toolbar/toolbar-dropdown";
-		private const int MAX_WIDTH = 24;
-		private const int MAX_HEIGHT = 24;
+		private const int MAX_TEX_WIDTH = 24;
+		private const int MAX_TEX_HEIGHT = 24;
 		private const int DROPDOWN_TEX_WIDTH = 10;
 		private const int DROPDOWN_TEX_HEIGHT = 7;
 		private const int PADDING = 4;
@@ -115,8 +115,8 @@ namespace Toolbar {
 					try {
 						texture_ = GameDatabase.Instance.GetTexture(TexturePath, false);
 
-						if ((texture_.width > MAX_WIDTH) || (texture_.height > MAX_HEIGHT)) {
-							Debug.LogError("button texture exceeds " + MAX_WIDTH + "x" + MAX_HEIGHT + " pixels, ignoring texture: " + ns + "." + id);
+						if ((texture_.width > MAX_TEX_WIDTH) || (texture_.height > MAX_TEX_HEIGHT)) {
+							Debug.LogError("button texture exceeds " + MAX_TEX_WIDTH + "x" + MAX_TEX_HEIGHT + " pixels, ignoring texture: " + ns + "." + id);
 							texture_ = null;
 							texturePath_ = null;
 						}
@@ -206,7 +206,7 @@ namespace Toolbar {
 					if (toolbarDropdown) {
 						size_ = new Vector2(DROPDOWN_TEX_WIDTH, DROPDOWN_TEX_HEIGHT);
 					} else if (IsTextured) {
-						size_ = new Vector2(MAX_WIDTH + PADDING * 2, MAX_HEIGHT + PADDING * 2);
+						size_ = new Vector2(MAX_TEX_WIDTH + PADDING * 2, MAX_TEX_HEIGHT + PADDING * 2);
 					} else {
 						size_ = Style.CalcSize(Content);
 						size_.x += Style.padding.left + Style.padding.right;
@@ -237,7 +237,7 @@ namespace Toolbar {
 		public event MouseEnterHandler OnMouseEnter;
 		public event MouseLeaveHandler OnMouseLeave;
 
-		internal event Action OnDestroy;
+		internal event DestroyHandler OnDestroy;
 
 		internal readonly string ns;
 		internal readonly string id;
@@ -315,7 +315,7 @@ namespace Toolbar {
 		}
 
 		internal void drawToolTip() {
-			if (showTooltip && (ToolTip != null)) {
+			if (showTooltip && (ToolTip != null) && (ToolTip.Trim().Length > 0)) {
 				Vector2 mousePos = Utils.getMousePosition();
 				Vector2 size = TooltipStyle.CalcSize(new GUIContent(ToolTip));
 				Rect rect = new Rect(mousePos.x, mousePos.y + 20, size.x, size.y);
@@ -362,7 +362,7 @@ namespace Toolbar {
 			}
 
 			if (OnDestroy != null) {
-				OnDestroy();
+				OnDestroy(new DestroyEvent(this));
 			}
 		}
 

@@ -49,6 +49,7 @@
     <Compile Include="ClickEvent.cs" />
     <Compile Include="ClickHandler.cs" />
     <Compile Include="Internal\ClickEvent.cs" />
+    <Compile Include="Internal\DestroyHandler.cs" />
     <Compile Include="Internal\DragEvent.cs" />
     <Compile Include="Internal\Draggable.cs" />
     <Compile Include="Internal\DragHandler.cs" />
@@ -57,6 +58,9 @@
     <Compile Include="Internal\Extensions.cs" />
     <Compile Include="GameScenesVisibility.cs" />
     <Compile Include="IButton.cs" />
+    <Compile Include="Internal\DestroyEvent.cs" />
+    <Compile Include="Internal\FolderSettings.cs" />
+    <Compile Include="Internal\FolderSettingsDialog.cs" />
     <Compile Include="Internal\PopupMenu.cs" />
     <Compile Include="Internal\MouseEnterEvent.cs" />
     <Compile Include="Internal\MouseMoveEvent.cs" />

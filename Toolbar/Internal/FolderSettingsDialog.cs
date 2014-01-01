@@ -30,38 +30,52 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal class DropMarker {
-		internal const float MARKER_LINE_WIDTH = 2;
+	internal class FolderSettingsDialog {
+		internal event Action OnOkClicked;
+		internal event Action OnCancelClicked;
 
-		private static readonly Rect NO_POSITION = new Rect(float.MinValue, float.MinValue, float.MinValue, float.MinValue);
+		internal string ToolTip;
 
-		internal Rect Rect = NO_POSITION;
-		internal bool Visible = true;
+		private readonly int id = new System.Random().Next(int.MaxValue);
 
-		private Texture2D orangeBgTex;
-		private GUIStyle style;
-		private bool styleInitialized;
+		private Rect rect = new Rect(300, 300, Mathf.Max(Screen.width / 4, 350), 0);
 
-		internal void draw() {
-			if (Visible && !Rect.Equals(NO_POSITION)) {
-				initStyle();
-
-				GUI.Label(Rect, (string) null, style);
-			}
+		internal FolderSettingsDialog(string toolTip) {
+			this.ToolTip = toolTip;
 		}
 
-		private void initStyle() {
-			if (!styleInitialized) {
-				orangeBgTex = new Texture2D(1, 1);
-				orangeBgTex.SetPixel(0, 0, XKCDColors.DarkOrange);
-				orangeBgTex.Apply();
+		internal void draw() {
+			rect = GUILayout.Window(id, rect.clampToScreen(), drawWindow, "Folder Settings");
+		}
 
-				style = new GUIStyle(GUI.skin.label);
-				style.normal.background = orangeBgTex;
-				style.border = new RectOffset(0, 0, 0, 0);
-				style.padding = new RectOffset(0, 0, 0, 0);
+		private void drawWindow(int id) {
+			GUILayout.BeginVertical();
 
-				styleInitialized = true;
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Button tooltip text:", GUILayout.ExpandWidth(false));
+			ToolTip = GUILayout.TextField(ToolTip, GUILayout.ExpandWidth(true));
+			GUILayout.EndHorizontal();
+
+			GUILayout.Space(15);
+
+			GUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			if (GUILayout.Button("OK")) {
+				fireButtonClicked(OnOkClicked);
+			}
+			if (GUILayout.Button("Cancel")) {
+				fireButtonClicked(OnCancelClicked);
+			}
+			GUILayout.EndHorizontal();
+
+			GUILayout.EndVertical();
+
+			GUI.DragWindow();
+		}
+
+		private void fireButtonClicked(Action evt) {
+			if (evt != null) {
+				evt();
 			}
 		}
 	}

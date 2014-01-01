@@ -81,6 +81,13 @@ namespace Toolbar {
 			configNode.AddValue(name, value);
 		}
 
+		internal static ConfigNode overwriteNode(this ConfigNode configNode, string nodeName) {
+			if (configNode.HasNode(nodeName)) {
+				configNode.RemoveNode(nodeName);
+			}
+			return configNode.AddNode(nodeName);
+		}
+
 		internal static T get<T>(this ConfigNode configNode, string name, T defaultValue) {
 			return configNode.HasValue(name) ? (T) TypeDescriptor.GetConverter(defaultValue.GetType()).ConvertFromInvariantString(configNode.GetValue(name)) : defaultValue;
 		}

@@ -31,17 +31,77 @@ using UnityEngine;
 
 namespace Toolbar {
 	internal class Toolbar {
+		internal enum Mode {
+			TOOLBAR, FOLDER
+		}
+
 		private const float BUTTON_SPACING = 1;
 		private const float PADDING = 3;
 		private const float DEFAULT_X = 300;
 		private const float DEFAULT_Y = 300;
-		private const float DEFAULT_WIDTH = 500;
+		private const float DEFAULT_WIDTH = 250;
+		private const float DEFAULT_HEIGHT_FOLDER = 100;
 
 		internal event Action onChange;
 		internal event Action onSkinChange;
 
 		private delegate void ButtonPositionCalculatedHandler(Button button, Vector2 position);
 
+		private bool Visible {
+			set {
+				if (value != visible_) {
+					if (!value) {
+						rectLocked = true;
+						buttonOrderLocked = true;
+						dropdownMenu = null;
+						folderSettingsDialog = null;
+						hookButtonOrderDraggables(false);
+					}
+
+					visible_ = value;
+				}
+			}
+			get {
+				return visible_;
+			}
+		}
+		private bool visible_ = true;
+
+		private bool Enabled {
+			set {
+				if (value != enabled_) {
+					if (!value) {
+						rectLocked = true;
+						buttonOrderLocked = true;
+						dropdownMenu = null;
+						folderSettingsDialog = null;
+						hookButtonOrderDraggables(false);
+					}
+
+					enabled_ = value;
+				}
+			}
+			get {
+				return enabled_;
+			}
+		}
+		private bool enabled_ = true;
+
+		private bool UseKSPSkin {
+			set {
+				if (value != useKSPSkin_) {
+					useKSPSkin_ = value;
+					fireSkinChange();
+				}
+			}
+			get {
+				return useKSPSkin_;
+			}
+		}
+		private bool useKSPSkin_;
+
+		private Mode mode;
+		private Toolbar parentToolbar;
 		private Rectangle rect;
 		private Draggable draggable;
 		private Resizable resizable;
@@ -57,8 +117,7 @@ namespace Toolbar {
 		private Color autoHideUnimportantButtonAlpha = Color.white;
 		private Button mouseHoverButton;
 		private float savedMaxWidth = DEFAULT_WIDTH;
-		private bool drawBorder = true;
-		private bool useKSPSkin;
+		private bool showBorder = true;
 		private Dictionary<Draggable, Rectangle> buttonOrderDraggables = new Dictionary<Draggable, Rectangle>();
 		private DropMarker buttonOrderDropMarker;
 		private Button draggedButton;
@@ -69,23 +128,32 @@ namespace Toolbar {
 		private EditorLock editorLockMenu = new EditorLock("ToolbarPlugin_menu");
 		private EditorLock editorLockDrag = new EditorLock("ToolbarPlugin_drag");
 		private EditorLock editorLockReorder = new EditorLock("ToolbarPlugin_buttonReorder");
+		private Dictionary<string, Toolbar> folders = new Dictionary<string, Toolbar>();
+		private Dictionary<Button, Toolbar> folderButtons = new Dictionary<Button, Toolbar>();
+		private Dictionary<string, FolderSettings> savedFolderSettings = new Dictionary<string, FolderSettings>();
+		private FolderSettingsDialog folderSettingsDialog;
 
-		internal Toolbar() {
+		internal Toolbar(Mode mode = Mode.TOOLBAR, Toolbar parentToolbar = null) {
+			this.mode = mode;
+			this.parentToolbar = parentToolbar;
+
 			autoHideUnimportantButtonAlpha.a = 0.4f;
 
 			rect = new Rectangle(new Rect(DEFAULT_X, DEFAULT_Y, DEFAULT_WIDTH, float.MinValue));
 
-			dropdownMenuButton = Button.createToolbarDropdown();
-			dropdownMenuButton.OnClick += (e) => toggleDropdownMenu();
-			buttons.Add(dropdownMenuButton);
+			if (mode == Mode.TOOLBAR) {
+				dropdownMenuButton = Button.createToolbarDropdown();
+				dropdownMenuButton.OnClick += (e) => toggleDropdownMenu();
+				buttons.Add(dropdownMenuButton);
 
-			draggable = new Draggable(rect, PADDING,
-				(pos) => !getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos) && !resizable.HandleRect.Contains(pos));
-			resizable = new Resizable(rect, PADDING,
-				(pos) => !getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos));
+				draggable = new Draggable(rect, PADDING,
+					(pos) => !getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos) && !resizable.HandleRect.Contains(pos));
+				resizable = new Resizable(rect, PADDING,
+					(pos) => !getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos));
 
-			draggable.OnDrag += (e) => toolbarDrag();
-			resizable.OnResize += toolbarResize;
+				draggable.OnDrag += (e) => toolbarDrag();
+				resizable.OnResize += toolbarResize;
+			}
 		}
 
 		private void toolbarDrag() {
@@ -115,9 +183,15 @@ namespace Toolbar {
 		internal void draw() {
 			// only show toolbar if there is at least one visible button
 			// that is not the drop-down menu button
-			if (buttons.Any((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyVisible)) {
+			if (Visible &&
+				((mode == Mode.FOLDER) || buttons.Any((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyVisible))) {
+
 				forceAutoSizeIfButtonVisibilitiesChanged();
 				autoSize();
+
+				if (mode == Mode.FOLDER) {
+					autoPositionFolder();
+				}
 
 				if (autoHide && (dropdownMenu == null)) {
 					handleAutoHide();
@@ -134,18 +208,26 @@ namespace Toolbar {
 				}
 
 				GUISkin oldSkin = GUI.skin;
-				if (useKSPSkin) {
+				if (UseKSPSkin) {
 					GUI.skin = HighLogic.Skin;
 				}
 				drawButtons();
 				GUI.skin = oldSkin;
 
-				if (rectLocked && buttonOrderLocked) {
+				foreach (Toolbar folder in folders.Values) {
+					folder.draw();
+				}
+
+				if (Enabled && rectLocked && buttonOrderLocked && (dropdownMenu == null)) {
 					drawButtonToolTips();
 				}
 
 				if (dropdownMenu != null) {
 					dropdownMenu.draw();
+				}
+
+				if (folderSettingsDialog != null) {
+					folderSettingsDialog.draw();
 				}
 
 				GUI.depth = oldDepth;
@@ -158,9 +240,39 @@ namespace Toolbar {
 			editorLockReorder.draw(!buttonOrderLocked);
 		}
 
+		private void autoPositionFolder() {
+			// at this point, we should already have a good width/height
+
+			if (parentToolbar.isSingleColumn()) {
+				// positioning to right of parent toolbar
+				rect.x = parentToolbar.rect.x + parentToolbar.rect.width + BUTTON_SPACING;
+				float origX = rect.x;
+				rect.y = parentToolbar.rect.y + (parentToolbar.rect.height - rect.height) / 2;
+				rect.clampToScreen(0);
+				// clamping to screen moved it to the left -> position to left of parent toolbar
+				if (rect.x < origX) {
+					rect.x = parentToolbar.rect.x - rect.width - BUTTON_SPACING;
+					rect.clampToScreen(0);
+				}
+			} else {
+				// position above parent toolbar
+				rect.x = parentToolbar.rect.x + (parentToolbar.rect.width - rect.width) / 2;
+				rect.y = parentToolbar.rect.y - rect.height - BUTTON_SPACING;
+				float origY = rect.y;
+				rect.clampToScreen(0);
+				// clamping to screen moved it to the bottom -> position below parent toolbar
+				if (rect.y > origY) {
+					rect.y = parentToolbar.rect.y + parentToolbar.rect.height + BUTTON_SPACING;
+					rect.clampToScreen(0);
+				}
+			}
+		}
+
 		private void handleAutoHide() {
-			bool anyButtonImportant = buttons.Any(b => b.Important);
-			if (rect.contains(Utils.getMousePosition()) || anyButtonImportant) {
+			if (rect.contains(Utils.getMousePosition()) ||
+				buttons.Any(b => b.Important) ||
+				folders.Values.Any(f => f.Visible)) {
+
 				if (autoHidden) {
 					rect.x = rectPositionBeforeAutoHide.x;
 					rect.y = rectPositionBeforeAutoHide.y;
@@ -169,18 +281,22 @@ namespace Toolbar {
 			} else {
 				if (!autoHidden) {
 					if (rect.x <= 0) {
+						// left screen edge
 						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
 						rect.x = -rect.width + PADDING;
 						autoHidden = true;
 					} else if (rect.x >= (Screen.width - rect.width)) {
+						// right screen edge
 						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
 						rect.x = Screen.width - PADDING;
 						autoHidden = true;
 					} else if (rect.y <= 0) {
+						// top screen edge
 						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
 						rect.y = -rect.height + PADDING;
 						autoHidden = true;
 					} else if (rect.y >= (Screen.height - rect.height)) {
+						// bottom screen edge
 						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
 						rect.y = Screen.height - PADDING;
 						autoHidden = true;
@@ -210,27 +326,45 @@ namespace Toolbar {
 		}
 
 		private float getMinWidthForButtons() {
-			float width = 0;
-			calculateButtonPositions((button, pos) => {
-				float currentWidth = pos.x + button.Size.x;
-				if (currentWidth > width) {
-					width = currentWidth;
+			if (mode == Mode.FOLDER) {
+				int count = buttons.Count((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyVisible);
+				if (count == 0) {
+					return DEFAULT_WIDTH;
+				} else {
+					// make it roughly a square
+					int columns = Mathf.CeilToInt(Mathf.Sqrt(count));
+					// they're all the same size, so let's just take the first one
+					Button firstVisibleButton = buttons.First((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyVisible);
+					float buttonWidth = firstVisibleButton.Size.x;
+					return buttonWidth * columns + BUTTON_SPACING * (columns - 1) + PADDING * 2;
 				}
-			});
-			width += PADDING;
-			return width;
+			} else {
+				float width = 0;
+				calculateButtonPositions((button, pos) => {
+					float currentWidth = pos.x + button.Size.x;
+					if (currentWidth > width) {
+						width = currentWidth;
+					}
+				});
+				width += PADDING;
+				return width;
+			}
 		}
 
 		private float getMinHeightForButtons() {
-			float height = 0;
-			calculateButtonPositions((button, pos) => {
-				float currentHeight = pos.y + button.Size.y;
-				if (currentHeight > height) {
-					height = currentHeight;
-				}
-			});
-			height += PADDING;
-			return height;
+			if ((mode == Mode.FOLDER) && (buttons.Count((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyVisible) == 0)) {
+				return DEFAULT_HEIGHT_FOLDER;
+			} else {
+				float height = 0;
+				calculateButtonPositions((button, pos) => {
+					float currentHeight = pos.y + button.Size.y;
+					if (currentHeight > height) {
+						height = currentHeight;
+					}
+				});
+				height += PADDING;
+				return height;
+			}
 		}
 
 		private void calculateButtonPositions(ButtonPositionCalculatedHandler buttonPositionCalculatedHandler) {
@@ -264,17 +398,19 @@ namespace Toolbar {
 			}
 
 			// calculate position of drop-down menu button
-			if (y == PADDING) {
-				// all buttons on a single line
-				buttonPositionCalculatedHandler(dropdownMenuButton, new Vector2(x + 2, (lineHeight - dropdownMenuButton.Size.y) / 2 + PADDING));
-			} else {
-				// multiple lines
-				buttonPositionCalculatedHandler(dropdownMenuButton, new Vector2((widestLineWidth - dropdownMenuButton.Size.x) / 2 + PADDING, y + lineHeight + BUTTON_SPACING + 2));
+			if (dropdownMenuButton != null) {
+				if (y == PADDING) {
+					// all buttons on a single line
+					buttonPositionCalculatedHandler(dropdownMenuButton, new Vector2(x + 2, (lineHeight - dropdownMenuButton.Size.y) / 2 + PADDING));
+				} else {
+					// multiple lines
+					buttonPositionCalculatedHandler(dropdownMenuButton, new Vector2((widestLineWidth - dropdownMenuButton.Size.x) / 2 + PADDING, y + lineHeight + BUTTON_SPACING + 2));
+				}
 			}
 		}
 
 		private void drawToolbarBorder() {
-			if (drawBorder || !rectLocked || !buttonOrderLocked) {
+			if (showBorder || !rectLocked || !buttonOrderLocked) {
 				Color oldColor = GUI.color;
 				if (shouldAutoHide() && !autoHidden && (dropdownMenu == null)) {
 					GUI.color = autoHideUnimportantButtonAlpha;
@@ -304,7 +440,7 @@ namespace Toolbar {
 				if (shouldHide && !autoHidden && !button.Important && (dropdownMenu == null)) {
 					GUI.color = autoHideUnimportantButtonAlpha;
 				}
-				button.draw(buttonRect, ((rectLocked && buttonOrderLocked) || button.Equals(dropdownMenuButton)) && !isPauseMenuOpen());
+				button.draw(buttonRect, ((Enabled && rectLocked && buttonOrderLocked) || button.Equals(dropdownMenuButton)) && !isPauseMenuOpen());
 				GUI.color = oldColor;
 
 				if (buttonRect.Contains(mousePos)) {
@@ -342,7 +478,7 @@ namespace Toolbar {
 				newVisibleButtonIds.Add(button.ns + "." + button.id);
 			}
 			if (!newVisibleButtonIds.SetEquals(visibleButtonIds)) {
-				Debug.Log("button visibilities have changed, forcing auto-size ");
+				Debug.Log("button visibilities have changed, forcing auto-size");
 				visibleButtonIds = newVisibleButtonIds;
 
 				if (isSingleLine()) {
@@ -375,13 +511,31 @@ namespace Toolbar {
 				rect.width = savedMaxWidth;
 				rect.width = getMinWidthForButtons();
 				rect.height = getMinHeightForButtons();
+
+				if (!autoHidden) {
+					rect.clampToScreen(PADDING);
+				}
+
 				fireChange();
 			}
 		}
 
 		private bool isSingleLine() {
-			float maxButtonHeight = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.y);
-			return rect.height <= (maxButtonHeight + PADDING * 2);
+			if (buttons.Count(b => b.EffectivelyVisible) > 0) {
+				float maxButtonHeight = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.y);
+				return rect.height <= (maxButtonHeight + PADDING * 2);
+			} else {
+				return true;
+			}
+		}
+
+		private bool isSingleColumn() {
+			if (buttons.Count(b => b.EffectivelyVisible) > 0) {
+				float maxButtonWidth = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.x);
+				return rect.width <= (maxButtonWidth + PADDING * 2);
+			} else {
+				return true;
+			}
 		}
 
 		internal Vector2 getPosition(Button button) {
@@ -416,8 +570,12 @@ namespace Toolbar {
 		}
 
 		internal void update() {
-			draggable.update();
-			resizable.update();
+			if (draggable != null) {
+				draggable.update();
+			}
+			if (resizable != null) {
+				resizable.update();
+			}
 
 			if (dropdownMenu != null) {
 				if ((Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2)) && !dropdownMenu.contains(Utils.getMousePosition())) {
@@ -428,61 +586,106 @@ namespace Toolbar {
 				}
 			}
 
-			foreach (Draggable d in buttonOrderDraggables.Keys) {
-				d.update();
+			if (buttonOrderDraggables.Count() > 0) {
+				foreach (Draggable d in new List<Draggable>(buttonOrderDraggables.Keys)) {
+					d.update();
+				}
 			}
 		}
 
 		internal void add(Button button) {
+			// destroy old button with the same ID
 			Button oldButton = buttons.SingleOrDefault(b => (b.ns == button.ns) && (b.id == button.id));
-
 			if (oldButton != null) {
 				oldButton.Destroy();
 			}
+			// same with any folders
+			Toolbar folder = folders.Values.SingleOrDefault(f => f.buttons.Any(b => (b.ns == button.ns) && (b.id == button.id)));
+			if (folder != null) {
+				oldButton = folder.buttons.SingleOrDefault(b => (b.ns == button.ns) && (b.id == button.id));
+				if (oldButton != null) {
+					oldButton.Destroy();
+				}
+			}
 
-			button.OnDestroy += () => buttonDestroyed(button);
+			string buttonId = button.ns + "." + button.id;
+			string folderId = savedFolderSettings.Where(kv => kv.Value.buttons.Contains(buttonId)).Select(kv => kv.Key).SingleOrDefault();
+			if ((folderId != null) && folders.ContainsKey(folderId)) {
+				folders[folderId].add(button);
+			} else {
+				button.OnDestroy += buttonDestroyed;
 
-			buttons.Add(button);
+				buttons.Add(button);
 
-			sortButtons();
+				sortButtons();
+			}
 		}
 
 		private void sortButtons() {
-			buttons.Remove(dropdownMenuButton);
+			if (dropdownMenuButton != null) {
+				buttons.Remove(dropdownMenuButton);
+			}
 
 			buttons.Sort((b1, b2) => {
 				string id1 = b1.ns + "." + b1.id;
 				string id2 = b2.ns + "." + b2.id;
-				int idx1 = savedButtonOrder.IndexOf(id1);
-				int idx2 = savedButtonOrder.IndexOf(id2);
-				if ((idx1 >= 0) && (idx2 >= 0)) {
-					return idx1 - idx2;
-				} else if ((idx1 >= 0) && (idx2 < 0)) {
-					return -1;
-				} else if ((idx1 < 0) && (idx2 >= 0)) {
-					return 1;
-				} else {
-					return StringComparer.CurrentCultureIgnoreCase.Compare(id1, id2);
+				if (mode == Mode.TOOLBAR) {
+					int idx1 = savedButtonOrder.IndexOf(id1);
+					int idx2 = savedButtonOrder.IndexOf(id2);
+					if ((idx1 >= 0) && (idx2 >= 0)) {
+						return idx1 - idx2;
+					} else if ((idx1 >= 0) && (idx2 < 0)) {
+						return -1;
+					} else if ((idx1 < 0) && (idx2 >= 0)) {
+						return 1;
+					}
 				}
+				return StringComparer.CurrentCultureIgnoreCase.Compare(id1, id2);
 			});
 
-			buttons.Add(dropdownMenuButton);
+			if (dropdownMenuButton != null) {
+				buttons.Add(dropdownMenuButton);
+			}
 		}
 
-		private void buttonDestroyed(Button button) {
+		private void remove(Button button) {
+			button.OnDestroy -= buttonDestroyed;
 			buttons.Remove(button);
+			if (folderButtons.ContainsKey(button)) {
+				folderButtons.Remove(button);
+			}
+		}
+
+		private void buttonDestroyed(DestroyEvent e) {
+			remove(e.button);
 		}
 
 		internal void loadSettings(ConfigNode parentNode, GameScenes scene) {
-			// hide this
+			// hide these
 			dropdownMenu = null;
+			folderSettingsDialog = null;
 			// deactivate these
+			rectLocked = true;
 			draggable.Enabled = false;
 			resizable.Enabled = false;
+			buttonOrderLocked = true;
 			// pretend we're not auto-hidden right now
 			autoHidden = false;
+			// enable ourselves
+			Enabled = true;
+			// hide folders
+			foreach (Toolbar folder in folders.Values) {
+				folder.Visible = false;
+			}
+			// pretend that nothing was visible until now
+			visibleButtonIds.Clear();
 
 			if (parentNode.HasNode("toolbar")) {
+				foreach (Toolbar folder in new List<Toolbar>(folders.Values)) {
+					deleteFolder(folder);
+				}
+				savedFolderSettings.Clear();
+
 				ConfigNode toolbarNode = parentNode.GetNode("toolbar");
 				ConfigNode settingsNode = toolbarNode.HasNode(scene.ToString()) ? toolbarNode.GetNode(scene.ToString()) : toolbarNode;
 				rect.x = settingsNode.get("x", DEFAULT_X);
@@ -490,9 +693,32 @@ namespace Toolbar {
 				rect.width = settingsNode.get("width", DEFAULT_WIDTH);
 				rect.height = settingsNode.get("height", 0f);
 				autoHide = settingsNode.get("autoHide", false);
-				drawBorder = settingsNode.get("drawBorder", true);
-				useKSPSkin = settingsNode.get("useKSPSkin", false);
+				showBorder = settingsNode.get("drawBorder", true);
+				useKSPSkin_ = settingsNode.get("useKSPSkin", false);
 				savedButtonOrder = settingsNode.get("buttonOrder", "").Split(new char[] { ',' }).ToList();
+
+				if (settingsNode.HasNode("folders")) {
+					foreach (ConfigNode folderNode in settingsNode.GetNode("folders").nodes) {
+						string folderId = folderNode.name;
+						string toolTip = folderNode.get("toolTip", "");
+						HashSet<string> buttonIds = new HashSet<string>(folderNode.get("buttons", "").Split(new char[] { ',' }));
+
+						Toolbar folder = createFolder(folderId, toolTip, false);
+						folder.UseKSPSkin = UseKSPSkin;
+						folder.showBorder = showBorder;
+
+						savedFolderSettings[folderId].buttons = buttonIds;
+					}
+				}
+
+				// move existing buttons according to saved folder contents
+				foreach (Button button in new List<Button>(buttons)) {
+					string buttonId = button.ns + "." + button.id;
+					string folderId = savedFolderSettings.SingleOrDefault(kv => kv.Value.buttons.Contains(buttonId)).Key;
+					if (folderId != null) {
+						moveButtonToFolder(button, folders[folderId]);
+					}
+				}
 			}
 
 			savedMaxWidth = rect.width;
@@ -508,9 +734,19 @@ namespace Toolbar {
 			settingsNode.overwrite("width", savedMaxWidth.ToString("F0"));
 			settingsNode.overwrite("height", rect.height.ToString("F0"));
 			settingsNode.overwrite("autoHide", autoHide.ToString());
-			settingsNode.overwrite("drawBorder", drawBorder.ToString());
-			settingsNode.overwrite("useKSPSkin", useKSPSkin.ToString());
+			settingsNode.overwrite("drawBorder", showBorder.ToString());
+			settingsNode.overwrite("useKSPSkin", UseKSPSkin.ToString());
 			settingsNode.overwrite("buttonOrder", string.Join(",", savedButtonOrder.ToArray()));
+
+			ConfigNode foldersNode = settingsNode.overwriteNode("folders");
+			foreach (KeyValuePair<string, FolderSettings> entry in savedFolderSettings) {
+				ConfigNode folderNode = foldersNode.getOrCreateNode(entry.Key);
+				folderNode.overwrite("toolTip", entry.Value.toolTip ?? "");
+				folderNode.overwrite("buttons", string.Join(",", entry.Value.buttons.ToArray()));
+			}
+			if (foldersNode.CountNodes == 0) {
+				settingsNode.RemoveNode("folders");
+			}
 		}
 
 		private void fireChange() {
@@ -529,6 +765,13 @@ namespace Toolbar {
 			if (dropdownMenu == null) {
 				dropdownMenu = new PopupMenu(new Vector2(rect.x + PADDING + getPosition(dropdownMenuButton).x, rect.y + rect.height + BUTTON_SPACING));
 
+				bool regularEntriesEnabled = rectLocked && buttonOrderLocked;
+
+				Button createFolderButton = Button.createMenuOption("Create New Folder");
+				createFolderButton.OnClick += (e) => createFolder();
+				createFolderButton.Enabled = regularEntriesEnabled;
+				dropdownMenu += createFolderButton;
+
 				Button toggleRectLockButton = Button.createMenuOption(rectLocked ? "Unlock Position and Size" : "Lock Position and Size");
 				toggleRectLockButton.OnClick += (e) => {
 					rectLocked = !rectLocked;
@@ -539,6 +782,9 @@ namespace Toolbar {
 						fireChange();
 					} else {
 						autoHide = false;
+						foreach (Toolbar folder in folders.Values) {
+							folder.Visible = false;
+						}
 					}
 				};
 				toggleRectLockButton.Enabled = buttonOrderLocked;
@@ -555,11 +801,12 @@ namespace Toolbar {
 					} else {
 						autoHide = false;
 					}
+					foreach (Toolbar folder in folders.Values) {
+						folder.Enabled = buttonOrderLocked;
+					}
 				};
 				toggleButtonOrderLockButton.Enabled = rectLocked;
 				dropdownMenu += toggleButtonOrderLockButton;
-
-				bool regularEntriesEnabled = rectLocked && buttonOrderLocked;
 
 				Button toggleAutoHideButton = Button.createMenuOption(autoHide ? "Deactivate Auto-Hide at Screen Edge" : "Activate Auto-Hide at Screen Edge");
 				toggleAutoHideButton.OnClick += (e) => {
@@ -569,18 +816,23 @@ namespace Toolbar {
 				toggleAutoHideButton.Enabled = regularEntriesEnabled;
 				dropdownMenu += toggleAutoHideButton;
 
-				Button toggleDrawBorderButton = Button.createMenuOption(drawBorder ? "Hide Border" : "Show Border");
+				Button toggleDrawBorderButton = Button.createMenuOption(showBorder ? "Hide Border" : "Show Border");
 				toggleDrawBorderButton.OnClick += (e) => {
-					drawBorder = !drawBorder;
+					showBorder = !showBorder;
+					foreach (Toolbar folder in folders.Values) {
+						folder.showBorder = showBorder;
+					}
 					fireChange();
 				};
 				toggleDrawBorderButton.Enabled = regularEntriesEnabled;
 				dropdownMenu += toggleDrawBorderButton;
 
-				Button toggleKSPSkinButton = Button.createMenuOption(useKSPSkin ? "Use Unity 'Smoke' Skin" : "Use KSP Skin");
+				Button toggleKSPSkinButton = Button.createMenuOption(UseKSPSkin ? "Use Unity 'Smoke' Skin" : "Use KSP Skin");
 				toggleKSPSkinButton.OnClick += (e) => {
-					useKSPSkin = !useKSPSkin;
-					fireSkinChange();
+					UseKSPSkin = !UseKSPSkin;
+					foreach (Toolbar folder in folders.Values) {
+						folder.UseKSPSkin = UseKSPSkin;
+					}
 					fireChange();
 				};
 				toggleKSPSkinButton.Enabled = regularEntriesEnabled;
@@ -606,15 +858,17 @@ namespace Toolbar {
 					if (!button.Equals(dropdownMenuButton)) {
 						Rectangle buttonRect = new Rectangle(new Rect(rect.x + pos.x, rect.y + pos.y, button.Size.x, button.Size.y));
 						Draggable draggable = new Draggable(buttonRect, 0, null);
-						buttonOrderDraggables.Add(draggable, buttonRect);
-
 						draggable.Enabled = true;
 						draggable.OnDrag += buttonDrag;
+						buttonOrderDraggables.Add(draggable, buttonRect);
 					}
 				});
 
 				buttonOrderDropMarker = new DropMarker();
 			} else {
+				foreach (Draggable d in buttonOrderDraggables.Keys) {
+					d.OnDrag -= buttonDrag;
+				}
 				buttonOrderDraggables.Clear();
 				buttonOrderDropMarker = null;
 			}
@@ -637,12 +891,35 @@ namespace Toolbar {
 						b => !b.Equals(draggedButton) && !b.Equals(dropdownMenuButton) && getRect(b).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(mousePos));
 					if (buttonOrderHoveredButton != null) {
 						Rect hoveredButtonRect = getRect(buttonOrderHoveredButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING));
-						bool leftSide = new Rect(hoveredButtonRect.x, hoveredButtonRect.y, hoveredButtonRect.width / 2, hoveredButtonRect.height).Contains(mousePos);
-						// TODO: improve this to show a horizontal drop marker instead of a vertical one for single-column toolbars
-						buttonOrderDropMarker.Rect = new Rect(
-							leftSide ? (hoveredButtonRect.x - DropMarker.MARKER_WIDTH) : (hoveredButtonRect.x + hoveredButtonRect.width),
-							hoveredButtonRect.y,
-							DropMarker.MARKER_WIDTH, hoveredButtonRect.height);
+						Toolbar folder = folderButtons.ContainsKey(buttonOrderHoveredButton) ? folderButtons[buttonOrderHoveredButton] : null;
+						if ((folder != null) &&
+							// disallow folders in folders
+							!folderButtons.ContainsKey(draggedButton)) {
+
+							float widthOneThird = hoveredButtonRect.width / 3;
+							float middleX = hoveredButtonRect.x + widthOneThird;
+							if (new Rect(middleX, hoveredButtonRect.y, widthOneThird, hoveredButtonRect.height).Contains(mousePos)) {
+								// middle section
+								buttonOrderDropMarker.Rect = hoveredButtonRect;
+							} else if (new Rect(hoveredButtonRect.x, hoveredButtonRect.y, widthOneThird, hoveredButtonRect.height).Contains(mousePos)) {
+								// left section
+								buttonOrderDropMarker.Rect = new Rect(
+									hoveredButtonRect.x - DropMarker.MARKER_LINE_WIDTH, hoveredButtonRect.y,
+									DropMarker.MARKER_LINE_WIDTH, hoveredButtonRect.height);
+							} else {
+								// right section
+								buttonOrderDropMarker.Rect = new Rect(
+									hoveredButtonRect.x + hoveredButtonRect.width, hoveredButtonRect.y,
+									DropMarker.MARKER_LINE_WIDTH, hoveredButtonRect.height);
+							}
+						} else {
+							bool leftSide = new Rect(hoveredButtonRect.x, hoveredButtonRect.y, hoveredButtonRect.width / 2, hoveredButtonRect.height).Contains(mousePos);
+							// TODO: improve this to show a horizontal drop marker instead of a vertical one for single-column toolbars
+							buttonOrderDropMarker.Rect = new Rect(
+								leftSide ? (hoveredButtonRect.x - DropMarker.MARKER_LINE_WIDTH) : (hoveredButtonRect.x + hoveredButtonRect.width),
+								hoveredButtonRect.y,
+								DropMarker.MARKER_LINE_WIDTH, hoveredButtonRect.height);
+						}
 					}
 					buttonOrderDropMarker.Visible = buttonOrderHoveredButton != null;
 				}
@@ -650,27 +927,160 @@ namespace Toolbar {
 				if ((draggedButton != null) && (buttonOrderHoveredButton != null)) {
 					Rect hoveredButtonRect = getRect(buttonOrderHoveredButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING));
 					Vector2 mousePos = Utils.getMousePosition();
-					bool leftSide = new Rect(hoveredButtonRect.x, hoveredButtonRect.y, hoveredButtonRect.width / 2, hoveredButtonRect.height).Contains(mousePos);
-
-					int draggedButtonIdx = buttons.IndexOf(draggedButton);
-					int hoveredButtonIdx = buttons.IndexOf(buttonOrderHoveredButton);
-					if (!leftSide) {
-						hoveredButtonIdx++;
+					bool leftSide = false;
+					bool intoFolder = false;
+					Toolbar folder = folderButtons.ContainsKey(buttonOrderHoveredButton) ? folderButtons[buttonOrderHoveredButton] : null;
+					if (folder != null) {
+						float widthOneThird = hoveredButtonRect.width / 3;
+						float middleX = hoveredButtonRect.x + widthOneThird;
+						if (new Rect(middleX, hoveredButtonRect.y, widthOneThird, hoveredButtonRect.height).Contains(mousePos)) {
+							intoFolder = true;
+						} else if (new Rect(hoveredButtonRect.x, hoveredButtonRect.y, widthOneThird, hoveredButtonRect.height).Contains(mousePos)) {
+							leftSide = true;
+						}
+					} else {
+						leftSide = new Rect(hoveredButtonRect.x, hoveredButtonRect.y, hoveredButtonRect.width / 2, hoveredButtonRect.height).Contains(mousePos);
 					}
 
-					buttons.RemoveAt(draggedButtonIdx);
-					if (hoveredButtonIdx > draggedButtonIdx) {
-						hoveredButtonIdx--;
+					if (intoFolder) {
+						moveButtonToFolder(draggedButton, folder);
+					} else {
+						int draggedButtonIdx = buttons.IndexOf(draggedButton);
+						int hoveredButtonIdx = buttons.IndexOf(buttonOrderHoveredButton);
+						if (!leftSide) {
+							hoveredButtonIdx++;
+						}
+
+						buttons.RemoveAt(draggedButtonIdx);
+						if (hoveredButtonIdx > draggedButtonIdx) {
+							hoveredButtonIdx--;
+						}
+						buttons.Insert(hoveredButtonIdx, draggedButton);
 					}
-					buttons.Insert(hoveredButtonIdx, draggedButton);
 
 					savedButtonOrder = buttons.Where(b => !b.Equals(dropdownMenuButton)).Select(b => b.ns + "." + b.id).ToList();
+
+					Dictionary<string, FolderSettings> newSavedFolderSettings = new Dictionary<string, FolderSettings>();
+					foreach (KeyValuePair<string, Toolbar> entry in folders) {
+						HashSet<string> folderButtonIds = new HashSet<string>(entry.Value.buttons.Select(b => b.ns + "." + b.id));
+						newSavedFolderSettings.Add(entry.Key, new FolderSettings() {
+							toolTip = savedFolderSettings[entry.Key].toolTip,
+							buttons = folderButtonIds
+						});
+					}
+					savedFolderSettings = newSavedFolderSettings;
+
 					fireChange();
 				}
+
+				forceAutoSizeIfButtonVisibilitiesChanged();
 
 				// reset draggables, drop marker, and dragged button
 				hookButtonOrderDraggables(false);
 				hookButtonOrderDraggables(true);
+			}
+		}
+
+		private void moveButtonToFolder(Button button, Toolbar folder) {
+			remove(button);
+			folder.add(button);
+		}
+
+		private void createFolder() {
+			folderSettingsDialog = new FolderSettingsDialog("New Folder");
+			folderSettingsDialog.OnOkClicked += () => {
+				createFolder("folder_" + new System.Random().Next(int.MaxValue), folderSettingsDialog.ToolTip, true);
+				folderSettingsDialog = null;
+			};
+			folderSettingsDialog.OnCancelClicked += () => folderSettingsDialog = null;
+		}
+
+		private void editFolder(Toolbar folder) {
+			string folderId = folders.Single(kv => kv.Value.Equals(folder)).Key;
+			string toolTip = savedFolderSettings[folderId].toolTip;
+			folderSettingsDialog = new FolderSettingsDialog(toolTip);
+			folderSettingsDialog.OnOkClicked += () => {
+				toolTip = folderSettingsDialog.ToolTip;
+				savedFolderSettings[folderId].toolTip = toolTip;
+				Button folderButton = folderButtons.Single(kv => kv.Value.Equals(folder)).Key;
+				folderButton.ToolTip = toolTip;
+				folderSettingsDialog = null;
+				fireChange();
+			};
+			folderSettingsDialog.OnCancelClicked += () => folderSettingsDialog = null;
+		}
+
+		private Toolbar createFolder(string id, string toolTip, bool visible) {
+			if (visible) {
+				// close all other folders first
+				foreach (Toolbar folder in folders.Values) {
+					folder.Visible = false;
+				}
+			}
+
+			Toolbar newFolder = new Toolbar(Mode.FOLDER, this);
+			newFolder.Visible = visible;
+			folders.Add(id, newFolder);
+
+			Button folderButton = new Button(Button.NAMESPACE_INTERNAL, id, this);
+			folderButton.TexturePath = "000_Toolbar/folder";
+			folderButton.ToolTip = toolTip;
+			folderButton.OnClick += (e) => {
+				switch (e.MouseButton) {
+					case 0:
+						newFolder.Visible = !newFolder.Visible;
+						if (newFolder.Visible) {
+							foreach (Toolbar otherFolder in folders.Values.Where(f => !f.Equals(newFolder))) {
+								otherFolder.Visible = false;
+							}
+						}
+						break;
+
+					case 1:
+						openFolderButtonDropdownMenu(newFolder, getPosition(folderButton) + new Vector2(rect.x + PADDING, rect.y + PADDING + folderButton.Size.y + BUTTON_SPACING));
+						break;
+				}
+			};
+			folderButtons.Add(folderButton, newFolder);
+			add(folderButton);
+
+			savedFolderSettings.Add(id, new FolderSettings() {
+				buttons = new HashSet<string>(),
+				toolTip = toolTip
+			});
+
+			return newFolder;
+		}
+
+		private void openFolderButtonDropdownMenu(Toolbar folder, Vector2 pos) {
+			dropdownMenu = new PopupMenu(pos);
+
+			Button editButton = Button.createMenuOption("Edit Folder Settings");
+			editButton.OnClick += (e) => editFolder(folder);
+			dropdownMenu += editButton;
+
+			Button deleteButton = Button.createMenuOption("Delete Folder");
+			deleteButton.OnClick += (e) => deleteFolder(folder);
+			dropdownMenu += deleteButton;
+
+			// close drop-down menu when player clicks on an option
+			foreach (Button option in dropdownMenu.Options) {
+				option.OnClick += (e) => dropdownMenu = null;
+			}
+		}
+
+		private void deleteFolder(Toolbar folder) {
+			string folderId = folders.Single(kv => kv.Value.Equals(folder)).Key;
+			folders.Remove(folderId);
+
+			savedFolderSettings.Remove(folderId);
+
+			Button folderButton = folderButtons.Single(kv => kv.Value.Equals(folder)).Key;
+			folderButton.Destroy();
+
+			foreach (Button b in new List<Button>(folder.buttons)) {
+				folder.remove(b);
+				add(b);
 			}
 		}
 	}

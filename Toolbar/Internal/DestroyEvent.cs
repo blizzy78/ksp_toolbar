@@ -27,42 +27,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using UnityEngine;
 
 namespace Toolbar {
-	internal class DropMarker {
-		internal const float MARKER_LINE_WIDTH = 2;
+	internal class DestroyEvent : EventArgs {
+		internal readonly Button button;
 
-		private static readonly Rect NO_POSITION = new Rect(float.MinValue, float.MinValue, float.MinValue, float.MinValue);
-
-		internal Rect Rect = NO_POSITION;
-		internal bool Visible = true;
-
-		private Texture2D orangeBgTex;
-		private GUIStyle style;
-		private bool styleInitialized;
-
-		internal void draw() {
-			if (Visible && !Rect.Equals(NO_POSITION)) {
-				initStyle();
-
-				GUI.Label(Rect, (string) null, style);
-			}
-		}
-
-		private void initStyle() {
-			if (!styleInitialized) {
-				orangeBgTex = new Texture2D(1, 1);
-				orangeBgTex.SetPixel(0, 0, XKCDColors.DarkOrange);
-				orangeBgTex.Apply();
-
-				style = new GUIStyle(GUI.skin.label);
-				style.normal.background = orangeBgTex;
-				style.border = new RectOffset(0, 0, 0, 0);
-				style.padding = new RectOffset(0, 0, 0, 0);
-
-				styleInitialized = true;
-			}
+		internal DestroyEvent(Button button) {
+			this.button = button;
 		}
 	}
 }
