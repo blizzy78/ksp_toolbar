@@ -36,7 +36,7 @@ namespace Toolbar {
 
 		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 
-		private const int VERSION = 1;
+		private const int VERSION = 4;
 
 		internal static bool? showUpdateAvailableButton = null;
 

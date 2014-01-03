@@ -694,7 +694,7 @@ namespace Toolbar {
 				rect.height = settingsNode.get("height", 0f);
 				autoHide = settingsNode.get("autoHide", false);
 				showBorder = settingsNode.get("drawBorder", true);
-				useKSPSkin_ = settingsNode.get("useKSPSkin", false);
+				UseKSPSkin = settingsNode.get("useKSPSkin", false);
 				savedButtonOrder = settingsNode.get("buttonOrder", "").Split(new char[] { ',' }).ToList();
 
 				if (settingsNode.HasNode("folders")) {
