@@ -1,4 +1,8 @@
-﻿1.4.0, 2014-01-01
+﻿1.4.1, 2014-01-05
+- Fixed a bug that could sometimes cause buttons to render with Unity's
+  default skin instead of the KSP skin.
+
+1.4.0, 2014-01-01
 - You can now add custom folders to the toolbar, which can hold any number
   of regular buttons for improved organization.
 
