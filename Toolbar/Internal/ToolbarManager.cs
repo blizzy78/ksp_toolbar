@@ -36,12 +36,11 @@ namespace Toolbar {
 
 		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 
-		private const int VERSION = 4;
-
-		internal static bool? showUpdateAvailableButton = null;
+		private const int VERSION = 1;
 
 		private static WWW versionWWW;
-		private static bool? newVersionAvailable = null;
+
+		private bool checkForUpdates;
 
 		private RenderingManager renderingManager;
 		private Toolbar toolbar = new Toolbar();
@@ -50,10 +49,6 @@ namespace Toolbar {
 		internal ToolbarManager() {
 			Instance = this;
 			GameObject.DontDestroyOnLoad(this);
-
-			if (versionWWW == null) {
-				versionWWW = new WWW("http://blizzy.de/toolbar/version.txt");
-			}
 
 			toolbar.onChange += toolbarChanged;
 
@@ -94,7 +89,7 @@ namespace Toolbar {
 			ConfigNode root = loadSettings();
 			if (root.HasNode("toolbars")) {
 				ConfigNode toolbarsNode = root.GetNode("toolbars");
-				showUpdateAvailableButton = toolbarsNode.get("showUpdateNotification", true);
+				checkForUpdates = toolbarsNode.get("checkForUpdates", true);
 
 				toolbar.loadSettings(toolbarsNode, scene);
 			}
@@ -139,15 +134,24 @@ namespace Toolbar {
 		}
 
 		private void checkForNewVersion() {
-			if ((newVersionAvailable == null) && String.IsNullOrEmpty(versionWWW.error) && versionWWW.isDone) {
-				try {
-					long ver = long.Parse(versionWWW.text);
-					newVersionAvailable = ver > VERSION;
-					if (newVersionAvailable == true) {
-						addUpdateAvailableButton();
+			if (checkForUpdates) {
+				if (versionWWW == null) {
+					versionWWW = new WWW("http://blizzy.de/toolbar/version.txt");
+				}
+
+				if (versionWWW.isDone) {
+					if (String.IsNullOrEmpty(versionWWW.error)) {
+						try {
+							if (int.Parse(versionWWW.text) > VERSION) {
+								addUpdateAvailableButton();
+							}
+						} catch (Exception) {
+							// ignore
+						}
 					}
-				} catch (Exception) {
-					// ignore
+
+					checkForUpdates = false;
+					versionWWW = null;
 				}
 			}
 		}
@@ -157,7 +161,6 @@ namespace Toolbar {
 			button.TexturePath = "000_Toolbar/update-available";
 			button.ToolTip = "Toolbar Plugin Update Available";
 			button.Important = true;
-			button.Visibility = new UpdateAvailableVisibility();
 			button.OnClick += (e) => {
 				Application.OpenURL(FORUM_THREAD_URL);
 				button.Important = false;
@@ -169,14 +172,6 @@ namespace Toolbar {
 			toolbar.add(button);
 
 			return button;
-		}
-	}
-
-	internal class UpdateAvailableVisibility : IVisibility {
-		public bool Visible {
-			get {
-				return ToolbarManager.showUpdateAvailableButton == true;
-			}
 		}
 	}
 }
