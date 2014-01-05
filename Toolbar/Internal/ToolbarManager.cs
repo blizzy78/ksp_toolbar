@@ -36,15 +36,14 @@ namespace Toolbar {
 
 		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 
-		private const int VERSION = 1;
+		private const int VERSION = 4;
 
 		private static WWW versionWWW;
-
-		private bool checkForUpdates;
 
 		private RenderingManager renderingManager;
 		private Toolbar toolbar = new Toolbar();
 		private ConfigNode settings;
+		private bool checkForUpdates;
 
 		internal ToolbarManager() {
 			Instance = this;
@@ -60,11 +59,9 @@ namespace Toolbar {
 		}
 
 		internal void OnGUI() {
-			if (!showGUI()) {
-				return;
+			if (showGUI()) {
+				toolbar.draw();
 			}
-
-			toolbar.draw();
 		}
 
 		internal void Update() {
