@@ -30,50 +30,29 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal class FolderSettingsDialog : AbstractWindow {
-		internal event Action OnOkClicked;
-		internal event Action OnCancelClicked;
+	internal abstract class AbstractWindow {
+		private readonly int id = new System.Random().Next(int.MaxValue);
 
-		internal string ToolTip;
+		internal protected Rect Rect = new Rect(0, 0, 0, 0);
+		internal protected string Title;
+		internal protected GUIStyle GUIStyle;
+		internal protected GUILayoutOption[] GUILayoutOptions = {};
 
-		private Rect rect = new Rect(300, 300, Mathf.Max(Screen.width / 4, 350), 0);
-
-		internal FolderSettingsDialog(string toolTip) {
-			Rect = new Rect(300, 300, Mathf.Max(Screen.width / 4, 350), 0);
-			Title = "Folder Settings";
-
-			this.ToolTip = toolTip;
+		internal AbstractWindow() {
 		}
 
-		internal override void drawContents() {
-			GUILayout.BeginVertical();
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("Button tooltip text:", GUILayout.ExpandWidth(false));
-			ToolTip = GUILayout.TextField(ToolTip, GUILayout.ExpandWidth(true));
-			GUILayout.EndHorizontal();
-
-			GUILayout.Space(15);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("OK")) {
-				fireButtonClicked(OnOkClicked);
+		internal virtual void draw() {
+			if (GUIStyle == null) {
+				GUIStyle = GUI.skin.window;
 			}
-			if (GUILayout.Button("Cancel")) {
-				fireButtonClicked(OnCancelClicked);
-			}
-			GUILayout.EndHorizontal();
 
-			GUILayout.EndVertical();
-
-			GUI.DragWindow();
+			Rect = GUILayout.Window(id, Rect.clampToScreen(), windowId => drawContents(), Title, GUIStyle, GUILayoutOptions);
 		}
 
-		private void fireButtonClicked(Action evt) {
-			if (evt != null) {
-				evt();
-			}
+		internal bool contains(Vector2 pos) {
+			return Rect.Contains(pos);
 		}
+
+		internal abstract void drawContents();
 	}
 }

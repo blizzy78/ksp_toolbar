@@ -578,9 +578,12 @@ namespace Toolbar {
 			}
 
 			if (dropdownMenu != null) {
+				// auto-close drop-down menu when clicking outside
 				if ((Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2)) && !dropdownMenu.contains(Utils.getMousePosition())) {
 					dropdownMenu = null;
 				}
+
+				// auto-close drop-down menu when pause menu is opened
 				if (isPauseMenuOpen()) {
 					dropdownMenu = null;
 				}
@@ -843,10 +846,7 @@ namespace Toolbar {
 				aboutButton.Enabled = regularEntriesEnabled;
 				dropdownMenu += aboutButton;
 
-				// close drop-down menu when player clicks on an option
-				foreach (Button option in dropdownMenu.Options) {
-					option.OnClick += (e) => dropdownMenu = null;
-				}
+				dropdownMenu.OnAnyOptionClicked += () => dropdownMenu = null;
 			} else {
 				dropdownMenu = null;
 			}
@@ -1063,10 +1063,7 @@ namespace Toolbar {
 			deleteButton.OnClick += (e) => deleteFolder(folder);
 			dropdownMenu += deleteButton;
 
-			// close drop-down menu when player clicks on an option
-			foreach (Button option in dropdownMenu.Options) {
-				option.OnClick += (e) => dropdownMenu = null;
-			}
+			dropdownMenu.OnAnyOptionClicked += () => dropdownMenu = null;
 		}
 
 		private void deleteFolder(Toolbar folder) {

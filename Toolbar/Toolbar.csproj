@@ -45,6 +45,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Internal\AbstractWindow.cs" />
     <Compile Include="Internal\Button.cs" />
     <Compile Include="ClickEvent.cs" />
     <Compile Include="ClickHandler.cs" />

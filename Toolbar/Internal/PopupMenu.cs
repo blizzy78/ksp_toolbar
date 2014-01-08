@@ -30,43 +30,24 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal class PopupMenu {
-		private readonly int id = new System.Random().Next(int.MaxValue);
-
+	internal class PopupMenu : AbstractWindow {
+		internal event Action OnAnyOptionClicked;
+		
 		private Texture2D orangeBgTex;
 		private GUIStyle optionStyle;
 		private bool stylesInitialized;
-
-		public static PopupMenu operator +(PopupMenu menu, Button option) {
-			menu.options.Add(option);
-			return menu;
-		}
-
-		internal IEnumerable<Button> Options {
-			get {
-				return options;
-			}
-		}
-
-		internal Rect Rect {
-			get;
-			private set;
-		}
-
 		private List<Button> options = new List<Button>();
 
 		internal PopupMenu(Vector2 position) {
 			Rect = new Rect(position.x, position.y, 0, 0);
 		}
 
-		internal void draw() {
+		internal override void draw() {
 			initStyles();
-
-			Rect = Rect.clampToScreen();
-			Rect = GUILayout.Window(id, Rect, drawWindow, (string) null, GUI.skin.box, GUILayout.ExpandWidth(true));
+			base.draw();
 		}
 
-		private void drawWindow(int id) {
+		internal override void drawContents() {
 			GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
 			foreach (Button option in options) {
 				option.drawMenuOption(optionStyle);
@@ -89,12 +70,27 @@ namespace Toolbar {
 				optionStyle.padding.left += 8;
 				optionStyle.padding.right += 8;
 
+				GUIStyle = GUI.skin.box;
+				GUILayoutOptions = new GUILayoutOption[] { GUILayout.ExpandWidth(true) };
+
 				stylesInitialized = true;
 			}
 		}
 
-		internal bool contains(Vector2 pos) {
-			return Rect.Contains(pos);
+		private void addOption(Button option) {
+			options.Add(option);
+			option.OnClick += (e) => fireAnyOptionClicked();
+		}
+
+		private void fireAnyOptionClicked() {
+			if (OnAnyOptionClicked != null) {
+				OnAnyOptionClicked();
+			}
+		}
+
+		public static PopupMenu operator +(PopupMenu menu, Button option) {
+			menu.addOption(option);
+			return menu;
 		}
 	}
 }
