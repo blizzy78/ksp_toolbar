@@ -31,14 +31,27 @@ using UnityEngine;
 
 namespace Toolbar {
 	internal abstract class AbstractWindow {
-		private readonly int id = new System.Random().Next(int.MaxValue);
-
 		internal protected Rect Rect = new Rect(0, 0, 0, 0);
 		internal protected string Title;
 		internal protected GUIStyle GUIStyle;
 		internal protected GUILayoutOption[] GUILayoutOptions = {};
+		internal protected bool Draggable = true;
+		internal protected bool Dialog;
+		internal protected bool Modal;
+
+		private readonly int id = new System.Random().Next(int.MaxValue);
+		private EditorLock editorLock;
 
 		internal AbstractWindow() {
+			WindowList.Instance += this;
+
+			editorLock = new EditorLock("Toolbar_window_" + id);
+		}
+
+		internal void destroy() {
+			WindowList.Instance -= this;
+
+			editorLock.draw(false);
 		}
 
 		internal virtual void draw() {
@@ -46,11 +59,21 @@ namespace Toolbar {
 				GUIStyle = GUI.skin.window;
 			}
 
-			Rect = GUILayout.Window(id, Rect.clampToScreen(), windowId => drawContents(), Title, GUIStyle, GUILayoutOptions);
+			Rect = GUILayout.Window(id, Rect.clampToScreen(), windowId => drawContentsInternal(), Title, GUIStyle, GUILayoutOptions);
+
+			editorLock.draw(Modal || Rect.Contains(Utils.getMousePosition()));
 		}
 
 		internal bool contains(Vector2 pos) {
 			return Rect.Contains(pos);
+		}
+
+		private void drawContentsInternal() {
+			drawContents();
+
+			if (Draggable) {
+				GUI.DragWindow();
+			}
 		}
 
 		internal abstract void drawContents();

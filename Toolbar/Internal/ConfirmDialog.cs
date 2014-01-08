@@ -30,51 +30,50 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal class FolderSettingsDialog : AbstractWindow {
-		internal event Action OnOkClicked;
-		internal event Action OnCancelClicked;
+	internal class ConfirmDialog : AbstractWindow {
+		private string text;
+		private Action onOk;
+		private Action onCancel;
 
-		internal string ToolTip;
-
-		private Rect rect = new Rect(300, 300, Mathf.Max(Screen.width / 4, 350), 0);
-
-		internal FolderSettingsDialog(string toolTip) : base() {
-			Rect = new Rect(300, 300, Mathf.Max(Screen.width / 4, 350), 0);
-			Title = "Folder Settings";
+		internal ConfirmDialog(string title, string text, Action onOk, Action onCancel) : base() {
+			Rect = new Rect(300, 300, Screen.width / 4, 0);
+			Title = title;
 			Dialog = true;
 			Modal = true;
 
-			this.ToolTip = toolTip;
+			this.text = text;
+			this.onOk = onOk;
+			this.onCancel = onCancel;
 		}
 
 		internal override void drawContents() {
 			GUILayout.BeginVertical();
 
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("Button tooltip text:", GUILayout.ExpandWidth(false));
-			ToolTip = GUILayout.TextField(ToolTip, GUILayout.ExpandWidth(true));
-			GUILayout.EndHorizontal();
+			GUILayout.Label(text, GUILayout.ExpandWidth(true));
 
 			GUILayout.Space(15);
 
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
 			if (GUILayout.Button("OK")) {
-				fireButtonClicked(OnOkClicked);
+				onOk();
 			}
 			if (GUILayout.Button("Cancel")) {
-				fireButtonClicked(OnCancelClicked);
+				onCancel();
 			}
 			GUILayout.EndHorizontal();
 
 			GUILayout.EndVertical();
 		}
 
-		private void fireButtonClicked(Action evt) {
-			destroy();
-			if (evt != null) {
-				evt();
-			}
+		internal static void confirm(string title, string text, Action onOk) {
+			ConfirmDialog dialog = null;
+			dialog = new ConfirmDialog(title, text,
+				() => {
+					dialog.destroy();
+					onOk();
+				},
+				() => dialog.destroy());
 		}
 	}
 }

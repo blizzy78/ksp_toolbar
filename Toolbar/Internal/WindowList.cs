@@ -27,54 +27,50 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using UnityEngine;
 
 namespace Toolbar {
-	internal class FolderSettingsDialog : AbstractWindow {
-		internal event Action OnOkClicked;
-		internal event Action OnCancelClicked;
+	internal class WindowList {
+		internal static WindowList Instance = new WindowList();
 
-		internal string ToolTip;
+		private List<AbstractWindow> windows = new List<AbstractWindow>();
+		private List<AbstractWindow> newWindows;
 
-		private Rect rect = new Rect(300, 300, Mathf.Max(Screen.width / 4, 350), 0);
-
-		internal FolderSettingsDialog(string toolTip) : base() {
-			Rect = new Rect(300, 300, Mathf.Max(Screen.width / 4, 350), 0);
-			Title = "Folder Settings";
-			Dialog = true;
-			Modal = true;
-
-			this.ToolTip = toolTip;
+		private WindowList() {
 		}
 
-		internal override void drawContents() {
-			GUILayout.BeginVertical();
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("Button tooltip text:", GUILayout.ExpandWidth(false));
-			ToolTip = GUILayout.TextField(ToolTip, GUILayout.ExpandWidth(true));
-			GUILayout.EndHorizontal();
-
-			GUILayout.Space(15);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("OK")) {
-				fireButtonClicked(OnOkClicked);
+		internal void draw() {
+			// if there is a newer list, use that one
+			if (newWindows != null) {
+				windows = newWindows;
+				newWindows = null;
 			}
-			if (GUILayout.Button("Cancel")) {
-				fireButtonClicked(OnCancelClicked);
+			foreach (AbstractWindow window in windows) {
+				window.draw();
 			}
-			GUILayout.EndHorizontal();
-
-			GUILayout.EndVertical();
 		}
 
-		private void fireButtonClicked(Action evt) {
-			destroy();
-			if (evt != null) {
-				evt();
+		internal void destroyDialogs() {
+			// do not use the actual list because we might be iterating over it right now
+			createNewWindowList().RemoveAll(w => w.Dialog);
+		}
+
+		private List<AbstractWindow> createNewWindowList() {
+			if (newWindows == null) {
+				newWindows = new List<AbstractWindow>(windows);
 			}
+			return newWindows;
+		}
+
+		public static WindowList operator +(WindowList windowList, AbstractWindow window) {
+			// do not use the actual list because we might be iterating over it right now
+			windowList.createNewWindowList().Add(window);
+			return windowList;
+		}
+
+		public static WindowList operator -(WindowList windowList, AbstractWindow window) {
+			// do not use the actual list because we might be iterating over it right now
+			windowList.createNewWindowList().Remove(window);
+			return windowList;
 		}
 	}
 }

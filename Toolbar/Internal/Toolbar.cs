@@ -53,8 +53,8 @@ namespace Toolbar {
 					if (!value) {
 						rectLocked = true;
 						buttonOrderLocked = true;
+						WindowList.Instance.destroyDialogs();
 						dropdownMenu = null;
-						folderSettingsDialog = null;
 						hookButtonOrderDraggables(false);
 					}
 
@@ -73,8 +73,8 @@ namespace Toolbar {
 					if (!value) {
 						rectLocked = true;
 						buttonOrderLocked = true;
+						WindowList.Instance.destroyDialogs();
 						dropdownMenu = null;
-						folderSettingsDialog = null;
 						hookButtonOrderDraggables(false);
 					}
 
@@ -125,13 +125,11 @@ namespace Toolbar {
 		private Button buttonOrderHoveredButton;
 		private List<string> savedButtonOrder = new List<string>();
 		private EditorLock editorLockToolbar = new EditorLock("ToolbarPlugin_toolbar");
-		private EditorLock editorLockMenu = new EditorLock("ToolbarPlugin_menu");
 		private EditorLock editorLockDrag = new EditorLock("ToolbarPlugin_drag");
 		private EditorLock editorLockReorder = new EditorLock("ToolbarPlugin_buttonReorder");
 		private Dictionary<string, Toolbar> folders = new Dictionary<string, Toolbar>();
 		private Dictionary<Button, Toolbar> folderButtons = new Dictionary<Button, Toolbar>();
 		private Dictionary<string, FolderSettings> savedFolderSettings = new Dictionary<string, FolderSettings>();
-		private FolderSettingsDialog folderSettingsDialog;
 
 		internal Toolbar(Mode mode = Mode.TOOLBAR, Toolbar parentToolbar = null) {
 			this.mode = mode;
@@ -222,20 +220,11 @@ namespace Toolbar {
 					drawButtonToolTips();
 				}
 
-				if (dropdownMenu != null) {
-					dropdownMenu.draw();
-				}
-
-				if (folderSettingsDialog != null) {
-					folderSettingsDialog.draw();
-				}
-
 				GUI.depth = oldDepth;
 			}
 
 			Vector2 mousePos = Utils.getMousePosition();
 			editorLockToolbar.draw(rect.contains(mousePos));
-			editorLockMenu.draw((dropdownMenu != null) && dropdownMenu.Rect.Contains(mousePos));
 			editorLockDrag.draw(!rectLocked);
 			editorLockReorder.draw(!buttonOrderLocked);
 		}
@@ -580,11 +569,13 @@ namespace Toolbar {
 			if (dropdownMenu != null) {
 				// auto-close drop-down menu when clicking outside
 				if ((Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2)) && !dropdownMenu.contains(Utils.getMousePosition())) {
+					dropdownMenu.destroy();
 					dropdownMenu = null;
 				}
 
 				// auto-close drop-down menu when pause menu is opened
 				if (isPauseMenuOpen()) {
+					dropdownMenu.destroy();
 					dropdownMenu = null;
 				}
 			}
@@ -665,8 +656,8 @@ namespace Toolbar {
 
 		internal void loadSettings(ConfigNode parentNode, GameScenes scene) {
 			// hide these
+			WindowList.Instance.destroyDialogs();
 			dropdownMenu = null;
-			folderSettingsDialog = null;
 			// deactivate these
 			rectLocked = true;
 			draggable.Enabled = false;
@@ -846,8 +837,12 @@ namespace Toolbar {
 				aboutButton.Enabled = regularEntriesEnabled;
 				dropdownMenu += aboutButton;
 
-				dropdownMenu.OnAnyOptionClicked += () => dropdownMenu = null;
+				dropdownMenu.OnAnyOptionClicked += () => {
+					dropdownMenu.destroy();
+					dropdownMenu = null;
+				};
 			} else {
+				dropdownMenu.destroy();
 				dropdownMenu = null;
 			}
 		}
@@ -987,27 +982,23 @@ namespace Toolbar {
 		}
 
 		private void createFolder() {
-			folderSettingsDialog = new FolderSettingsDialog("New Folder");
+			FolderSettingsDialog folderSettingsDialog = new FolderSettingsDialog("New Folder");
 			folderSettingsDialog.OnOkClicked += () => {
 				createFolder("folder_" + new System.Random().Next(int.MaxValue), folderSettingsDialog.ToolTip, true);
-				folderSettingsDialog = null;
 			};
-			folderSettingsDialog.OnCancelClicked += () => folderSettingsDialog = null;
 		}
 
 		private void editFolder(Toolbar folder) {
 			string folderId = folders.Single(kv => kv.Value.Equals(folder)).Key;
 			string toolTip = savedFolderSettings[folderId].toolTip;
-			folderSettingsDialog = new FolderSettingsDialog(toolTip);
+			FolderSettingsDialog folderSettingsDialog = new FolderSettingsDialog(toolTip);
 			folderSettingsDialog.OnOkClicked += () => {
 				toolTip = folderSettingsDialog.ToolTip;
 				savedFolderSettings[folderId].toolTip = toolTip;
 				Button folderButton = folderButtons.Single(kv => kv.Value.Equals(folder)).Key;
 				folderButton.ToolTip = toolTip;
-				folderSettingsDialog = null;
 				fireChange();
 			};
-			folderSettingsDialog.OnCancelClicked += () => folderSettingsDialog = null;
 		}
 
 		private Toolbar createFolder(string id, string toolTip, bool visible) {
@@ -1063,7 +1054,10 @@ namespace Toolbar {
 			deleteButton.OnClick += (e) => deleteFolder(folder);
 			dropdownMenu += deleteButton;
 
-			dropdownMenu.OnAnyOptionClicked += () => dropdownMenu = null;
+			dropdownMenu.OnAnyOptionClicked += () => {
+				dropdownMenu.destroy();
+				dropdownMenu = null;
+			};
 		}
 
 		private void deleteFolder(Toolbar folder) {

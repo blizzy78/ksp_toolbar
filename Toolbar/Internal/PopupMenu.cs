@@ -38,8 +38,10 @@ namespace Toolbar {
 		private bool stylesInitialized;
 		private List<Button> options = new List<Button>();
 
-		internal PopupMenu(Vector2 position) {
+		internal PopupMenu(Vector2 position) : base() {
 			Rect = new Rect(position.x, position.y, 0, 0);
+			Draggable = false;
+			Dialog = true;
 		}
 
 		internal override void draw() {

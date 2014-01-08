@@ -61,6 +61,7 @@ namespace Toolbar {
 		internal void OnGUI() {
 			if (showGUI()) {
 				toolbar.draw();
+				WindowList.Instance.draw();
 			}
 		}
 
