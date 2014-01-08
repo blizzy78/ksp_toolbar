@@ -1061,18 +1061,21 @@ namespace Toolbar {
 		}
 
 		private void deleteFolder(Toolbar folder) {
-			string folderId = folders.Single(kv => kv.Value.Equals(folder)).Key;
-			folders.Remove(folderId);
+			ConfirmDialog.confirm("Delete Folder", "Delete this folder? Buttons inside the folder will be moved to the main toolbar.",
+				() => {
+					string folderId = folders.Single(kv => kv.Value.Equals(folder)).Key;
+					folders.Remove(folderId);
 
-			savedFolderSettings.Remove(folderId);
+					savedFolderSettings.Remove(folderId);
 
-			Button folderButton = folderButtons.Single(kv => kv.Value.Equals(folder)).Key;
-			folderButton.Destroy();
+					Button folderButton = folderButtons.Single(kv => kv.Value.Equals(folder)).Key;
+					folderButton.Destroy();
 
-			foreach (Button b in new List<Button>(folder.buttons)) {
-				folder.remove(b);
-				add(b);
-			}
+					foreach (Button b in new List<Button>(folder.buttons)) {
+						folder.remove(b);
+						add(b);
+					}
+				});
 		}
 	}
 }
