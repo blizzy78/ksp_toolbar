@@ -429,7 +429,10 @@ namespace Toolbar {
 				if (shouldHide && !autoHidden && !button.Important && (dropdownMenu == null)) {
 					GUI.color = autoHideUnimportantButtonAlpha;
 				}
-				button.draw(buttonRect, ((Enabled && rectLocked && buttonOrderLocked) || button.Equals(dropdownMenuButton)) && !isPauseMenuOpen());
+				button.draw(buttonRect,
+					((Enabled && rectLocked && buttonOrderLocked) || button.Equals(dropdownMenuButton)) &&
+					!isPauseMenuOpen() &&
+					!WindowList.Instance.ModalDialogOpen);
 				GUI.color = oldColor;
 
 				if (buttonRect.Contains(mousePos)) {

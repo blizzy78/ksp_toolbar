@@ -30,6 +30,12 @@ using System.Text;
 
 namespace Toolbar {
 	internal class WindowList {
+		internal bool ModalDialogOpen {
+			get {
+				return windows.Any(w => w.Dialog && w.Modal);
+			}
+		}
+
 		internal static WindowList Instance = new WindowList();
 
 		private List<AbstractWindow> windows = new List<AbstractWindow>();
