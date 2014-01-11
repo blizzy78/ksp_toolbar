@@ -679,7 +679,7 @@ namespace Toolbar {
 
 			if (parentNode.HasNode("toolbar")) {
 				foreach (Toolbar folder in new List<Toolbar>(folders.Values)) {
-					deleteFolder(folder);
+					removeFolder(folder);
 				}
 				savedFolderSettings.Clear();
 
@@ -1065,20 +1065,22 @@ namespace Toolbar {
 
 		private void deleteFolder(Toolbar folder) {
 			ConfirmDialog.confirm("Delete Folder", "Delete this folder? Buttons inside the folder will be moved to the main toolbar.",
-				() => {
-					string folderId = folders.Single(kv => kv.Value.Equals(folder)).Key;
-					folders.Remove(folderId);
+				() => removeFolder(folder));
+		}
 
-					savedFolderSettings.Remove(folderId);
+		private void removeFolder(Toolbar folder) {
+			string folderId = folders.Single(kv => kv.Value.Equals(folder)).Key;
+			folders.Remove(folderId);
 
-					Button folderButton = folderButtons.Single(kv => kv.Value.Equals(folder)).Key;
-					folderButton.Destroy();
+			savedFolderSettings.Remove(folderId);
 
-					foreach (Button b in new List<Button>(folder.buttons)) {
-						folder.remove(b);
-						add(b);
-					}
-				});
+			Button folderButton = folderButtons.Single(kv => kv.Value.Equals(folder)).Key;
+			folderButton.Destroy();
+
+			foreach (Button b in new List<Button>(folder.buttons)) {
+				folder.remove(b);
+				add(b);
+			}
 		}
 	}
 }
