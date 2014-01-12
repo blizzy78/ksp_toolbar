@@ -63,6 +63,7 @@
     <Compile Include="Internal\DestroyEvent.cs" />
     <Compile Include="Internal\FolderSettings.cs" />
     <Compile Include="Internal\FolderSettingsDialog.cs" />
+    <Compile Include="Internal\InstallChecker.cs" />
     <Compile Include="Internal\PopupMenu.cs" />
     <Compile Include="Internal\MouseEnterEvent.cs" />
     <Compile Include="Internal\MouseMoveEvent.cs" />
