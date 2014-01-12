@@ -45,44 +45,44 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Internal\AbstractWindow.cs" />
-    <Compile Include="Internal\Button.cs" />
-    <Compile Include="ClickEvent.cs" />
-    <Compile Include="ClickHandler.cs" />
-    <Compile Include="Internal\ClickEvent.cs" />
-    <Compile Include="Internal\ConfirmDialog.cs" />
-    <Compile Include="Internal\DestroyHandler.cs" />
-    <Compile Include="Internal\DragEvent.cs" />
-    <Compile Include="Internal\Draggable.cs" />
-    <Compile Include="Internal\DragHandler.cs" />
-    <Compile Include="Internal\DropMarker.cs" />
-    <Compile Include="Internal\EditorLock.cs" />
+    <Compile Include="Internal\GUI\AbstractWindow.cs" />
+    <Compile Include="Internal\Toolbar\Button.cs" />
+    <Compile Include="API\ClickEvent.cs" />
+    <Compile Include="API\ClickHandler.cs" />
+    <Compile Include="Internal\Toolbar\ClickEvent.cs" />
+    <Compile Include="Internal\GUI\ConfirmDialog.cs" />
+    <Compile Include="Internal\Toolbar\DestroyHandler.cs" />
+    <Compile Include="Internal\GUI\DragEvent.cs" />
+    <Compile Include="Internal\GUI\Draggable.cs" />
+    <Compile Include="Internal\GUI\DragHandler.cs" />
+    <Compile Include="Internal\GUI\DropMarker.cs" />
+    <Compile Include="Internal\GUI\EditorLock.cs" />
     <Compile Include="Internal\Extensions.cs" />
-    <Compile Include="GameScenesVisibility.cs" />
-    <Compile Include="IButton.cs" />
-    <Compile Include="Internal\DestroyEvent.cs" />
-    <Compile Include="Internal\FolderSettings.cs" />
-    <Compile Include="Internal\FolderSettingsDialog.cs" />
+    <Compile Include="API\GameScenesVisibility.cs" />
+    <Compile Include="API\IButton.cs" />
+    <Compile Include="Internal\Toolbar\DestroyEvent.cs" />
+    <Compile Include="Internal\Toolbar\FolderSettings.cs" />
+    <Compile Include="Internal\Toolbar\FolderSettingsDialog.cs" />
     <Compile Include="Internal\InstallChecker.cs" />
-    <Compile Include="Internal\PopupMenu.cs" />
-    <Compile Include="Internal\MouseEnterEvent.cs" />
-    <Compile Include="Internal\MouseMoveEvent.cs" />
-    <Compile Include="Internal\MouseLeaveEvent.cs" />
-    <Compile Include="Internal\ToolbarManager.cs" />
+    <Compile Include="Internal\GUI\PopupMenu.cs" />
+    <Compile Include="Internal\Toolbar\MouseEnterEvent.cs" />
+    <Compile Include="Internal\Toolbar\MouseMoveEvent.cs" />
+    <Compile Include="Internal\Toolbar\MouseLeaveEvent.cs" />
+    <Compile Include="Internal\Toolbar\ToolbarManager.cs" />
     <Compile Include="Internal\UpdateChecker.cs" />
-    <Compile Include="Internal\WindowList.cs" />
-    <Compile Include="IToolbarManager.cs" />
-    <Compile Include="IVisibility.cs" />
-    <Compile Include="Internal\Rectangle.cs" />
-    <Compile Include="Internal\Resizable.cs" />
+    <Compile Include="Internal\GUI\WindowList.cs" />
+    <Compile Include="API\IToolbarManager.cs" />
+    <Compile Include="API\IVisibility.cs" />
+    <Compile Include="Internal\GUI\Rectangle.cs" />
+    <Compile Include="Internal\GUI\Resizable.cs" />
     <Compile Include="Internal\KSPAddonFixed.cs" />
-    <Compile Include="MouseMoveHandler.cs" />
-    <Compile Include="MouseLeaveEvent.cs" />
-    <Compile Include="MouseEnterEvent.cs" />
-    <Compile Include="MouseMoveEvent.cs" />
+    <Compile Include="API\MouseMoveHandler.cs" />
+    <Compile Include="API\MouseLeaveEvent.cs" />
+    <Compile Include="API\MouseEnterEvent.cs" />
+    <Compile Include="API\MouseMoveEvent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Internal\Toolbar.cs" />
-    <Compile Include="ToolbarManager.cs" />
+    <Compile Include="Internal\Toolbar\Toolbar.cs" />
+    <Compile Include="API\ToolbarManager.cs" />
     <Compile Include="Internal\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -99,6 +99,7 @@
     <None Include="etc\update-available.psd" />
     <None Include="etc\update-available.tga" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
