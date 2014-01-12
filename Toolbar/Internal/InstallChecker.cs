@@ -40,7 +40,7 @@ namespace Toolbar {
 					.Where(a => (a.assembly.GetName().Name == executingAssemblyName) && (a.url != "000_Toolbar"));
 			if (assemblies.Any()) {
 				Uri rootUri = new Uri(Path.GetFullPath(KSPUtil.ApplicationRootPath));
-				var badPaths = assemblies
+				IEnumerable<string> badPaths = assemblies
 					.Select(a => Uri.UnescapeDataString(rootUri.MakeRelativeUri(new Uri(a.path)).ToString().Replace('/', Path.DirectorySeparatorChar)));
 				PopupDialog.SpawnPopupDialog("Incorrect Toolbar Plugin Installation",
 					"The Toolbar Plugin has been installed incorrectly and will not function properly. All Toolbar Plugin files " +
