@@ -69,6 +69,7 @@
     <Compile Include="Internal\MouseMoveEvent.cs" />
     <Compile Include="Internal\MouseLeaveEvent.cs" />
     <Compile Include="Internal\ToolbarManager.cs" />
+    <Compile Include="Internal\UpdateChecker.cs" />
     <Compile Include="Internal\WindowList.cs" />
     <Compile Include="IToolbarManager.cs" />
     <Compile Include="IVisibility.cs" />

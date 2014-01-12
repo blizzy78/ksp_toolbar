@@ -33,23 +33,22 @@ namespace Toolbar {
 	[KSPAddonFixed(KSPAddon.Startup.EveryScene, true, typeof(ToolbarManager))]
 	public partial class ToolbarManager : MonoBehaviour, IToolbarManager {
 		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
+		internal const int VERSION = 5;
 
 		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
-
-		private const int VERSION = 5;
-
-		private static WWW versionWWW;
 
 		private RenderingManager renderingManager;
 		private Toolbar toolbar = new Toolbar();
 		private ConfigNode settings;
-		private bool checkForUpdates;
+		private UpdateChecker updateChecker = new UpdateChecker();
 
 		internal ToolbarManager() {
 			Instance = this;
 			GameObject.DontDestroyOnLoad(this);
 
 			toolbar.onChange += toolbarChanged;
+
+			updateChecker.OnDone += () => updateChecker = null;
 
 			GameEvents.onGameSceneLoadRequested.Add(gameSceneLoadRequested);
 		}
@@ -67,8 +66,9 @@ namespace Toolbar {
 
 		internal void Update() {
 			toolbar.update();
-
-			checkForNewVersion();
+			if (updateChecker != null) {
+				updateChecker.update();
+			}
 		}
 
 		private void toolbarChanged() {
@@ -87,7 +87,9 @@ namespace Toolbar {
 			ConfigNode root = loadSettings();
 			if (root.HasNode("toolbars")) {
 				ConfigNode toolbarsNode = root.GetNode("toolbars");
-				checkForUpdates = toolbarsNode.get("checkForUpdates", true);
+				if (updateChecker != null) {
+					updateChecker.CheckForUpdates = toolbarsNode.get("checkForUpdates", true);
+				}
 
 				toolbar.loadSettings(toolbarsNode, scene);
 			}
@@ -129,40 +131,6 @@ namespace Toolbar {
 		private bool isRelevantGameScene(GameScenes scene) {
 			return (scene != GameScenes.LOADING) && (scene != GameScenes.LOADINGBUFFER) &&
 				(scene != GameScenes.MAINMENU) && (scene != GameScenes.PSYSTEM) && (scene != GameScenes.CREDITS);
-		}
-
-		private void checkForNewVersion() {
-			if (checkForUpdates) {
-				if (versionWWW == null) {
-					versionWWW = new WWW("http://blizzy.de/toolbar/version.txt");
-				}
-
-				if (versionWWW.isDone) {
-					if (String.IsNullOrEmpty(versionWWW.error)) {
-						try {
-							if (int.Parse(versionWWW.text) > VERSION) {
-								addUpdateAvailableButton();
-							}
-						} catch (Exception) {
-							// ignore
-						}
-					}
-
-					checkForUpdates = false;
-					versionWWW = null;
-				}
-			}
-		}
-
-		private void addUpdateAvailableButton() {
-			IButton button = add(Button.NAMESPACE_INTERNAL, "updateAvailable");
-			button.TexturePath = "000_Toolbar/update-available";
-			button.ToolTip = "Toolbar Plugin Update Available";
-			button.Important = true;
-			button.OnClick += (e) => {
-				Application.OpenURL(FORUM_THREAD_URL);
-				button.Important = false;
-			};
 		}
 
 		public IButton add(string ns, string id) {
