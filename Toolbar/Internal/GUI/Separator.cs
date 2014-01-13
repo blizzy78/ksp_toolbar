@@ -30,54 +30,38 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal class PopupMenu : AbstractWindow {
-		internal event Action OnAnyOptionClicked;
-		
-		private bool stylesInitialized;
-		private List<IPopupMenuOption> options = new List<IPopupMenuOption>();
+	internal class Separator : IPopupMenuOption {
+		internal static readonly Separator Instance = new Separator();
 
-		internal PopupMenu(Vector2 position) : base() {
-			Rect = new Rect(position.x, position.y, 0, 0);
-			Draggable = false;
-			Dialog = true;
-		}
+#pragma warning disable 67
+		public event ClickHandler OnClick;
+#pragma warning restore 67
 
-		internal override void draw() {
-			initStyles();
-			base.draw();
-		}
+		private GUIStyle style_;
+		private GUIStyle Style {
+			get {
+				if (style_ == null) {
+					Texture2D orangeBgTex = new Texture2D(1, 1);
+					orangeBgTex.SetPixel(0, 0, new Color(0.4f, 0.4f, 0.4f));
+					orangeBgTex.Apply();
 
-		internal override void drawContents() {
-			GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
-			foreach (IPopupMenuOption option in options) {
-				option.drawMenuOption();
-			}
-			GUILayout.EndVertical();
-		}
-
-		private void initStyles() {
-			if (!stylesInitialized) {
-				GUIStyle = GUI.skin.box;
-				GUILayoutOptions = new GUILayoutOption[] { GUILayout.ExpandWidth(true) };
-
-				stylesInitialized = true;
+					style_ = new GUIStyle(GUI.skin.label);
+					style_.normal.background = orangeBgTex;
+					style_.onNormal.background = orangeBgTex;
+					style_.margin.top = 0;
+					style_.margin.bottom = 0;
+					style_.padding.left += 8;
+					style_.padding.right += 8;
+				}
+				return style_;
 			}
 		}
 
-		private void addOption(IPopupMenuOption option) {
-			options.Add(option);
-			option.OnClick += (e) => fireAnyOptionClicked();
+		private Separator() {
 		}
 
-		private void fireAnyOptionClicked() {
-			if (OnAnyOptionClicked != null) {
-				OnAnyOptionClicked();
-			}
-		}
-
-		public static PopupMenu operator +(PopupMenu menu, IPopupMenuOption option) {
-			menu.addOption(option);
-			return menu;
+		public void drawMenuOption() {
+			GUILayout.Label("", Style, GUILayout.Height(1), GUILayout.MaxHeight(1), GUILayout.ExpandWidth(true));
 		}
 	}
 }

@@ -769,6 +769,8 @@ namespace Toolbar {
 				createFolderButton.Enabled = regularEntriesEnabled;
 				dropdownMenu += createFolderButton;
 
+				dropdownMenu += Separator.Instance;
+
 				Button toggleRectLockButton = Button.createMenuOption(rectLocked ? "Unlock Position and Size" : "Lock Position and Size");
 				toggleRectLockButton.OnClick += (e) => {
 					rectLocked = !rectLocked;
@@ -834,6 +836,8 @@ namespace Toolbar {
 				};
 				toggleKSPSkinButton.Enabled = regularEntriesEnabled;
 				dropdownMenu += toggleKSPSkinButton;
+
+				dropdownMenu += Separator.Instance;
 
 				Button aboutButton = Button.createMenuOption("About the Toolbar Plugin");
 				aboutButton.OnClick += (e) => Application.OpenURL(ToolbarManager.FORUM_THREAD_URL);

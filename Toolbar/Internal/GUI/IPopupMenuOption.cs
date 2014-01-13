@@ -30,54 +30,9 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal class PopupMenu : AbstractWindow {
-		internal event Action OnAnyOptionClicked;
-		
-		private bool stylesInitialized;
-		private List<IPopupMenuOption> options = new List<IPopupMenuOption>();
+	internal interface IPopupMenuOption {
+		event ClickHandler OnClick;
 
-		internal PopupMenu(Vector2 position) : base() {
-			Rect = new Rect(position.x, position.y, 0, 0);
-			Draggable = false;
-			Dialog = true;
-		}
-
-		internal override void draw() {
-			initStyles();
-			base.draw();
-		}
-
-		internal override void drawContents() {
-			GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
-			foreach (IPopupMenuOption option in options) {
-				option.drawMenuOption();
-			}
-			GUILayout.EndVertical();
-		}
-
-		private void initStyles() {
-			if (!stylesInitialized) {
-				GUIStyle = GUI.skin.box;
-				GUILayoutOptions = new GUILayoutOption[] { GUILayout.ExpandWidth(true) };
-
-				stylesInitialized = true;
-			}
-		}
-
-		private void addOption(IPopupMenuOption option) {
-			options.Add(option);
-			option.OnClick += (e) => fireAnyOptionClicked();
-		}
-
-		private void fireAnyOptionClicked() {
-			if (OnAnyOptionClicked != null) {
-				OnAnyOptionClicked();
-			}
-		}
-
-		public static PopupMenu operator +(PopupMenu menu, IPopupMenuOption option) {
-			menu.addOption(option);
-			return menu;
-		}
+		void drawMenuOption();
 	}
 }

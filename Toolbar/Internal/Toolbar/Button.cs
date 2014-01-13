@@ -30,7 +30,7 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal class Button : IButton {
+	internal class Button : IButton, IPopupMenuOption {
 		internal const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
 		
 		private static readonly Vector2 UNSIZED = new Vector2(float.NaN, float.NaN);
@@ -242,6 +242,29 @@ namespace Toolbar {
 		internal readonly string ns;
 		internal readonly string id;
 
+		private GUIStyle menuOptionStyle_;
+		private GUIStyle MenuOptionStyle {
+			get {
+				if (menuOptionStyle_ == null) {
+					Texture2D orangeBgTex = new Texture2D(1, 1);
+					orangeBgTex.SetPixel(0, 0, XKCDColors.DarkOrange);
+					orangeBgTex.Apply();
+
+					menuOptionStyle_ = new GUIStyle(GUI.skin.label);
+					menuOptionStyle_.hover.background = orangeBgTex;
+					menuOptionStyle_.hover.textColor = Color.white;
+					menuOptionStyle_.onHover.background = orangeBgTex;
+					menuOptionStyle_.onHover.textColor = Color.white;
+					menuOptionStyle_.wordWrap = false;
+					menuOptionStyle_.margin.top = 2;
+					menuOptionStyle_.margin.bottom = 2;
+					menuOptionStyle_.padding.left += 8;
+					menuOptionStyle_.padding.right += 8;
+				}
+				return menuOptionStyle_;
+			}
+		}
+
 		private Toolbar toolbar;
 		private bool toolbarDropdown;
 		private bool showTooltip;
@@ -297,11 +320,11 @@ namespace Toolbar {
 			}
 		}
 
-		internal void drawMenuOption(GUIStyle style) {
+		public void drawMenuOption() {
 			bool oldEnabled = GUI.enabled;
 			GUI.enabled = Enabled;
 
-			bool clicked = GUILayout.Button(Text, style, GUILayout.ExpandWidth(true));
+			bool clicked = GUILayout.Button(Text, MenuOptionStyle, GUILayout.ExpandWidth(true));
 
 			GUI.enabled = oldEnabled;
 
