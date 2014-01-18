@@ -233,7 +233,7 @@ namespace Toolbar {
 			// at this point, we should already have a good width/height
 
 			if (parentToolbar.isSingleColumn()) {
-				// positioning to right of parent toolbar
+				// position to right of parent toolbar
 				rect.x = parentToolbar.rect.x + parentToolbar.rect.width + BUTTON_SPACING;
 				float origX = rect.x;
 				rect.y = parentToolbar.rect.y + (parentToolbar.rect.height - rect.height) / 2;
