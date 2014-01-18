@@ -256,10 +256,8 @@ namespace Toolbar {
 					menuOptionStyle_.onHover.background = orangeBgTex;
 					menuOptionStyle_.onHover.textColor = Color.white;
 					menuOptionStyle_.wordWrap = false;
-					menuOptionStyle_.margin.top = 2;
-					menuOptionStyle_.margin.bottom = 2;
-					menuOptionStyle_.padding.left += 8;
-					menuOptionStyle_.padding.right += 8;
+					menuOptionStyle_.margin = new RectOffset(0, 0, 1, 1);
+					menuOptionStyle_.padding = new RectOffset(8, 8, 3, 3);
 				}
 				return menuOptionStyle_;
 			}

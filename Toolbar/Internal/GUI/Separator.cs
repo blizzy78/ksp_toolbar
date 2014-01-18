@@ -48,10 +48,8 @@ namespace Toolbar {
 					style_ = new GUIStyle(GUI.skin.label);
 					style_.normal.background = orangeBgTex;
 					style_.onNormal.background = orangeBgTex;
-					style_.margin.top = 0;
-					style_.margin.bottom = 0;
-					style_.padding.left += 8;
-					style_.padding.right += 8;
+					style_.margin = new RectOffset(0, 0, 1, 1);
+					style_.padding = new RectOffset(0, 0, 0, 0);
 				}
 				return style_;
 			}
