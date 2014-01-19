@@ -116,12 +116,12 @@ namespace Toolbar {
 						texture_ = GameDatabase.Instance.GetTexture(TexturePath, false);
 
 						if ((texture_.width > MAX_TEX_WIDTH) || (texture_.height > MAX_TEX_HEIGHT)) {
-							Debug.LogError("button texture exceeds " + MAX_TEX_WIDTH + "x" + MAX_TEX_HEIGHT + " pixels, ignoring texture: " + ns + "." + id);
+							Log.error("button texture exceeds {0}x{1} pixels, ignoring texture: {2}.{3}", MAX_TEX_WIDTH, MAX_TEX_HEIGHT, ns, id);
 							texture_ = null;
 							texturePath_ = null;
 						}
-					} catch {
-						Debug.LogError("error loading button texture: " + TexturePath);
+					} catch (Exception e) {
+						Log.error(e, "error loading button texture: {0}", TexturePath);
 						texture_ = null;
 						texturePath_ = null;
 					}
@@ -330,7 +330,7 @@ namespace Toolbar {
 				try {
 					OnClick(new ClickEvent(this, Event.current.button));
 				} catch (Exception e) {
-					Debug.LogException(e);
+					Log.error(e, "error while handling click event: {0}.{1}", ns, id);
 				}
 			}
 		}
@@ -362,7 +362,7 @@ namespace Toolbar {
 				try {
 					OnMouseEnter(new MouseEnterEvent(this));
 				} catch (Exception e) {
-					Debug.LogException(e);
+					Log.error(e, "error while handling mouse enter event: {0}.{1}", ns, id);
 				}
 			}
 		}
@@ -372,7 +372,7 @@ namespace Toolbar {
 				try {
 					OnMouseLeave(new MouseLeaveEvent(this));
 				} catch (Exception e) {
-					Debug.LogException(e);
+					Log.error(e, "error while handling mouse leave event: {0}.{1}", ns, id);
 				}
 			}
 		}

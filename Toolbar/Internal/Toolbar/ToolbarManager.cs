@@ -82,7 +82,7 @@ namespace Toolbar {
 		}
 
 		private void loadSettings(GameScenes scene) {
-			Debug.Log("loading toolbar settings (" + scene + ")");
+			Log.info("loading settings (game scene: {0})", scene);
 
 			ConfigNode root = loadSettings();
 			if (root.HasNode("toolbars")) {
@@ -104,7 +104,7 @@ namespace Toolbar {
 
 		private void saveSettings() {
 			GameScenes scene = HighLogic.LoadedScene;
-			Debug.Log("saving toolbar settings (" + scene + ")");
+			Log.info("saving settings (game scene: {0})", scene);
 
 			ConfigNode root = loadSettings();
 			toolbar.saveSettings(root.getOrCreateNode("toolbars"), scene);

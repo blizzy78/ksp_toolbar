@@ -48,6 +48,7 @@
     <Compile Include="Internal\GUI\Separator.cs" />
     <Compile Include="Internal\GUI\AbstractWindow.cs" />
     <Compile Include="Internal\GUI\IPopupMenuOption.cs" />
+    <Compile Include="Internal\Log.cs" />
     <Compile Include="Internal\Toolbar\Button.cs" />
     <Compile Include="API\ClickEvent.cs" />
     <Compile Include="API\ClickHandler.cs" />

@@ -470,7 +470,7 @@ namespace Toolbar {
 				newVisibleButtonIds.Add(button.ns + "." + button.id);
 			}
 			if (!newVisibleButtonIds.SetEquals(visibleButtonIds)) {
-				Debug.Log("button visibilities have changed, forcing auto-size");
+				Log.info("button visibilities have changed, forcing auto-size");
 				visibleButtonIds = newVisibleButtonIds;
 
 				if (isSingleLine()) {
