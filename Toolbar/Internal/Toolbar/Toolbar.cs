@@ -35,12 +35,17 @@ namespace Toolbar {
 			TOOLBAR, FOLDER
 		}
 
+		internal enum DisplayMode {
+			VISIBLE, HIDDEN, SLIDING_IN, SLIDING_OUT
+		}
+
 		private const float BUTTON_SPACING = 1;
 		private const float PADDING = 3;
 		private const float DEFAULT_X = 300;
 		private const float DEFAULT_Y = 300;
 		private const float DEFAULT_WIDTH = 250;
 		private const float DEFAULT_HEIGHT_FOLDER = 100;
+		private const long SLIDE_INTERVAL = 100;
 
 		internal event Action onChange;
 		internal event Action onSkinChange;
@@ -112,8 +117,9 @@ namespace Toolbar {
 		private bool rectLocked = true;
 		private bool buttonOrderLocked = true;
 		private bool autoHide;
-		private bool autoHidden;
-		private Vector2 rectPositionBeforeAutoHide;
+		private DisplayMode displayMode = DisplayMode.VISIBLE;
+		private long slideInOrOutStartTime;
+		private FloatCurveXY slideInOrOutCurve;
 		private Color autoHideUnimportantButtonAlpha = Color.white;
 		private Button mouseHoverButton;
 		private float savedMaxWidth = DEFAULT_WIDTH;
@@ -216,7 +222,7 @@ namespace Toolbar {
 					folder.draw();
 				}
 
-				if (Enabled && rectLocked && buttonOrderLocked && (dropdownMenu == null)) {
+				if (Enabled && rectLocked && buttonOrderLocked && (dropdownMenu == null) && (displayMode == DisplayMode.VISIBLE)) {
 					drawButtonToolTips();
 				}
 
@@ -258,44 +264,77 @@ namespace Toolbar {
 		}
 
 		private void handleAutoHide() {
+			long now = DateTime.UtcNow.Ticks / 10000;
+
 			if (rect.contains(Utils.getMousePosition()) ||
 				buttons.Any(b => b.Important) ||
 				folders.Values.Any(f => f.Visible)) {
 
-				if (autoHidden) {
-					rect.x = rectPositionBeforeAutoHide.x;
-					rect.y = rectPositionBeforeAutoHide.y;
-					autoHidden = false;
+				if (displayMode != DisplayMode.VISIBLE) {
+					Log.debug("display mode is {0}, starting slide in", displayMode);
+					if (displayMode == DisplayMode.HIDDEN) {
+						slideInOrOutStartTime = now;
+					} else if (displayMode != DisplayMode.SLIDING_IN) {
+						// do everything in reverse
+						long timeSpent = now - slideInOrOutStartTime;
+						long timeToGo = SLIDE_INTERVAL - timeSpent;
+						slideInOrOutStartTime = now - timeToGo;
+					}
+					displayMode = DisplayMode.SLIDING_IN;
+
+					slideInOrOutCurve = new FloatCurveXY();
+					if ((rect.x <= 0) || (rect.x >= (Screen.width - rect.width))) {
+						slideInOrOutCurve.addX(0, (rect.x <= 0) ? (-rect.width + PADDING) : (Screen.width - PADDING));
+						slideInOrOutCurve.addX(SLIDE_INTERVAL, (rect.x <= 0) ? -PADDING : (Screen.width - rect.width + PADDING));
+					} else if ((rect.y <= 0) || (rect.y >= (Screen.height - rect.height))) {
+						slideInOrOutCurve.addY(0, (rect.y <= 0) ? (-rect.height + PADDING) : (Screen.height - PADDING));
+						slideInOrOutCurve.addY(SLIDE_INTERVAL, (rect.y <= 0) ? -PADDING : (Screen.height - rect.height + PADDING));
+					}
 				}
 			} else {
-				if (!autoHidden) {
-					if (rect.x <= 0) {
-						// left screen edge
-						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
-						rect.x = -rect.width + PADDING;
-						autoHidden = true;
-					} else if (rect.x >= (Screen.width - rect.width)) {
-						// right screen edge
-						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
-						rect.x = Screen.width - PADDING;
-						autoHidden = true;
-					} else if (rect.y <= 0) {
-						// top screen edge
-						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
-						rect.y = -rect.height + PADDING;
-						autoHidden = true;
-					} else if (rect.y >= (Screen.height - rect.height)) {
-						// bottom screen edge
-						rectPositionBeforeAutoHide = new Vector2(rect.x, rect.y);
-						rect.y = Screen.height - PADDING;
-						autoHidden = true;
+				if (displayMode != DisplayMode.HIDDEN) {
+					Log.debug("display mode is {0}, starting slide out", displayMode);
+					if (displayMode == DisplayMode.VISIBLE) {
+						slideInOrOutStartTime = now;
+					} else if (displayMode != DisplayMode.SLIDING_OUT) {
+						// do everything in reverse
+						long timeSpent = now - slideInOrOutStartTime;
+						long timeToGo = SLIDE_INTERVAL - timeSpent;
+						slideInOrOutStartTime = now - timeToGo;
 					}
+					displayMode = DisplayMode.SLIDING_OUT;
+
+					slideInOrOutCurve = new FloatCurveXY();
+					if ((rect.x <= 0) || (rect.x >= (Screen.width - rect.width))) {
+						slideInOrOutCurve.addX(0, (rect.x <= 0) ? -PADDING : (Screen.width - rect.width + PADDING));
+						slideInOrOutCurve.addX(SLIDE_INTERVAL, (rect.x <= 0) ? (-rect.width + PADDING) : (Screen.width - PADDING));
+					} else if ((rect.y <= 0) || (rect.y >= (Screen.height - rect.height))) {
+						slideInOrOutCurve.addY(0, (rect.y <= 0) ? -PADDING : (Screen.height - rect.height + PADDING));
+						slideInOrOutCurve.addY(SLIDE_INTERVAL, (rect.y <= 0) ? (-rect.height + PADDING) : (Screen.height - PADDING));
+					}
+				}
+			}
+
+			if ((displayMode == DisplayMode.SLIDING_IN) || (displayMode == DisplayMode.SLIDING_OUT)) {
+				long timeSinceStartTime = now - slideInOrOutStartTime;
+				Log.debug("slide step, time since start: {0}", timeSinceStartTime);
+				if (slideInOrOutCurve.HasX) {
+					rect.x = slideInOrOutCurve.evaluateX(Mathf.Min(timeSinceStartTime, SLIDE_INTERVAL));
+				}
+				if (slideInOrOutCurve.HasY) {
+					rect.y = slideInOrOutCurve.evaluateY(Mathf.Min(timeSinceStartTime, SLIDE_INTERVAL));
+				}
+
+				if (timeSinceStartTime >= SLIDE_INTERVAL) {
+					displayMode = (displayMode == DisplayMode.SLIDING_IN) ? DisplayMode.VISIBLE : DisplayMode.HIDDEN;
+					Log.debug("slide done, set display mode to {0}", displayMode);
+					slideInOrOutCurve = null;
 				}
 			}
 		}
 
-		private bool shouldAutoHide() {
-			return autoHide && !autoHidden && !rect.contains(Utils.getMousePosition()) &&
+		private bool shouldSlideOut() {
+			return autoHide && (displayMode != DisplayMode.HIDDEN) && !rect.contains(Utils.getMousePosition()) &&
 				((rect.x <= 0) || (rect.x >= (Screen.width - rect.width)) || (rect.y <= 0) || (rect.y >= (Screen.height - rect.height)));
 		}
 
@@ -309,7 +348,7 @@ namespace Toolbar {
 				rect.height = getMinHeightForButtons();
 			}
 
-			if (!autoHidden) {
+			if (displayMode == DisplayMode.VISIBLE) {
 				rect.clampToScreen(PADDING);
 			}
 		}
@@ -401,7 +440,7 @@ namespace Toolbar {
 		private void drawToolbarBorder() {
 			if (showBorder || !rectLocked || !buttonOrderLocked) {
 				Color oldColor = GUI.color;
-				if (shouldAutoHide() && !autoHidden && (dropdownMenu == null)) {
+				if (shouldSlideOut() && (displayMode == DisplayMode.VISIBLE) && (dropdownMenu == null)) {
 					GUI.color = autoHideUnimportantButtonAlpha;
 				}
 				GUILayout.BeginArea(rect.Rect, GUI.skin.box);
@@ -418,15 +457,15 @@ namespace Toolbar {
 				Rect buttonRect = button.Equals(draggedButton) ? draggedButtonRect : new Rect(rect.x + pos.x, rect.y + pos.y, button.Size.x, button.Size.y);
 				buttonsToDraw.Add(button, buttonRect);
 			});
-			
-			bool shouldHide = shouldAutoHide();
+
+			bool shouldHide = shouldSlideOut();
 			Button currentMouseHoverButton = null;
 			Vector2 mousePos = Utils.getMousePosition();
 			foreach (KeyValuePair<Button, Rect> entry in buttonsToDraw) {
 				Button button = entry.Key;
 				Rect buttonRect = entry.Value;
 				Color oldColor = GUI.color;
-				if (shouldHide && !autoHidden && !button.Important && (dropdownMenu == null)) {
+				if (shouldHide && (displayMode == DisplayMode.VISIBLE) && !button.Important && (dropdownMenu == null)) {
 					GUI.color = autoHideUnimportantButtonAlpha;
 				}
 				button.draw(buttonRect,
@@ -474,28 +513,14 @@ namespace Toolbar {
 				visibleButtonIds = newVisibleButtonIds;
 
 				if (isSingleLine()) {
-					if (autoHidden) {
-						// docked at right screen edge -> keep it that way by moving to screen edge
-						if (rectPositionBeforeAutoHide.x >= (Screen.width - rect.width)) {
-							rectPositionBeforeAutoHide.x = Screen.width;
-						}
-					} else {
-						// docked at right screen edge -> keep it that way by moving to screen edge
-						if (rect.x >= (Screen.width - rect.width)) {
-							rect.x = Screen.width;
-						}
+					// docked at right screen edge -> keep it that way by moving to screen edge
+					if (rect.x >= (Screen.width - rect.width)) {
+						rect.x = Screen.width;
 					}
 				} else {
-					if (autoHidden) {
-						// docked at bottom screen edge -> keep it that way by moving to screen edge
-						if (rectPositionBeforeAutoHide.y >= (Screen.height - rect.height)) {
-							rectPositionBeforeAutoHide.y = Screen.height;
-						}
-					} else {
-						// docked at bottom screen edge -> keep it that way by moving to screen edge
-						if (rect.y >= (Screen.height - rect.height)) {
-							rect.y = Screen.height;
-						}
+					// docked at bottom screen edge -> keep it that way by moving to screen edge
+					if (rect.y >= (Screen.height - rect.height)) {
+						rect.y = Screen.height;
 					}
 				}
 
@@ -504,7 +529,7 @@ namespace Toolbar {
 				rect.width = getMinWidthForButtons();
 				rect.height = getMinHeightForButtons();
 
-				if (!autoHidden) {
+				if (displayMode == DisplayMode.VISIBLE) {
 					rect.clampToScreen(PADDING);
 				}
 
@@ -667,7 +692,7 @@ namespace Toolbar {
 			resizable.Enabled = false;
 			buttonOrderLocked = true;
 			// pretend we're not auto-hidden right now
-			autoHidden = false;
+			displayMode = DisplayMode.VISIBLE;
 			// enable ourselves
 			Enabled = true;
 			// hide folders
