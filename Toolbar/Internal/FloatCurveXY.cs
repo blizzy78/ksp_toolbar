@@ -27,47 +27,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace Toolbar {
 	internal class FloatCurveXY {
-		internal bool HasX {
-			get {
-				return curveX != null;
-			}
-		}
-
-		internal bool HasY {
-			get {
-				return curveY != null;
-			}
-		}
-
 		private FloatCurve curveX;
 		private FloatCurve curveY;
 
 		internal FloatCurveXY() {
 		}
 
-		internal void addX(float time, float value) {
+		internal void add(float time, Vector2 xy) {
 			if (curveX == null) {
 				curveX = new FloatCurve();
 			}
-			curveX.Add(time, value);
-		}
+			curveX.Add(time, xy.x);
 
-		internal void addY(float time, float value) {
 			if (curveY == null) {
 				curveY = new FloatCurve();
 			}
-			curveY.Add(time, value);
+			curveY.Add(time, xy.y);
 		}
 
-		internal float evaluateX(float time) {
-			return curveX.Evaluate(time);
-		}
-
-		internal float evaluateY(float time) {
-			return curveY.Evaluate(time);
+		internal Vector2 evaluate(float time) {
+			return new Vector2(curveX.Evaluate(time), curveY.Evaluate(time));
 		}
 	}
 }

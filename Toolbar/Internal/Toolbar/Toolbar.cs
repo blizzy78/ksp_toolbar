@@ -284,11 +284,11 @@ namespace Toolbar {
 
 					slideInOrOutCurve = new FloatCurveXY();
 					if ((rect.x <= 0) || (rect.x >= (Screen.width - rect.width))) {
-						slideInOrOutCurve.addX(0, (rect.x <= 0) ? (-rect.width + PADDING) : (Screen.width - PADDING));
-						slideInOrOutCurve.addX(SLIDE_INTERVAL, (rect.x <= 0) ? -PADDING : (Screen.width - rect.width + PADDING));
+						slideInOrOutCurve.add(0, new Vector2((rect.x <= 0) ? (-rect.width + PADDING) : (Screen.width - PADDING), rect.y));
+						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2((rect.x <= 0) ? -PADDING : (Screen.width - rect.width + PADDING), rect.y));
 					} else if ((rect.y <= 0) || (rect.y >= (Screen.height - rect.height))) {
-						slideInOrOutCurve.addY(0, (rect.y <= 0) ? (-rect.height + PADDING) : (Screen.height - PADDING));
-						slideInOrOutCurve.addY(SLIDE_INTERVAL, (rect.y <= 0) ? -PADDING : (Screen.height - rect.height + PADDING));
+						slideInOrOutCurve.add(0, new Vector2(rect.x, (rect.y <= 0) ? (-rect.height + PADDING) : (Screen.height - PADDING)));
+						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2(rect.x, (rect.y <= 0) ? -PADDING : (Screen.height - rect.height + PADDING)));
 					}
 				}
 			} else {
@@ -306,11 +306,11 @@ namespace Toolbar {
 
 					slideInOrOutCurve = new FloatCurveXY();
 					if ((rect.x <= 0) || (rect.x >= (Screen.width - rect.width))) {
-						slideInOrOutCurve.addX(0, (rect.x <= 0) ? -PADDING : (Screen.width - rect.width + PADDING));
-						slideInOrOutCurve.addX(SLIDE_INTERVAL, (rect.x <= 0) ? (-rect.width + PADDING) : (Screen.width - PADDING));
+						slideInOrOutCurve.add(0, new Vector2((rect.x <= 0) ? -PADDING : (Screen.width - rect.width + PADDING), rect.y));
+						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2((rect.x <= 0) ? (-rect.width + PADDING) : (Screen.width - PADDING), rect.y));
 					} else if ((rect.y <= 0) || (rect.y >= (Screen.height - rect.height))) {
-						slideInOrOutCurve.addY(0, (rect.y <= 0) ? -PADDING : (Screen.height - rect.height + PADDING));
-						slideInOrOutCurve.addY(SLIDE_INTERVAL, (rect.y <= 0) ? (-rect.height + PADDING) : (Screen.height - PADDING));
+						slideInOrOutCurve.add(0, new Vector2(rect.x, (rect.y <= 0) ? -PADDING : (Screen.height - rect.height + PADDING)));
+						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2(rect.x, (rect.y <= 0) ? (-rect.height + PADDING) : (Screen.height - PADDING)));
 					}
 				}
 			}
@@ -318,12 +318,9 @@ namespace Toolbar {
 			if ((displayMode == DisplayMode.SLIDING_IN) || (displayMode == DisplayMode.SLIDING_OUT)) {
 				long timeSinceStartTime = now - slideInOrOutStartTime;
 				Log.debug("slide step, time since start: {0}", timeSinceStartTime);
-				if (slideInOrOutCurve.HasX) {
-					rect.x = slideInOrOutCurve.evaluateX(Mathf.Min(timeSinceStartTime, SLIDE_INTERVAL));
-				}
-				if (slideInOrOutCurve.HasY) {
-					rect.y = slideInOrOutCurve.evaluateY(Mathf.Min(timeSinceStartTime, SLIDE_INTERVAL));
-				}
+				Vector2 newXY = slideInOrOutCurve.evaluate(Mathf.Min(timeSinceStartTime, SLIDE_INTERVAL));
+				rect.x = newXY.x;
+				rect.y = newXY.y;
 
 				if (timeSinceStartTime >= SLIDE_INTERVAL) {
 					displayMode = (displayMode == DisplayMode.SLIDING_IN) ? DisplayMode.VISIBLE : DisplayMode.HIDDEN;
