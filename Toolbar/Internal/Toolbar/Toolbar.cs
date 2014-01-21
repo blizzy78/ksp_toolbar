@@ -465,7 +465,11 @@ namespace Toolbar {
 				Button button = entry.Key;
 				Rect buttonRect = entry.Value;
 				Color oldColor = GUI.color;
-				if (shouldHide && (displayMode == DisplayMode.VISIBLE) && !button.Important && (dropdownMenu == null)) {
+				if (shouldHide && (displayMode != DisplayMode.HIDDEN) &&
+					!button.Important &&
+					(!folderButtons.ContainsKey(button) || !folderButtons[button].Visible) &&
+					(dropdownMenu == null)) {
+
 					GUI.color = autoHideUnimportantButtonAlpha;
 				}
 				button.draw(buttonRect,
