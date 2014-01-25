@@ -90,6 +90,11 @@ namespace Toolbar {
 			Log.info("loading settings (game scene: {0})", scene);
 
 			ConfigNode root = loadSettings();
+
+			if (root.HasValue("logLevel")) {
+				Log.Level = (LogLevel) int.Parse(root.GetValue("logLevel"));
+			}
+
 			if (root.HasNode("toolbars")) {
 				ConfigNode toolbarsNode = root.GetNode("toolbars");
 				if (updateChecker != null) {
