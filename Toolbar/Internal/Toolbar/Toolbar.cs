@@ -637,10 +637,9 @@ namespace Toolbar {
 				folders[folderId].add(button);
 			} else {
 				button.OnDestroy += buttonDestroyed;
-
 				buttons.Add(button);
-
 				sortButtons();
+				ButtonCreationCounter.Instance.add(button);
 			}
 		}
 

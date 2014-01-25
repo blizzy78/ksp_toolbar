@@ -54,6 +54,7 @@
     <Compile Include="Internal\Toolbar\Button.cs" />
     <Compile Include="API\ClickEvent.cs" />
     <Compile Include="API\ClickHandler.cs" />
+    <Compile Include="Internal\Toolbar\ButtonCreationCounter.cs" />
     <Compile Include="Internal\Toolbar\ClickEvent.cs" />
     <Compile Include="Internal\GUI\ConfirmDialog.cs" />
     <Compile Include="Internal\Toolbar\DestroyHandler.cs" />
