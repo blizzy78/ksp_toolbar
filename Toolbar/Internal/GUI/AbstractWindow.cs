@@ -43,13 +43,13 @@ namespace Toolbar {
 		private EditorLock editorLock;
 
 		internal AbstractWindow() {
-			WindowList.Instance += this;
+			WindowList.Instance.add(this);
 
 			editorLock = new EditorLock("Toolbar_window_" + id);
 		}
 
 		internal void destroy() {
-			WindowList.Instance -= this;
+			WindowList.Instance.remove(this);
 
 			editorLock.draw(false);
 		}

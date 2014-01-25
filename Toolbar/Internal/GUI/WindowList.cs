@@ -36,7 +36,7 @@ namespace Toolbar {
 			}
 		}
 
-		internal static WindowList Instance = new WindowList();
+		internal static readonly WindowList Instance = new WindowList();
 
 		private List<AbstractWindow> windows = new List<AbstractWindow>();
 		private List<AbstractWindow> newWindows;
@@ -67,16 +67,14 @@ namespace Toolbar {
 			return newWindows;
 		}
 
-		public static WindowList operator +(WindowList windowList, AbstractWindow window) {
+		internal void add(AbstractWindow window) {
 			// do not use the actual list because we might be iterating over it right now
-			windowList.createNewWindowList().Add(window);
-			return windowList;
+			createNewWindowList().Add(window);
 		}
 
-		public static WindowList operator -(WindowList windowList, AbstractWindow window) {
+		internal void remove(AbstractWindow window) {
 			// do not use the actual list because we might be iterating over it right now
-			windowList.createNewWindowList().Remove(window);
-			return windowList;
+			createNewWindowList().Remove(window);
 		}
 	}
 }
