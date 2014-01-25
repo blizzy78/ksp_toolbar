@@ -30,7 +30,7 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal class Toolbar {
+	internal class Toolbar : ICursorGrabber {
 		internal enum Mode {
 			TOOLBAR, FOLDER
 		}
@@ -162,6 +162,8 @@ namespace Toolbar {
 				};
 				CursorGrabbing.Instance.add(draggable);
 				CursorGrabbing.Instance.add(resizable);
+
+				CursorGrabbing.Instance.add(this);
 			}
 		}
 
@@ -194,11 +196,11 @@ namespace Toolbar {
 		}
 
 		internal void destroy() {
-			if (draggable != null) {
+			if (mode == Mode.TOOLBAR) {
 				CursorGrabbing.Instance.remove(draggable);
-			}
-			if (resizable != null) {
 				CursorGrabbing.Instance.remove(resizable);
+
+				CursorGrabbing.Instance.remove(this);
 			}
 		}
 
@@ -1130,6 +1132,21 @@ namespace Toolbar {
 			}
 
 			folder.destroy();
+		}
+
+		public bool grabCursor() {
+			if (Visible && !buttonOrderLocked) {
+				Vector2 mousePos = Utils.getMousePosition();
+				Button hoveredButton = buttons.SingleOrDefault(
+					b => !b.Equals(dropdownMenuButton) && getRect(b).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(mousePos));
+				bool setCursor = (hoveredButton != null) || (draggedButton != null);
+				if (setCursor) {
+					Cursor.SetCursor(GameDatabase.Instance.GetTexture("000_Toolbar/move-cursor", false), new Vector2(10, 10), CursorMode.ForceSoftware);
+				}
+				return setCursor;
+			} else {
+				return false;
+			}
 		}
 	}
 }
