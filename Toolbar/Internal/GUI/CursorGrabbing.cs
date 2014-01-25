@@ -30,30 +30,42 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal class Resizable : Draggable {
-		private const string CURSOR_TEXTURE = "000_Toolbar/resize-cursor";
-		private const float CURSOR_HOT_SPOT_X = 7;
-		private const float CURSOR_HOT_SPOT_Y = 7;
-		private const float HANDLE_SIZE = 10;
+	internal interface ICursorGrabber {
+		bool grabCursor();
+	}
 
-		internal Rect HandleRect {
-			get {
-				return new Rect(rect.x + rect.width - HANDLE_SIZE, rect.y + rect.height - HANDLE_SIZE, HANDLE_SIZE, HANDLE_SIZE);
+	internal class CursorGrabbing {
+		internal static readonly CursorGrabbing Instance = new CursorGrabbing();
+
+		private List<ICursorGrabber> grabbers = new List<ICursorGrabber>();
+		private bool cursorGrabbed;
+
+		private CursorGrabbing() {
+		}
+
+		internal void update() {
+			bool grabbed = false;
+			foreach (ICursorGrabber grabber in grabbers) {
+				if (grabber.grabCursor()) {
+					grabbed = true;
+					break;
+				}
+			}
+
+			if (grabbed) {
+				cursorGrabbed = true;
+			} else if (cursorGrabbed) {
+				Cursor.SetCursor(null, new Vector2(0, 0), CursorMode.Auto);
+				cursorGrabbed = false;
 			}
 		}
-		
-		internal Resizable(Rectangle initialPosition, float clampOverscan, Func<Vector2, bool> handleAreaCheck)
-			: base(initialPosition, clampOverscan, handleAreaCheck, CURSOR_TEXTURE, CURSOR_HOT_SPOT_X, CURSOR_HOT_SPOT_Y) {
+
+		internal void add(ICursorGrabber grabber) {
+			grabbers.Add(grabber);
 		}
 
-		protected override bool isInArea(Vector2 mousePos) {
-			return HandleRect.Contains(mousePos);
-		}
-
-		protected override Rect getNewRect(Vector2 mousePos, Rect startRect, Vector2 startMousePos) {
-			return new Rect(rect.x, rect.y,
-				startRect.width + mousePos.x - startMousePos.x,
-				startRect.height + mousePos.y - startMousePos.y);
+		internal void remove(ICursorGrabber grabber) {
+			grabbers.Remove(grabber);
 		}
 	}
 }

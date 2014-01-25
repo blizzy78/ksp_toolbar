@@ -150,13 +150,18 @@ namespace Toolbar {
 				dropdownMenuButton.OnClick += (e) => toggleDropdownMenu();
 				buttons.Add(dropdownMenuButton);
 
-				draggable = new Draggable(rect, PADDING,
-					(pos) => !getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos) && !resizable.HandleRect.Contains(pos));
-				resizable = new Resizable(rect, PADDING,
-					(pos) => !getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos));
-
-				draggable.OnDrag += (e) => toolbarDrag();
-				resizable.OnResize += toolbarResize;
+				draggable = new Draggable(rect, PADDING, (pos) => !dropdownMenuButtonContains(pos) && !resizable.HandleRect.Contains(pos));
+				resizable = new Resizable(rect, PADDING, (pos) => !dropdownMenuButtonContains(pos));
+				draggable.OnDrag += (e) => {
+					resizable.Enabled = !draggable.Dragging;
+					toolbarDrag();
+				};
+				resizable.OnDrag += (e) => {
+					draggable.Enabled = !resizable.Dragging;
+					toolbarResize();
+				};
+				CursorGrabbing.Instance.add(draggable);
+				CursorGrabbing.Instance.add(resizable);
 			}
 		}
 
@@ -167,7 +172,7 @@ namespace Toolbar {
 		}
 
 		private void toolbarResize() {
-			if (resizable.Resizing) {
+			if (resizable.Dragging) {
 				float maxButtonWidth = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.x);
 				if (rect.width < (maxButtonWidth + PADDING * 2)) {
 					rect.width = maxButtonWidth + PADDING * 2;
@@ -181,6 +186,19 @@ namespace Toolbar {
 				rect.height = getMinHeightForButtons();
 				savedMaxWidth = rect.width;
 				fireChange();
+			}
+		}
+
+		private bool dropdownMenuButtonContains(Vector2 pos) {
+			return getRect(dropdownMenuButton).shift(new Vector2(rect.x + PADDING, rect.y + PADDING)).Contains(pos);
+		}
+
+		internal void destroy() {
+			if (draggable != null) {
+				CursorGrabbing.Instance.remove(draggable);
+			}
+			if (resizable != null) {
+				CursorGrabbing.Instance.remove(resizable);
 			}
 		}
 
@@ -1110,6 +1128,8 @@ namespace Toolbar {
 				folder.remove(b);
 				add(b);
 			}
+
+			folder.destroy();
 		}
 	}
 }

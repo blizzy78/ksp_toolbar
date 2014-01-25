@@ -55,6 +55,8 @@ namespace Toolbar {
 
 		internal void OnDestroy() {
 			GameEvents.onGameSceneLoadRequested.Remove(gameSceneLoadRequested);
+
+			toolbar.destroy();
 		}
 
 		internal void OnGUI() {
@@ -68,6 +70,9 @@ namespace Toolbar {
 			toolbar.update();
 			if (updateChecker != null) {
 				updateChecker.update();
+			}
+			if (showGUI()) {
+				CursorGrabbing.Instance.update();
 			}
 		}
 

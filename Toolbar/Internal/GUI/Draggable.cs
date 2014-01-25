@@ -30,8 +30,10 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal class Draggable {
-		private static readonly Vector2 CURSOR_HOTSPOT = new Vector2(10, 10);
+	internal class Draggable : ICursorGrabber {
+		private const string CURSOR_TEXTURE = "000_Toolbar/move-cursor";
+		private const float CURSOR_HOT_SPOT_X = 10;
+		private const float CURSOR_HOT_SPOT_Y = 10;
 
 		internal bool Dragging {
 			get;
@@ -65,21 +67,29 @@ namespace Toolbar {
 		private Texture2D CursorTexture {
 			get {
 				if (cursorTexture_ == null) {
-					cursorTexture_ = GameDatabase.Instance.GetTexture("000_Toolbar/move-cursor", false);
+					cursorTexture_ = GameDatabase.Instance.GetTexture(cursorTexturePath, false);
 				}
 				return cursorTexture_;
 			}
 		}
 
-		private Rectangle rect;
+		protected Rectangle rect;
+
 		private float clampOverscan;
 		private Func<Vector2, bool> handleAreaCheck;
-		private bool cursorActive;
+		private string cursorTexturePath;
+		private Vector2 cursorHotSpot;
+		private Rect startRect;
+		private Vector2 startMousePos;
 
-		internal Draggable(Rectangle initialPosition, float clampOverscan, Func<Vector2, bool> handleAreaCheck) {
+		internal Draggable(Rectangle initialPosition, float clampOverscan, Func<Vector2, bool> handleAreaCheck,
+			string cursorTexturePath = CURSOR_TEXTURE, float cursorHotSpotX = CURSOR_HOT_SPOT_X, float cursorHotSpotY = CURSOR_HOT_SPOT_Y) {
+
 			this.rect = initialPosition;
 			this.clampOverscan = clampOverscan;
 			this.handleAreaCheck = handleAreaCheck;
+			this.cursorTexturePath = cursorTexturePath;
+			this.cursorHotSpot = new Vector2(cursorHotSpotX, cursorHotSpotY);
 		}
 
 		internal void update() {
@@ -90,22 +100,15 @@ namespace Toolbar {
 
 		private void handleDrag() {
 			Vector2 mousePos = Utils.getMousePosition();
-			bool inArea = rect.contains(mousePos) && ((handleAreaCheck == null) || handleAreaCheck(mousePos));
+			bool inArea = isInArea(mousePos) && ((handleAreaCheck == null) || handleAreaCheck(mousePos));
 			if (inArea && Input.GetMouseButtonDown(0)) {
-				Dragging = true;
+				startDragging(mousePos);
 				fireDrag();
-			}
-			if (inArea || Dragging) {
-				Cursor.SetCursor(CursorTexture, CURSOR_HOTSPOT, CursorMode.ForceSoftware);
-				cursorActive = true;
-			} else if (cursorActive) {
-				Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-				cursorActive = false;
 			}
 
 			if (Dragging) {
 				if (Input.GetMouseButton(0)) {
-					rect.Rect = new Rect(mousePos.x - rect.width / 2, mousePos.y - rect.height / 2, rect.width, rect.height).clampToScreen(clampOverscan);
+					rect.Rect = getNewRect(mousePos, startRect, startMousePos).clampToScreen(clampOverscan);
 				} else {
 					stopDragging();
 				}
@@ -113,10 +116,36 @@ namespace Toolbar {
 			}
 		}
 
+		protected virtual bool isInArea(Vector2 mousePos) {
+			return rect.contains(mousePos);
+		}
+
+		protected virtual Rect getNewRect(Vector2 mousePos, Rect startRect, Vector2 startMousePos) {
+			return new Rect(mousePos.x - rect.width / 2, mousePos.y - rect.height / 2, rect.width, rect.height);
+		}
+
+		public bool grabCursor() {
+			if (Enabled) {
+				Vector2 mousePos = Utils.getMousePosition();
+				bool inArea = isInArea(mousePos) && ((handleAreaCheck == null) || handleAreaCheck(mousePos));
+				bool setCursor = inArea || Dragging;
+				if (setCursor) {
+					Cursor.SetCursor(CursorTexture, cursorHotSpot, CursorMode.ForceSoftware);
+				}
+				return setCursor;
+			} else {
+				return false;
+			}
+		}
+
+		private void startDragging(Vector2 mousePos) {
+			Dragging = true;
+			startRect = rect.Rect;
+			startMousePos = mousePos;
+		}
+
 		private void stopDragging() {
 			Dragging = false;
-			Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-			cursorActive = false;
 		}
 
 		private void fireDrag() {

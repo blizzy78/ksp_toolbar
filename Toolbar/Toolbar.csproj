@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Internal\FloatCurveXY.cs" />
+    <Compile Include="Internal\GUI\CursorGrabbing.cs" />
     <Compile Include="Internal\GUI\Separator.cs" />
     <Compile Include="Internal\GUI\AbstractWindow.cs" />
     <Compile Include="Internal\GUI\IPopupMenuOption.cs" />
