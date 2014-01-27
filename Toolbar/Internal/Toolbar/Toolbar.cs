@@ -105,6 +105,36 @@ namespace Toolbar {
 		}
 		private bool useKSPSkin_;
 
+		private bool AtScreenEdge {
+			get {
+				return AtLeftScreenEdge || AtRightScreenEdge || AtTopScreenEdge || AtBottomScreenEdge;
+			}
+		}
+
+		private bool AtLeftScreenEdge {
+			get {
+				return rect.x <= 0;
+			}
+		}
+
+		private bool AtRightScreenEdge {
+			get {
+				return rect.x >= (Screen.width - rect.width);
+			}
+		}
+
+		private bool AtTopScreenEdge {
+			get {
+				return rect.y <= 0;
+			}
+		}
+
+		private bool AtBottomScreenEdge {
+			get {
+				return rect.y >= (Screen.height - rect.height);
+			}
+		}
+		
 		private Mode mode;
 		private Toolbar parentToolbar;
 		private Rectangle rect;
@@ -303,12 +333,12 @@ namespace Toolbar {
 					displayMode = DisplayMode.SLIDING_IN;
 
 					slideInOrOutCurve = new FloatCurveXY();
-					if ((rect.x <= 0) || (rect.x >= (Screen.width - rect.width))) {
-						slideInOrOutCurve.add(0, new Vector2((rect.x <= 0) ? (-rect.width + PADDING) : (Screen.width - PADDING), rect.y));
-						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2((rect.x <= 0) ? -PADDING : (Screen.width - rect.width + PADDING), rect.y));
-					} else if ((rect.y <= 0) || (rect.y >= (Screen.height - rect.height))) {
-						slideInOrOutCurve.add(0, new Vector2(rect.x, (rect.y <= 0) ? (-rect.height + PADDING) : (Screen.height - PADDING)));
-						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2(rect.x, (rect.y <= 0) ? -PADDING : (Screen.height - rect.height + PADDING)));
+					if (AtLeftScreenEdge || AtRightScreenEdge) {
+						slideInOrOutCurve.add(0, new Vector2(AtLeftScreenEdge ? (-rect.width + PADDING) : (Screen.width - PADDING), rect.y));
+						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2(AtLeftScreenEdge ? -PADDING : (Screen.width - rect.width + PADDING), rect.y));
+					} else if (AtTopScreenEdge || AtBottomScreenEdge) {
+						slideInOrOutCurve.add(0, new Vector2(rect.x, AtTopScreenEdge ? (-rect.height + PADDING) : (Screen.height - PADDING)));
+						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2(rect.x, AtTopScreenEdge ? -PADDING : (Screen.height - rect.height + PADDING)));
 					}
 				}
 			} else {
@@ -325,12 +355,12 @@ namespace Toolbar {
 					displayMode = DisplayMode.SLIDING_OUT;
 
 					slideInOrOutCurve = new FloatCurveXY();
-					if ((rect.x <= 0) || (rect.x >= (Screen.width - rect.width))) {
-						slideInOrOutCurve.add(0, new Vector2((rect.x <= 0) ? -PADDING : (Screen.width - rect.width + PADDING), rect.y));
-						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2((rect.x <= 0) ? (-rect.width + PADDING) : (Screen.width - PADDING), rect.y));
-					} else if ((rect.y <= 0) || (rect.y >= (Screen.height - rect.height))) {
-						slideInOrOutCurve.add(0, new Vector2(rect.x, (rect.y <= 0) ? -PADDING : (Screen.height - rect.height + PADDING)));
-						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2(rect.x, (rect.y <= 0) ? (-rect.height + PADDING) : (Screen.height - PADDING)));
+					if (AtLeftScreenEdge || AtRightScreenEdge) {
+						slideInOrOutCurve.add(0, new Vector2(AtLeftScreenEdge ? -PADDING : (Screen.width - rect.width + PADDING), rect.y));
+						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2(AtLeftScreenEdge ? (-rect.width + PADDING) : (Screen.width - PADDING), rect.y));
+					} else if (AtTopScreenEdge || AtBottomScreenEdge) {
+						slideInOrOutCurve.add(0, new Vector2(rect.x, AtTopScreenEdge ? -PADDING : (Screen.height - rect.height + PADDING)));
+						slideInOrOutCurve.add(SLIDE_INTERVAL, new Vector2(rect.x, AtTopScreenEdge ? (-rect.height + PADDING) : (Screen.height - PADDING)));
 					}
 				}
 			}
@@ -351,8 +381,7 @@ namespace Toolbar {
 		}
 
 		private bool shouldSlideOut() {
-			return autoHide && (displayMode != DisplayMode.HIDDEN) && !rect.contains(Utils.getMousePosition()) &&
-				((rect.x <= 0) || (rect.x >= (Screen.width - rect.width)) || (rect.y <= 0) || (rect.y >= (Screen.height - rect.height)));
+			return autoHide && (displayMode != DisplayMode.HIDDEN) && !rect.contains(Utils.getMousePosition()) && AtScreenEdge;
 		}
 
 		private void autoSize() {
@@ -535,12 +564,12 @@ namespace Toolbar {
 
 				if (isSingleLine()) {
 					// docked at right screen edge -> keep it that way by moving to screen edge
-					if (rect.x >= (Screen.width - rect.width)) {
+					if (AtRightScreenEdge) {
 						rect.x = Screen.width;
 					}
 				} else {
 					// docked at bottom screen edge -> keep it that way by moving to screen edge
-					if (rect.y >= (Screen.height - rect.height)) {
+					if (AtBottomScreenEdge) {
 						rect.y = Screen.height;
 					}
 				}
@@ -857,7 +886,7 @@ namespace Toolbar {
 					autoHide = !autoHide;
 					fireChange();
 				};
-				toggleAutoHideButton.Enabled = regularEntriesEnabled;
+				toggleAutoHideButton.Enabled = regularEntriesEnabled && (autoHide || AtScreenEdge);
 				dropdownMenu += toggleAutoHideButton;
 
 				Button toggleDrawBorderButton = Button.createMenuOption(showBorder ? "Hide Border" : "Show Border");
