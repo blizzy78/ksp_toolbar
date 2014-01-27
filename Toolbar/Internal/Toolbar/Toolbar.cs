@@ -247,7 +247,7 @@ namespace Toolbar {
 					autoPositionFolder();
 				}
 
-				if (autoHide && (dropdownMenu == null)) {
+				if (autoHide && (dropdownMenu == null) && AtScreenEdge) {
 					handleAutoHide();
 				}
 
