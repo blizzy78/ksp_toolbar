@@ -134,6 +134,28 @@ namespace Toolbar {
 				return rect.y >= (Screen.height - rect.height);
 			}
 		}
+
+		private bool SingleRow {
+			get {
+				if (buttons.Count(b => b.EffectivelyVisible) > 0) {
+					float maxButtonHeight = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.y);
+					return rect.height <= (maxButtonHeight + PADDING * 2);
+				} else {
+					return true;
+				}
+			}
+		}
+
+		private bool SingleColumn {
+			get {
+				if (buttons.Count(b => b.EffectivelyVisible) > 0) {
+					float maxButtonWidth = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.x);
+					return rect.width <= (maxButtonWidth + PADDING * 2);
+				} else {
+					return true;
+				}
+			}
+		}
 		
 		private Mode mode;
 		private Toolbar parentToolbar;
@@ -288,7 +310,7 @@ namespace Toolbar {
 		private void autoPositionFolder() {
 			// at this point, we should already have a good width/height
 
-			if (parentToolbar.isSingleColumn()) {
+			if (parentToolbar.SingleColumn) {
 				// position to right of parent toolbar
 				rect.x = parentToolbar.rect.x + parentToolbar.rect.width + BUTTON_SPACING;
 				float origX = rect.x;
@@ -562,7 +584,7 @@ namespace Toolbar {
 				Log.info("button visibilities have changed, forcing auto-size");
 				visibleButtonIds = newVisibleButtonIds;
 
-				if (isSingleLine()) {
+				if (SingleRow) {
 					// docked at right screen edge -> keep it that way by moving to screen edge
 					if (AtRightScreenEdge) {
 						rect.x = Screen.width;
@@ -584,24 +606,6 @@ namespace Toolbar {
 				}
 
 				fireChange();
-			}
-		}
-
-		private bool isSingleLine() {
-			if (buttons.Count(b => b.EffectivelyVisible) > 0) {
-				float maxButtonHeight = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.y);
-				return rect.height <= (maxButtonHeight + PADDING * 2);
-			} else {
-				return true;
-			}
-		}
-
-		private bool isSingleColumn() {
-			if (buttons.Count(b => b.EffectivelyVisible) > 0) {
-				float maxButtonWidth = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.x);
-				return rect.width <= (maxButtonWidth + PADDING * 2);
-			} else {
-				return true;
 			}
 		}
 
