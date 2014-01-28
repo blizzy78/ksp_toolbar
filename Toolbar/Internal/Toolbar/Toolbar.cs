@@ -320,11 +320,11 @@ namespace Toolbar {
 				buttons.Any(b => b.Important) ||
 				folders.Values.Any(f => f.Visible)) {
 
-				if (displayMode != DisplayMode.VISIBLE) {
+				if ((displayMode != DisplayMode.VISIBLE) && (displayMode != DisplayMode.SLIDING_IN)) {
 					Log.debug("display mode is {0}, starting slide in", displayMode);
 					if (displayMode == DisplayMode.HIDDEN) {
 						slideInOrOutStartTime = now;
-					} else if (displayMode != DisplayMode.SLIDING_IN) {
+					} else {
 						// do everything in reverse
 						long timeSpent = now - slideInOrOutStartTime;
 						long timeToGo = SLIDE_INTERVAL - timeSpent;
@@ -342,11 +342,11 @@ namespace Toolbar {
 					}
 				}
 			} else {
-				if (displayMode != DisplayMode.HIDDEN) {
+				if ((displayMode != DisplayMode.HIDDEN) && (displayMode != DisplayMode.SLIDING_OUT)) {
 					Log.debug("display mode is {0}, starting slide out", displayMode);
 					if (displayMode == DisplayMode.VISIBLE) {
 						slideInOrOutStartTime = now;
-					} else if (displayMode != DisplayMode.SLIDING_OUT) {
+					} else {
 						// do everything in reverse
 						long timeSpent = now - slideInOrOutStartTime;
 						long timeToGo = SLIDE_INTERVAL - timeSpent;
