@@ -32,22 +32,6 @@ using UnityEngine;
 
 namespace Toolbar {
 	internal static class Extensions {
-		internal static Rect rotate(this Rect rect) {
-			float newX = -rect.y;
-			float newY = rect.x;
-			rect.x = newX;
-			rect.y = newY;
-			return rect;
-		}
-
-		internal static Vector2 rotate(this Vector2 pos) {
-			float newX = -pos.y;
-			float newY = pos.x;
-			pos.x = newX;
-			pos.y = newY;
-			return pos;
-		}
-
 		internal static Rect clampToScreen(this Rect rect) {
 			return rect.clampToScreen(0);
 		}
