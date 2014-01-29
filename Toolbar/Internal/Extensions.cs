@@ -75,5 +75,9 @@ namespace Toolbar {
 		internal static T get<T>(this ConfigNode configNode, string name, T defaultValue) {
 			return configNode.HasValue(name) ? (T) TypeDescriptor.GetConverter(defaultValue.GetType()).ConvertFromInvariantString(configNode.GetValue(name)) : defaultValue;
 		}
+
+		internal static long getSeconds(this DateTime date) {
+			return date.Ticks / 10000;
+		}
 	}
 }

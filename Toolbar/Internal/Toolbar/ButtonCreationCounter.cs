@@ -41,7 +41,7 @@ namespace Toolbar {
 		internal void add(Button button) {
 			string key = button.ns + "." + button.id;
 			if (!firstCreation.ContainsKey(key)) {
-				firstCreation.Add(key, DateTime.UtcNow.Ticks / 10000);
+				firstCreation.Add(key, DateTime.UtcNow.getSeconds());
 				creationCounts.Add(key, 1);
 			} else if (creationCounts[key] >= 0) {
 				creationCounts[key]++;
@@ -51,7 +51,7 @@ namespace Toolbar {
 		}
 
 		private void check() {
-			long now = DateTime.UtcNow.Ticks / 10000;
+			long now = DateTime.UtcNow.getSeconds();
 			List<string> badIds = new List<string>(firstCreation.Keys.Where(
 				id => (creationCounts[id] >= 100) && ((now - firstCreation[id]) <= 10000)));
 			foreach (string id in badIds) {

@@ -336,7 +336,7 @@ namespace Toolbar {
 		}
 
 		private void handleAutoHide() {
-			long now = DateTime.UtcNow.Ticks / 10000;
+			long now = DateTime.UtcNow.getSeconds();
 
 			if (rect.contains(Utils.getMousePosition()) ||
 				buttons.Any(b => b.Important) ||
