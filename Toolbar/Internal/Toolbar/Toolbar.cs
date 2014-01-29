@@ -169,6 +169,7 @@ namespace Toolbar {
 		private bool rectLocked = true;
 		private bool buttonOrderLocked = true;
 		private bool autoHide;
+		private bool autoHideAvailable = true;
 		private DisplayMode displayMode = DisplayMode.VISIBLE;
 		private long slideInOrOutStartTime;
 		private FloatCurveXY slideInOrOutCurve;
@@ -269,7 +270,7 @@ namespace Toolbar {
 					autoPositionFolder();
 				}
 
-				if (autoHide && (dropdownMenu == null) && AtScreenEdge) {
+				if (autoHide && autoHideAvailable && (dropdownMenu == null) && AtScreenEdge) {
 					handleAutoHide();
 				}
 
@@ -299,6 +300,9 @@ namespace Toolbar {
 				}
 
 				GUI.depth = oldDepth;
+
+				// enable auto-hide again
+				autoHideAvailable = true;
 			}
 
 			Vector2 mousePos = Utils.getMousePosition();
@@ -754,6 +758,8 @@ namespace Toolbar {
 			}
 			// pretend that nothing was visible until now
 			visibleButtonIds.Clear();
+			// disable auto-hide for now
+			autoHideAvailable = false;
 
 			if (parentNode.HasNode("toolbar")) {
 				foreach (Toolbar folder in new List<Toolbar>(folders.Values)) {
