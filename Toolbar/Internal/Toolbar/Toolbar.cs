@@ -169,7 +169,6 @@ namespace Toolbar {
 		private bool rectLocked = true;
 		private bool buttonOrderLocked = true;
 		private bool autoHide;
-		private bool autoHideAvailable = true;
 		private DisplayMode displayMode = DisplayMode.VISIBLE;
 		private long slideInOrOutStartTime;
 		private FloatCurveXY slideInOrOutCurve;
@@ -270,7 +269,7 @@ namespace Toolbar {
 					autoPositionFolder();
 				}
 
-				if (autoHide && autoHideAvailable && (dropdownMenu == null) && AtScreenEdge) {
+				if (autoHide && (dropdownMenu == null) && AtScreenEdge) {
 					handleAutoHide();
 				}
 
@@ -300,9 +299,6 @@ namespace Toolbar {
 				}
 
 				GUI.depth = oldDepth;
-
-				// enable auto-hide again
-				autoHideAvailable = true;
 			}
 
 			Vector2 mousePos = Utils.getMousePosition();
@@ -393,10 +389,10 @@ namespace Toolbar {
 
 			if ((displayMode == DisplayMode.SLIDING_IN) || (displayMode == DisplayMode.SLIDING_OUT)) {
 				long timeSinceStartTime = now - slideInOrOutStartTime;
-				Log.debug("slide step, time since start: {0}", timeSinceStartTime);
 				Vector2 newXY = slideInOrOutCurve.evaluate(Mathf.Min(timeSinceStartTime, SLIDE_INTERVAL));
 				rect.x = newXY.x;
 				rect.y = newXY.y;
+				Log.debug("slide step, time since start: {0}, new position: {1},{2}", timeSinceStartTime, rect.x, rect.y);
 
 				if (timeSinceStartTime >= SLIDE_INTERVAL) {
 					displayMode = (displayMode == DisplayMode.SLIDING_IN) ? DisplayMode.VISIBLE : DisplayMode.HIDDEN;
@@ -580,36 +576,47 @@ namespace Toolbar {
 		}
 
 		private void forceAutoSizeIfButtonVisibilitiesChanged() {
-			HashSet<string> newVisibleButtonIds = new HashSet<string>();
-			foreach (Button button in buttons.Where(b => b.EffectivelyVisible)) {
-				newVisibleButtonIds.Add(button.ns + "." + button.id);
-			}
-			if (!newVisibleButtonIds.SetEquals(visibleButtonIds)) {
-				Log.info("button visibilities have changed, forcing auto-size");
-				visibleButtonIds = newVisibleButtonIds;
-
-				if (SingleRow) {
-					// docked at right screen edge -> keep it that way by moving to screen edge
-					if (AtRightScreenEdge) {
-						rect.x = Screen.width;
-					}
-				} else {
-					// docked at bottom screen edge -> keep it that way by moving to screen edge
-					if (AtBottomScreenEdge) {
-						rect.y = Screen.height;
-					}
+			// ignore changes while sliding in/out
+			if ((displayMode == DisplayMode.VISIBLE) || (displayMode == DisplayMode.HIDDEN)) {
+				HashSet<string> newVisibleButtonIds = new HashSet<string>();
+				foreach (Button button in buttons.Where(b => b.EffectivelyVisible)) {
+					newVisibleButtonIds.Add(button.ns + "." + button.id);
 				}
+				if (!newVisibleButtonIds.SetEquals(visibleButtonIds)) {
+					Log.info("button visibilities have changed, forcing auto-size");
+					visibleButtonIds = newVisibleButtonIds;
 
-				// expand width to last saved width, then resize for buttons, and expand height to fit new buttons
-				rect.width = savedMaxWidth;
-				rect.width = getMinWidthForButtons();
-				rect.height = getMinHeightForButtons();
+					if (SingleRow) {
+						// docked at right screen edge -> keep it that way by moving to screen edge
+						if (AtRightScreenEdge) {
+							rect.x = Screen.width;
+						}
+					} else {
+						// docked at bottom screen edge -> keep it that way by moving to screen edge
+						if (AtBottomScreenEdge) {
+							rect.y = Screen.height;
+						}
+					}
 
-				if (displayMode == DisplayMode.VISIBLE) {
-					rect.clampToScreen(PADDING);
+					// expand width to last saved width, then resize for buttons, and expand height to fit new buttons
+					rect.width = savedMaxWidth;
+					rect.width = getMinWidthForButtons();
+					rect.height = getMinHeightForButtons();
+
+					// move rect into view as necessary
+					switch (displayMode) {
+						case DisplayMode.VISIBLE:
+							rect.clampToScreen(PADDING);
+							break;
+						case DisplayMode.HIDDEN:
+							rect.clampToScreen(new Vector2(rect.width - PADDING, rect.height - PADDING));
+							break;
+					}
+
+					Log.debug("new position after forcing auto-size: {0},{1} (display mode: {2})", rect.x, rect.y, displayMode);
+
+					fireChange();
 				}
-
-				fireChange();
 			}
 		}
 
@@ -745,9 +752,9 @@ namespace Toolbar {
 			dropdownMenu = null;
 			// deactivate these
 			rectLocked = true;
+			buttonOrderLocked = true;
 			draggable.Enabled = false;
 			resizable.Enabled = false;
-			buttonOrderLocked = true;
 			// pretend we're not auto-hidden right now
 			displayMode = DisplayMode.VISIBLE;
 			// enable ourselves
@@ -758,8 +765,6 @@ namespace Toolbar {
 			}
 			// pretend that nothing was visible until now
 			visibleButtonIds.Clear();
-			// disable auto-hide for now
-			autoHideAvailable = false;
 
 			if (parentNode.HasNode("toolbar")) {
 				foreach (Toolbar folder in new List<Toolbar>(folders.Values)) {

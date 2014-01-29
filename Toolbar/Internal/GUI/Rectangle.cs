@@ -87,8 +87,12 @@ namespace Toolbar {
 			return Rect.Contains(pos);
 		}
 
-		internal void clampToScreen(float clampOverscan) {
-			rect_ = rect_.clampToScreen(clampOverscan);
+		internal void clampToScreen(float overscan) {
+			rect_ = rect_.clampToScreen(overscan);
+		}
+
+		internal void clampToScreen(Vector2 overscan) {
+			rect_ = rect_.clampToScreen(overscan);
 		}
 	}
 }
