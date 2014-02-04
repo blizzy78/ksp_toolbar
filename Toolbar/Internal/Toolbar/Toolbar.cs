@@ -294,7 +294,7 @@ namespace Toolbar {
 					folder.draw();
 				}
 
-				if (Enabled && rectLocked && buttonOrderLocked && (dropdownMenu == null) && (displayMode == DisplayMode.VISIBLE)) {
+				if (Enabled && rectLocked && (buttonOrderLocked || (draggedButton == null)) && (dropdownMenu == null) && (displayMode == DisplayMode.VISIBLE)) {
 					drawButtonToolTips();
 				}
 
