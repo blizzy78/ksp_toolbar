@@ -33,7 +33,7 @@ namespace Toolbar {
 	[KSPAddonFixed(KSPAddon.Startup.EveryScene, true, typeof(ToolbarManager))]
 	public partial class ToolbarManager : MonoBehaviour, IToolbarManager {
 		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
-		internal const int VERSION = 8;
+		internal const int VERSION = 9;
 
 		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 

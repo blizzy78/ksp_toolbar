@@ -1,4 +1,9 @@
-﻿1.4.4, 2014-01-27
+﻿1.4.5, 2014-02-04
+- Fixed another bug where the toolbar would get completely invisible under
+  certain circumstances.
+- Various other minor improvements and bug fixes.
+
+1.4.4, 2014-01-27
 - Fixed a bug where the toolbar would get completely invisible under certain
   circumstances.
 
