@@ -31,49 +31,73 @@ using UnityEngine;
 
 namespace Toolbar {
 	internal enum LogLevel {
-		DEBUG = 0,
-		INFO = 1,
-		WARN = 2,
-		ERROR = 3
+		TRACE = 0,
+		DEBUG = 1,
+		INFO = 2,
+		WARN = 3,
+		ERROR = 4
 	}
 
+	internal delegate void LogMethod(string message);
+	
 	internal static class Log {
 		private const string CATEGORY = "Toolbar";
 
 		internal static LogLevel Level = LogLevel.WARN;
 
+		internal static void trace(string message, params object[] @params) {
+			log(LogLevel.TRACE, null, message, @params);
+		}
+		
 		internal static void debug(string message, params object[] @params) {
-			if (doLog(LogLevel.DEBUG)) {
-				Debug.Log(getLogMessage(LogLevel.DEBUG, message, @params));
-			}
+			log(LogLevel.DEBUG, null, message, @params);
 		}
 
 		internal static void info(string message, params object[] @params) {
-			if (doLog(LogLevel.INFO)) {
-				Debug.Log(getLogMessage(LogLevel.INFO, message, @params));
-			}
+			log(LogLevel.INFO, null, message, @params);
 		}
 
 		internal static void warn(string message, params object[] @params) {
-			warn(null, message, @params);
+			log(LogLevel.WARN, null, message, @params);
 		}
 
 		internal static void warn(Exception e, string message, params object[] @params) {
-			if (doLog(LogLevel.WARN)) {
-				Debug.LogWarning(getLogMessage(LogLevel.WARN, message, @params));
-				if (e != null) {
-					Debug.LogException(e);
-				}
-			}
+			log(LogLevel.WARN, e, message, @params);
 		}
 
 		internal static void error(string message, params object[] @params) {
-			error(null, message, @params);
+			log(LogLevel.ERROR, null, message, @params);
 		}
 
 		internal static void error(Exception e, string message, params object[] @params) {
-			if (doLog(LogLevel.ERROR)) {
-				Debug.LogError(getLogMessage(LogLevel.ERROR, message, @params));
+			log(LogLevel.ERROR, e, message, @params);
+		}
+
+		private static void log(LogLevel level, Exception e, string message, params object[] @params) {
+			if (doLog(level)) {
+				LogMethod logMethod;
+				switch (level) {
+					case LogLevel.TRACE:
+						goto case LogLevel.INFO;
+					case LogLevel.DEBUG:
+						goto case LogLevel.INFO;
+					case LogLevel.INFO:
+						logMethod = Debug.Log;
+						break;
+
+					case LogLevel.WARN:
+						logMethod = Debug.LogWarning;
+						break;
+
+					case LogLevel.ERROR:
+						logMethod = Debug.LogError;
+						break;
+
+					default:
+						throw new ArgumentException("unknown log level: " + level);
+				}
+
+				logMethod(getLogMessage(level, message, @params));
 				if (e != null) {
 					Debug.LogException(e);
 				}
