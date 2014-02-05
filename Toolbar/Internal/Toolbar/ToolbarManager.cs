@@ -32,47 +32,62 @@ using UnityEngine;
 namespace Toolbar {
 	[KSPAddonFixed(KSPAddon.Startup.EveryScene, true, typeof(ToolbarManager))]
 	public partial class ToolbarManager : MonoBehaviour, IToolbarManager {
+		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
 		internal const int VERSION = 9;
 
-		private static readonly string settingsFile = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
-
 		private RenderingManager renderingManager;
-		private Toolbar toolbar = new Toolbar();
+		private Toolbar toolbar;
 		private ConfigNode settings;
-		private UpdateChecker updateChecker = new UpdateChecker();
+		private UpdateChecker updateChecker;
+		private bool running = true;
 
 		internal ToolbarManager() {
-			Instance = this;
-			GameObject.DontDestroyOnLoad(this);
+			Log.trace("ToolbarManager()");
 
-			toolbar.onChange += toolbarChanged;
+			if (Instance == null) {
+				Instance = this;
+				GameObject.DontDestroyOnLoad(this);
 
-			updateChecker.OnDone += () => updateChecker = null;
+				toolbar = new Toolbar();
+				toolbar.onChange += toolbarChanged;
 
-			GameEvents.onGameSceneLoadRequested.Add(gameSceneLoadRequested);
+				updateChecker = new UpdateChecker();
+				updateChecker.OnDone += () => updateChecker = null;
+
+				GameEvents.onGameSceneLoadRequested.Add(gameSceneLoadRequested);
+			} else {
+				Log.warn("ToolbarManager already running, marking this instance as stale");
+				running = false;
+			}
 		}
 
 		internal void OnDestroy() {
-			GameEvents.onGameSceneLoadRequested.Remove(gameSceneLoadRequested);
+			Log.trace("ToolbarManager.OnDestroy()");
 
-			toolbar.destroy();
+			if (running) {
+				GameEvents.onGameSceneLoadRequested.Remove(gameSceneLoadRequested);
+
+				toolbar.destroy();
+			}
 		}
 
 		internal void OnGUI() {
-			if (showGUI()) {
+			if (running && showGUI()) {
 				toolbar.draw();
 				WindowList.Instance.draw();
 			}
 		}
 
 		internal void Update() {
-			toolbar.update();
-			if (updateChecker != null) {
-				updateChecker.update();
-			}
-			if (showGUI()) {
-				CursorGrabbing.Instance.update();
+			if (running) {
+				toolbar.update();
+				if (updateChecker != null) {
+					updateChecker.update();
+				}
+				if (showGUI()) {
+					CursorGrabbing.Instance.update();
+				}
 			}
 		}
 
@@ -107,7 +122,7 @@ namespace Toolbar {
 
 		private ConfigNode loadSettings() {
 			if (settings == null) {
-				settings = ConfigNode.Load(settingsFile) ?? new ConfigNode();
+				settings = ConfigNode.Load(SETTINGS_FILE) ?? new ConfigNode();
 			}
 			return settings;
 		}
@@ -118,7 +133,7 @@ namespace Toolbar {
 
 			ConfigNode root = loadSettings();
 			toolbar.saveSettings(root.getOrCreateNode("toolbars"), scene);
-			root.Save(settingsFile);
+			root.Save(SETTINGS_FILE);
 		}
 
 		private bool showGUI() {
@@ -144,10 +159,14 @@ namespace Toolbar {
 		}
 
 		public IButton add(string ns, string id) {
-			Button button = new Button(ns, id, toolbar);
-			toolbar.add(button);
+			if (running) {
+				Button button = new Button(ns, id, toolbar);
+				toolbar.add(button);
 
-			return button;
+				return button;
+			} else {
+				throw new NotSupportedException("cannot add button to stale ToolbarManager instance");
+			}
 		}
 	}
 }
