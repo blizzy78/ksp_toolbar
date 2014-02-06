@@ -97,6 +97,10 @@ namespace Toolbar {
 		/// <summary>
 		/// Whether this button is currently visible or not. Can be used in addition to or as a replacement for <see cref="Visibility"/>.
 		/// </summary>
+		/// <remarks>
+		/// Setting this property to true does not affect the player's ability to hide the button using the configuration.
+		/// Conversely, setting this property to false does not enable the player to show the button using the configuration.
+		/// </remarks>
 		bool Visible {
 			set;
 			get;
@@ -105,6 +109,10 @@ namespace Toolbar {
 		/// <summary>
 		/// Determines this button's visibility. Can be used in addition to or as a replacement for <see cref="Visible"/>.
 		/// </summary>
+		/// <remarks>
+		/// The return value from IVisibility.Visible is subject to the same rules as outlined for
+		/// <see cref="Visible"/>.
+		/// </remarks>
 		IVisibility Visibility {
 			set;
 			get;
@@ -116,15 +124,16 @@ namespace Toolbar {
 		/// </summary>
 		/// <remarks>
 		/// Note that the toolbar is not visible in certain game scenes, for example the loading screens. This property
-		/// does not reflect button invisibility in those scenes.
+		/// does not reflect button invisibility in those scenes. In addition, this property does not reflect the
+		/// player's configuration of the button's visibility.
 		/// </remarks>
 		bool EffectivelyVisible {
 			get;
 		}
 
 		/// <summary>
-		/// Whether this button is currently enabled (clickable) or not. This will not affect the player's ability to
-		/// position the button on their screen.
+		/// Whether this button is currently enabled (clickable) or not. This does not affect the player's ability to
+		/// position the button on their toolbar.
 		/// </summary>
 		bool Enabled {
 			set;
@@ -143,6 +152,10 @@ namespace Toolbar {
 		/// <para>
 		/// Setting this property does not change the appearance of the button. Use <see cref="TexturePath"/> to
 		/// change the button's icon.
+		/// </para>
+		/// <para>
+		/// Setting this property to true does not affect the player's ability to hide the button using the
+		/// configuration.
 		/// </para>
 		/// <para>
 		/// This feature should be used only sparingly, if at all, since it forces the button to be displayed on
