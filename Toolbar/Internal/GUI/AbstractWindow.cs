@@ -31,6 +31,8 @@ using UnityEngine;
 
 namespace Toolbar {
 	internal abstract class AbstractWindow {
+		internal event Action OnDestroy;
+
 		internal protected Rect Rect = new Rect(0, 0, 0, 0);
 		internal protected string Title;
 		internal protected GUIStyle GUIStyle;
@@ -52,6 +54,10 @@ namespace Toolbar {
 			WindowList.Instance.remove(this);
 
 			editorLock.draw(false);
+
+			if (OnDestroy != null) {
+				OnDestroy();
+			}
 		}
 
 		internal virtual void draw() {
