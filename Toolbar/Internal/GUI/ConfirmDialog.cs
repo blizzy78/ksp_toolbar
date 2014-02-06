@@ -34,8 +34,10 @@ namespace Toolbar {
 		private string text;
 		private Action onOk;
 		private Action onCancel;
+		private string okText;
+		private string cancelText;
 
-		internal ConfirmDialog(string title, string text, Action onOk, Action onCancel) : base() {
+		internal ConfirmDialog(string title, string text, Action onOk, Action onCancel, string okText = "OK", string cancelText = "Cancel") : base() {
 			Rect = new Rect(300, 300, Screen.width / 4, 0);
 			Title = title;
 			Dialog = true;
@@ -44,6 +46,8 @@ namespace Toolbar {
 			this.text = text;
 			this.onOk = onOk;
 			this.onCancel = onCancel;
+			this.okText = okText;
+			this.cancelText = cancelText;
 		}
 
 		internal override void drawContents() {
@@ -55,10 +59,10 @@ namespace Toolbar {
 
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("OK")) {
+			if (GUILayout.Button(okText)) {
 				onOk();
 			}
-			if (GUILayout.Button("Cancel")) {
+			if (GUILayout.Button(cancelText)) {
 				onCancel();
 			}
 			GUILayout.EndHorizontal();
@@ -66,14 +70,15 @@ namespace Toolbar {
 			GUILayout.EndVertical();
 		}
 
-		internal static void confirm(string title, string text, Action onOk) {
+		internal static void confirm(string title, string text, Action onOk, string okText = "OK", string cancelText = "Cancel") {
 			ConfirmDialog dialog = null;
 			dialog = new ConfirmDialog(title, text,
 				() => {
 					dialog.destroy();
 					onOk();
 				},
-				() => dialog.destroy());
+				() => dialog.destroy(),
+				okText, cancelText);
 		}
 	}
 }
