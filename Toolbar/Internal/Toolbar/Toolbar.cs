@@ -47,6 +47,11 @@ namespace Toolbar {
 		private const float DEFAULT_HEIGHT_FOLDER = 100;
 		private const long SLIDE_INTERVAL = 100;
 
+		internal bool NewButtonKnown {
+			set;
+			private get;
+		}
+
 		internal event Action onChange;
 		internal event Action onSkinChange;
 
@@ -137,8 +142,8 @@ namespace Toolbar {
 
 		private bool SingleRow {
 			get {
-				if (buttons.Count(b => b.EffectivelyVisible) > 0) {
-					float maxButtonHeight = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.y);
+				if (buttons.Count(b => b.EffectivelyUserVisible) > 0) {
+					float maxButtonHeight = buttons.Where(b => b.EffectivelyUserVisible).Max(b => b.Size.y);
 					return rect.height <= (maxButtonHeight + PADDING * 2);
 				} else {
 					return true;
@@ -148,8 +153,8 @@ namespace Toolbar {
 
 		private bool SingleColumn {
 			get {
-				if (buttons.Count(b => b.EffectivelyVisible) > 0) {
-					float maxButtonWidth = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.x);
+				if (buttons.Count(b => b.EffectivelyUserVisible) > 0) {
+					float maxButtonWidth = buttons.Where(b => b.EffectivelyUserVisible).Max(b => b.Size.x);
 					return rect.width <= (maxButtonWidth + PADDING * 2);
 				} else {
 					return true;
@@ -188,6 +193,9 @@ namespace Toolbar {
 		private Dictionary<string, Toolbar> folders = new Dictionary<string, Toolbar>();
 		private Dictionary<Button, Toolbar> folderButtons = new Dictionary<Button, Toolbar>();
 		private Dictionary<string, FolderSettings> savedFolderSettings = new Dictionary<string, FolderSettings>();
+		private Button configureVisibleButtonsButton;
+		private VisibleButtonsSelector visibleButtonsSelector;
+		private List<string> savedVisibleButtons = new List<string>();
 
 		internal Toolbar(Mode mode = Mode.TOOLBAR, Toolbar parentToolbar = null) {
 			this.mode = mode;
@@ -227,7 +235,7 @@ namespace Toolbar {
 
 		private void toolbarResize() {
 			if (resizable.Dragging) {
-				float maxButtonWidth = buttons.Where(b => b.EffectivelyVisible).Max(b => b.Size.x);
+				float maxButtonWidth = buttons.Where(b => b.EffectivelyUserVisible).Max(b => b.Size.x);
 				if (rect.width < (maxButtonWidth + PADDING * 2)) {
 					rect.width = maxButtonWidth + PADDING * 2;
 				}
@@ -260,7 +268,7 @@ namespace Toolbar {
 			// only show toolbar if there is at least one visible button
 			// that is not the drop-down menu button
 			if (Visible &&
-				((mode == Mode.FOLDER) || buttons.Any((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyVisible))) {
+				((mode == Mode.FOLDER) || buttons.Any((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyUserVisible))) {
 
 				forceAutoSizeIfButtonVisibilitiesChanged();
 				autoSize();
@@ -299,6 +307,20 @@ namespace Toolbar {
 				}
 
 				GUI.depth = oldDepth;
+			}
+
+			if (Visible && NewButtonKnown) {
+				if (visibleButtonsSelector == null) {
+					ConfirmDialog.confirm("New Toolbar Buttons Available",
+						"There are new toolbar buttons available.\n\n" +
+						"You can configure the buttons now to make them visible on the toolbar, " +
+						"or do so at a later time by selecting 'Configure Visible Buttons' from the toolbar's drop-down menu.",
+						() => {
+							toggleVisibleButtonsSelector();
+						},
+						"Configure Buttons", "Close");
+				}
+				NewButtonKnown = false;
 			}
 
 			Vector2 mousePos = Utils.getMousePosition();
@@ -423,14 +445,14 @@ namespace Toolbar {
 
 		private float getMinWidthForButtons() {
 			if (mode == Mode.FOLDER) {
-				int count = buttons.Count((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyVisible);
+				int count = buttons.Count((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyUserVisible);
 				if (count == 0) {
 					return DEFAULT_WIDTH;
 				} else {
 					// make it roughly a square
 					int columns = Mathf.CeilToInt(Mathf.Sqrt(count));
 					// they're all the same size, so let's just take the first one
-					Button firstVisibleButton = buttons.First((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyVisible);
+					Button firstVisibleButton = buttons.First((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyUserVisible);
 					float buttonWidth = firstVisibleButton.Size.x;
 					return buttonWidth * columns + BUTTON_SPACING * (columns - 1) + PADDING * 2;
 				}
@@ -448,7 +470,7 @@ namespace Toolbar {
 		}
 
 		private float getMinHeightForButtons() {
-			if ((mode == Mode.FOLDER) && (buttons.Count((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyVisible) == 0)) {
+			if ((mode == Mode.FOLDER) && (buttons.Count((b) => !b.Equals(dropdownMenuButton) && b.EffectivelyUserVisible) == 0)) {
 				return DEFAULT_HEIGHT_FOLDER;
 			} else {
 				float height = 0;
@@ -470,7 +492,7 @@ namespace Toolbar {
 			float widestLineWidth = float.MinValue;
 			float currentLineWidth = 0;
 			foreach (Button button in buttons) {
-				if (button.EffectivelyVisible && !button.Equals(dropdownMenuButton)) {
+				if (button.EffectivelyUserVisible && !button.Equals(dropdownMenuButton)) {
 					if (((x + button.Size.x) > (rect.width - PADDING)) && (lineHeight > 0)) {
 						x = PADDING;
 						y += lineHeight + BUTTON_SPACING;
@@ -579,7 +601,7 @@ namespace Toolbar {
 			// ignore changes while sliding in/out
 			if ((displayMode == DisplayMode.VISIBLE) || (displayMode == DisplayMode.HIDDEN)) {
 				HashSet<string> newVisibleButtonIds = new HashSet<string>();
-				foreach (Button button in buttons.Where(b => b.EffectivelyVisible)) {
+				foreach (Button button in buttons.Where(b => b.EffectivelyUserVisible)) {
 					newVisibleButtonIds.Add(button.ns + "." + button.id);
 				}
 				if (!newVisibleButtonIds.SetEquals(visibleButtonIds)) {
@@ -652,6 +674,8 @@ namespace Toolbar {
 		}
 
 		internal void update() {
+			setupConfigureVisibleButtonsButton();
+			
 			if (draggable != null) {
 				draggable.update();
 			}
@@ -680,6 +704,28 @@ namespace Toolbar {
 			}
 		}
 
+		private void setupConfigureVisibleButtonsButton() {
+			// set up a button to configure visible buttons if there is currently no button visible,
+			// but if there are buttons that could be made visible by the player
+			bool contentsVisible = (mode == Mode.FOLDER) ||
+				buttons.Any((b) => !b.Equals(dropdownMenuButton) &&
+					((configureVisibleButtonsButton == null) || !b.Equals(configureVisibleButtonsButton)) &&
+					b.EffectivelyUserVisible);
+			if (mode == Mode.TOOLBAR) {
+				if (contentsVisible && (configureVisibleButtonsButton != null)) {
+					configureVisibleButtonsButton.Destroy();
+					configureVisibleButtonsButton = null;
+				} else if (!contentsVisible && (configureVisibleButtonsButton == null)) {
+					configureVisibleButtonsButton = (Button) ToolbarManager.Instance.add(Button.NAMESPACE_INTERNAL, "configureVisibleButtons");
+					configureVisibleButtonsButton.TexturePath = "000_Toolbar/update-available";
+					configureVisibleButtonsButton.ToolTip = "Configure Visible Buttons";
+					configureVisibleButtonsButton.OnClick += (e) => {
+						toggleVisibleButtonsSelector();
+					};
+				}
+			}
+		}
+
 		internal void add(Button button) {
 			// destroy old button with the same ID
 			Button oldButton = buttons.SingleOrDefault(b => (b.ns == button.ns) && (b.id == button.id));
@@ -695,6 +741,7 @@ namespace Toolbar {
 				}
 			}
 
+			// move button to correct folder if necessary
 			string buttonId = button.ns + "." + button.id;
 			string folderId = savedFolderSettings.Where(kv => kv.Value.buttons.Contains(buttonId)).Select(kv => kv.Key).SingleOrDefault();
 			if ((folderId != null) && folders.ContainsKey(folderId)) {
@@ -704,6 +751,11 @@ namespace Toolbar {
 				buttons.Add(button);
 				sortButtons();
 				ButtonCreationCounter.Instance.add(button);
+			}
+			
+			// show/hide button
+			if (button.ns != Button.NAMESPACE_INTERNAL) {
+				button.UserVisible = savedVisibleButtons.Contains(button.ns + "." + button.id);
 			}
 		}
 
@@ -781,7 +833,8 @@ namespace Toolbar {
 				autoHide = settingsNode.get("autoHide", false);
 				showBorder = settingsNode.get("drawBorder", true);
 				UseKSPSkin = settingsNode.get("useKSPSkin", false);
-				savedButtonOrder = settingsNode.get("buttonOrder", "").Split(new char[] { ',' }).ToList();
+				savedButtonOrder = settingsNode.get("buttonOrder", "").Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+				savedVisibleButtons = settingsNode.get("visibleButtons", "").Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
 
 				if (settingsNode.HasNode("folders")) {
 					foreach (ConfigNode folderNode in settingsNode.GetNode("folders").nodes) {
@@ -805,6 +858,11 @@ namespace Toolbar {
 						moveButtonToFolder(button, folders[folderId]);
 					}
 				}
+
+				// show/hide buttons according to saved settings
+				foreach (Button button in buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton))) {
+					button.UserVisible = savedVisibleButtons.Contains(button.ns + "." + button.id);
+				}
 			}
 
 			savedMaxWidth = rect.width;
@@ -823,6 +881,8 @@ namespace Toolbar {
 			settingsNode.overwrite("drawBorder", showBorder.ToString());
 			settingsNode.overwrite("useKSPSkin", UseKSPSkin.ToString());
 			settingsNode.overwrite("buttonOrder", string.Join(",", savedButtonOrder.ToArray()));
+			settingsNode.overwrite("visibleButtons", string.Join(",",
+				buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton) && b.UserVisible).Select(b => b.ns + "." + b.id).ToArray()));
 
 			ConfigNode foldersNode = settingsNode.overwriteNode("folders");
 			foreach (KeyValuePair<string, FolderSettings> entry in savedFolderSettings) {
@@ -853,7 +913,7 @@ namespace Toolbar {
 
 				bool regularEntriesEnabled = rectLocked && buttonOrderLocked;
 
-				Button createFolderButton = Button.createMenuOption("Create New Folder");
+				Button createFolderButton = Button.createMenuOption("Create New Folder...");
 				createFolderButton.OnClick += (e) => createFolder();
 				createFolderButton.Enabled = regularEntriesEnabled;
 				dropdownMenu += createFolderButton;
@@ -872,6 +932,9 @@ namespace Toolbar {
 						autoHide = false;
 						foreach (Toolbar folder in folders.Values) {
 							folder.Visible = false;
+						}
+						if (visibleButtonsSelector != null) {
+							visibleButtonsSelector.destroy();
 						}
 					}
 				};
@@ -892,9 +955,19 @@ namespace Toolbar {
 					foreach (Toolbar folder in folders.Values) {
 						folder.Enabled = buttonOrderLocked;
 					}
+					if (visibleButtonsSelector != null) {
+						visibleButtonsSelector.destroy();
+					}
 				};
 				toggleButtonOrderLockButton.Enabled = rectLocked;
 				dropdownMenu += toggleButtonOrderLockButton;
+
+				Button visibleButtonsButton = Button.createMenuOption("Configure Visible Buttons...");
+				visibleButtonsButton.Enabled = regularEntriesEnabled && (visibleButtonsSelector == null);
+				visibleButtonsButton.OnClick += (e) => {
+					toggleVisibleButtonsSelector();
+				};
+				dropdownMenu += visibleButtonsButton;
 
 				Button toggleAutoHideButton = Button.createMenuOption(autoHide ? "Deactivate Auto-Hide at Screen Edge" : "Activate Auto-Hide at Screen Edge");
 				toggleAutoHideButton.OnClick += (e) => {
@@ -1190,6 +1263,24 @@ namespace Toolbar {
 				return setCursor;
 			} else {
 				return false;
+			}
+		}
+
+		private void toggleVisibleButtonsSelector() {
+			if (visibleButtonsSelector == null) {
+				visibleButtonsSelector = new VisibleButtonsSelector(buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton)).ToList());
+				visibleButtonsSelector.OnButtonSelectionChanged += (button) => {
+					Log.info("user changed button visibility: button: {0}.{1}, new visibility: {2}", button.ns, button.id, button.UserVisible);
+					savedVisibleButtons = buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton) && b.UserVisible)
+						.Select(b => b.ns + "." + b.id).ToList();
+					fireChange();
+				};
+				visibleButtonsSelector.OnDestroy += () => {
+					visibleButtonsSelector = null;
+				};
+			} else {
+				visibleButtonsSelector.destroy();
+				// OnDestroy event will clear the variable
 			}
 		}
 	}

@@ -161,9 +161,41 @@ namespace Toolbar {
 			set;
 		}
 
+		private bool userVisible_;
+		internal bool UserVisible {
+			set {
+				userVisible_ = value;
+
+				if (!userVisible_) {
+					// we don't need these for now
+					texture_ = null;
+					content_ = null;
+					style_ = null;
+				}
+			}
+			get {
+				return userVisible_;
+			}
+		}
+
 		public bool EffectivelyVisible {
 			get {
-				return Visible && ((Visibility == null) || Visibility.Visible) && (TexturePath != null);
+				if (Visible && (TexturePath != null)) {
+					try {
+						return (Visibility == null) || Visibility.Visible;
+					} catch (Exception e) {
+						Log.error(e, "error while calling IButton.Visibility.Visible for button {0}.{1}", ns, id);
+						return false;
+					}
+				} else {
+					return false;
+				}
+			}
+		}
+
+		internal bool EffectivelyUserVisible {
+			get {
+				return EffectivelyVisible && UserVisible;
 			}
 		}
 
@@ -280,6 +312,9 @@ namespace Toolbar {
 			this.toolbar = toolbar;
 
 			Enabled = true;
+			if (ns == NAMESPACE_INTERNAL) {
+				UserVisible = true;
+			}
 
 			OnMouseEnter += (e) => showTooltip = true;
 			OnMouseLeave += (e) => showTooltip = false;
@@ -320,6 +355,12 @@ namespace Toolbar {
 			if (clicked && (OnClick != null)) {
 				OnClick(new ClickEvent(this, Event.current.button));
 			}
+		}
+
+		internal void drawPlain() {
+			GUIStyle style = new GUIStyle();
+			style.alignment = TextAnchor.MiddleCenter;
+			GUILayout.Label(Content, style, GUILayout.Width(Size.x), GUILayout.Height(Size.y));
 		}
 
 		public void drawMenuOption() {
