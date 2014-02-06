@@ -57,7 +57,10 @@ namespace Toolbar {
 
 		internal void destroyDialogs() {
 			// do not use the actual list because we might be iterating over it right now
-			createNewWindowList().RemoveAll(w => w.Dialog);
+			List<AbstractWindow> windowsToDestroy = new List<AbstractWindow>(windows.Where(w => w.Dialog));
+			foreach (AbstractWindow window in windowsToDestroy) {
+				window.destroy();
+			}
 		}
 
 		private List<AbstractWindow> createNewWindowList() {
