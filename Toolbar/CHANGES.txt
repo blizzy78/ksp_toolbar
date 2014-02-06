@@ -1,4 +1,11 @@
-﻿1.4.5, 2014-02-04
+﻿1.5.0, 2014-02-07
+- You can now configure the visibility of each button. For example, you can
+  now hide a button if you don't need it. Button visibility is saved in
+  relation to game scene.
+  Note: This change will cause a one-time reset of the toolbar, such that
+  no buttons are visible at first. Toolbar location will be preserved.
+
+1.4.5, 2014-02-04
 - Fixed another bug where the toolbar would get completely invisible under
   certain circumstances.
 - Various other minor improvements and bug fixes.
