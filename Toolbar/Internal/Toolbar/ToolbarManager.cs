@@ -51,6 +51,8 @@ namespace Toolbar {
 				Instance = this;
 				GameObject.DontDestroyOnLoad(this);
 
+				loadSettings(GameScenes.MAINMENU);
+
 				toolbar = new Toolbar();
 				toolbar.onChange += toolbarChanged;
 
@@ -125,7 +127,9 @@ namespace Toolbar {
 					updateChecker.CheckForUpdates = toolbarsNode.get("checkForUpdates", true);
 				}
 
-				toolbar.loadSettings(toolbarsNode, scene);
+				if (toolbar != null) {
+					toolbar.loadSettings(toolbarsNode, scene);
+				}
 			}
 		}
 
