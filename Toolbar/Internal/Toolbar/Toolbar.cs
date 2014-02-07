@@ -750,11 +750,13 @@ namespace Toolbar {
 			string buttonId = button.ns + "." + button.id;
 			string folderId = savedFolderSettings.Where(kv => kv.Value.buttons.Contains(buttonId)).Select(kv => kv.Key).SingleOrDefault();
 			if ((folderId != null) && folders.ContainsKey(folderId)) {
+				// move to folder
 				folders[folderId].add(button);
 			} else {
+				// add to toolbar
 				button.OnDestroy += buttonDestroyed;
 				buttons.Add(button);
-				sortButtons();
+				sortButtons(buttons, compareButtonsUserOrder);
 				ButtonCreationCounter.Instance.add(button);
 			}
 			
@@ -764,33 +766,41 @@ namespace Toolbar {
 			}
 		}
 
-		private void sortButtons() {
-			if (dropdownMenuButton != null) {
+		private void sortButtons(List<Button> buttons, Comparison<Button> comparison) {
+			bool addDropDownMenuButton = buttons.Contains(dropdownMenuButton);
+			if (addDropDownMenuButton) {
 				buttons.Remove(dropdownMenuButton);
 			}
 
-			buttons.Sort((b1, b2) => {
-				string id1 = b1.ns + "." + b1.id;
-				string id2 = b2.ns + "." + b2.id;
-				if (mode == Mode.TOOLBAR) {
-					int idx1 = savedButtonOrder.IndexOf(id1);
-					int idx2 = savedButtonOrder.IndexOf(id2);
-					if ((idx1 >= 0) && (idx2 >= 0)) {
-						return idx1 - idx2;
-					} else if ((idx1 >= 0) && (idx2 < 0)) {
-						return -1;
-					} else if ((idx1 < 0) && (idx2 >= 0)) {
-						return 1;
-					}
-				}
-				return StringComparer.CurrentCultureIgnoreCase.Compare(id1, id2);
-			});
+			buttons.Sort(comparison);
 
-			if (dropdownMenuButton != null) {
+			if (addDropDownMenuButton) {
 				buttons.Add(dropdownMenuButton);
 			}
 		}
 
+		private int compareButtonsUserOrder(Button b1, Button b2) {
+			string id1 = b1.ns + "." + b1.id;
+			string id2 = b2.ns + "." + b2.id;
+			int idx1 = savedButtonOrder.IndexOf(id1);
+			int idx2 = savedButtonOrder.IndexOf(id2);
+			if ((idx1 >= 0) && (idx2 >= 0)) {
+				return idx1 - idx2;
+			} else if ((idx1 >= 0) && (idx2 < 0)) {
+				return -1;
+			} else if ((idx1 < 0) && (idx2 >= 0)) {
+				return 1;
+			} else {
+				return compareButtonsNaturalOrder(b1, b2);
+			}
+		}
+
+		private int compareButtonsNaturalOrder(Button b1, Button b2) {
+			string id1 = b1.ns + "." + b1.id;
+			string id2 = b2.ns + "." + b2.id;
+			return StringComparer.CurrentCultureIgnoreCase.Compare(id1, id2);
+		}
+		
 		private void remove(Button button) {
 			button.OnDestroy -= buttonDestroyed;
 			buttons.Remove(button);
@@ -872,7 +882,7 @@ namespace Toolbar {
 
 			savedMaxWidth = rect.width;
 
-			sortButtons();
+			sortButtons(buttons, compareButtonsUserOrder);
 		}
 
 		internal void saveSettings(ConfigNode parentNode, GameScenes scene) {
@@ -1273,7 +1283,11 @@ namespace Toolbar {
 
 		private void toggleVisibleButtonsSelector() {
 			if (visibleButtonsSelector == null) {
-				visibleButtonsSelector = new VisibleButtonsSelector(buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton)).ToList());
+				List<Button> buttons = new List<Button>(this.buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton)));
+				buttons.AddRange(folders.Values.SelectMany(f => f.buttons).Where(b => b.ns != Button.NAMESPACE_INTERNAL));
+				sortButtons(buttons, compareButtonsNaturalOrder);
+
+				visibleButtonsSelector = new VisibleButtonsSelector(buttons);
 				visibleButtonsSelector.OnButtonSelectionChanged += (button) => {
 					Log.info("user changed button visibility: button: {0}.{1}, new visibility: {2}", button.ns, button.id, button.UserVisible);
 					savedVisibleButtons = buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton) && b.UserVisible)
