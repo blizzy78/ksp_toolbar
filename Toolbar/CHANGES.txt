@@ -1,7 +1,7 @@
 ﻿1.5.1, 2014-02-07
 - Fixed a bug where the new buttons notification would pop up more often
   than intended.
-- Fixed a bug where folders would not display there contents.
+- Fixed a bug where folders would not display their contents.
 - The update notification button can now be dismissed (hidden) by right-
   clicking it.
 
