@@ -1,4 +1,11 @@
-﻿1.5.0, 2014-02-07
+﻿1.5.1, 2014-02-07
+- Fixed a bug where the new buttons notification would pop up more often
+  than intended.
+- Fixed a bug where folders would not display there contents.
+- The update notification button can now be dismissed (hidden) by right-
+  clicking it.
+
+1.5.0, 2014-02-07
 - You can now configure the visibility of each button. For example, you can
   now hide a button if you don't need it. Button visibility is saved in
   relation to game scene.
