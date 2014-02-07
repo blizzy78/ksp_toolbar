@@ -362,7 +362,8 @@ namespace Toolbar {
 
 			if (rect.contains(Utils.getMousePosition()) ||
 				buttons.Any(b => b.Important) ||
-				folders.Values.Any(f => f.Visible)) {
+				folders.Values.Any(f => f.Visible) ||
+				(visibleButtonsSelector != null)) {
 
 				if ((displayMode != DisplayMode.VISIBLE) && (displayMode != DisplayMode.SLIDING_IN)) {
 					Log.debug("display mode is {0}, starting slide in", displayMode);
@@ -707,18 +708,22 @@ namespace Toolbar {
 		private void setupConfigureVisibleButtonsButton() {
 			// set up a button to configure visible buttons if there is currently no button visible,
 			// but if there are buttons that could be made visible by the player
-			bool contentsVisible = (mode == Mode.FOLDER) ||
-				buttons.Any((b) => !b.Equals(dropdownMenuButton) &&
+			if (mode == Mode.TOOLBAR) {
+				bool contentsExist = buttons.Any((b) =>
+					!b.Equals(dropdownMenuButton) &&
+					((configureVisibleButtonsButton == null) || !b.Equals(configureVisibleButtonsButton)));
+				bool contentsVisible = buttons.Any((b) =>
+					!b.Equals(dropdownMenuButton) &&
 					((configureVisibleButtonsButton == null) || !b.Equals(configureVisibleButtonsButton)) &&
 					b.EffectivelyUserVisible);
-			if (mode == Mode.TOOLBAR) {
-				if (contentsVisible && (configureVisibleButtonsButton != null)) {
+				if ((contentsVisible || !contentsExist) && (configureVisibleButtonsButton != null)) {
 					configureVisibleButtonsButton.Destroy();
 					configureVisibleButtonsButton = null;
-				} else if (!contentsVisible && (configureVisibleButtonsButton == null)) {
+				} else if (!contentsVisible && contentsExist && (configureVisibleButtonsButton == null)) {
 					configureVisibleButtonsButton = (Button) ToolbarManager.Instance.add(Button.NAMESPACE_INTERNAL, "configureVisibleButtons");
 					configureVisibleButtonsButton.TexturePath = "000_Toolbar/new-button-available";
 					configureVisibleButtonsButton.ToolTip = "Configure Visible Toolbar Buttons";
+					configureVisibleButtonsButton.Important = true;
 					configureVisibleButtonsButton.OnClick += (e) => {
 						toggleVisibleButtonsSelector();
 					};

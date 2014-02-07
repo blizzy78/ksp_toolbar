@@ -181,10 +181,10 @@ namespace Toolbar {
 
 				if (ns != Button.NAMESPACE_INTERNAL) {
 					knownButtonIds.Add(ns + "." + id);
-				}
 
-				if (!knownButtonIds.SetEquals(savedKnownButtonIds)) {
-					toolbar.NewButtonKnown = true;
+					if (!knownButtonIds.SetEquals(savedKnownButtonIds)) {
+						toolbar.NewButtonKnown = true;
+					}
 				}
 
 				return button;
