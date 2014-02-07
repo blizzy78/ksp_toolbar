@@ -98,8 +98,12 @@
     <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="etc\folder.psd" />
+    <None Include="etc\folder.tga" />
     <None Include="etc\move-cursor.psd" />
     <None Include="etc\move-cursor.tga" />
+    <None Include="etc\new-button-available.psd" />
+    <None Include="etc\new-button-available.tga" />
     <None Include="etc\resize-cursor.psd" />
     <None Include="etc\resize-cursor.tga" />
     <None Include="etc\toolbar-dropdown.psd" />

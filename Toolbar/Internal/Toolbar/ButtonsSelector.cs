@@ -40,7 +40,7 @@ namespace Toolbar {
 			this.buttons = buttons;
 
 			Rect = new Rect(300, 300, 0, 0);
-			Title = "Button Visibility";
+			Title = "Toolbar Button Visibility";
 			Dialog = true;
 		}
 

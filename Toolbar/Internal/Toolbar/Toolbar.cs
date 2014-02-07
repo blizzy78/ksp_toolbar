@@ -717,8 +717,8 @@ namespace Toolbar {
 					configureVisibleButtonsButton = null;
 				} else if (!contentsVisible && (configureVisibleButtonsButton == null)) {
 					configureVisibleButtonsButton = (Button) ToolbarManager.Instance.add(Button.NAMESPACE_INTERNAL, "configureVisibleButtons");
-					configureVisibleButtonsButton.TexturePath = "000_Toolbar/update-available";
-					configureVisibleButtonsButton.ToolTip = "Configure Visible Buttons";
+					configureVisibleButtonsButton.TexturePath = "000_Toolbar/new-button-available";
+					configureVisibleButtonsButton.ToolTip = "Configure Visible Toolbar Buttons";
 					configureVisibleButtonsButton.OnClick += (e) => {
 						toggleVisibleButtonsSelector();
 					};
