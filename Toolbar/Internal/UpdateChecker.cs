@@ -74,13 +74,17 @@ namespace Toolbar {
 		}
 
 		private void addUpdateAvailableButton() {
-			IButton button = ToolbarManager.Instance.add(Button.NAMESPACE_INTERNAL, "updateAvailable");
+			IButton button = ToolbarManager.Instance.add(Button.NAMESPACE_INTERNAL, "__updateAvailable");
 			button.TexturePath = "000_Toolbar/update-available";
-			button.ToolTip = "Toolbar Plugin Update Available";
+			button.ToolTip = "Toolbar Plugin Update Available (Right-Click to Dismiss)";
 			button.Important = true;
 			button.OnClick += (e) => {
-				Application.OpenURL(ToolbarManager.FORUM_THREAD_URL);
-				button.Important = false;
+				if (e.MouseButton == 1) {
+					button.Destroy();
+				} else {
+					Application.OpenURL(ToolbarManager.FORUM_THREAD_URL);
+					button.Important = false;
+				}
 			};
 		}
 	}
