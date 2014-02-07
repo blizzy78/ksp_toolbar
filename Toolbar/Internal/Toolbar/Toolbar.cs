@@ -762,7 +762,9 @@ namespace Toolbar {
 			
 			// show/hide button
 			if (button.ns != Button.NAMESPACE_INTERNAL) {
-				button.UserVisible = savedVisibleButtons.Contains(button.ns + "." + button.id);
+				button.UserVisible = (mode == Mode.TOOLBAR) ?
+					savedVisibleButtons.Contains(button.ns + "." + button.id) :
+					parentToolbar.savedVisibleButtons.Contains(button.ns + "." + button.id);
 			}
 		}
 
@@ -865,6 +867,11 @@ namespace Toolbar {
 					}
 				}
 
+				// show/hide buttons according to saved settings
+				foreach (Button button in buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton))) {
+					button.UserVisible = savedVisibleButtons.Contains(button.ns + "." + button.id);
+				}
+
 				// move existing buttons according to saved folder contents
 				foreach (Button button in new List<Button>(buttons)) {
 					string buttonId = button.ns + "." + button.id;
@@ -872,11 +879,6 @@ namespace Toolbar {
 					if (folderId != null) {
 						moveButtonToFolder(button, folders[folderId]);
 					}
-				}
-
-				// show/hide buttons according to saved settings
-				foreach (Button button in buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton))) {
-					button.UserVisible = savedVisibleButtons.Contains(button.ns + "." + button.id);
 				}
 			}
 
@@ -896,8 +898,9 @@ namespace Toolbar {
 			settingsNode.overwrite("drawBorder", showBorder.ToString());
 			settingsNode.overwrite("useKSPSkin", UseKSPSkin.ToString());
 			settingsNode.overwrite("buttonOrder", string.Join(",", savedButtonOrder.ToArray()));
-			settingsNode.overwrite("visibleButtons", string.Join(",",
-				buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton) && b.UserVisible).Select(b => b.ns + "." + b.id).ToArray()));
+			List<Button> visibleButtons = new List<Button>(buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton) && b.UserVisible));
+			visibleButtons.AddRange(folders.Values.SelectMany(f => f.buttons).Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && b.UserVisible));
+			settingsNode.overwrite("visibleButtons", string.Join(",", visibleButtons.Select(b => b.ns + "." + b.id).ToArray()));
 
 			ConfigNode foldersNode = settingsNode.overwriteNode("folders");
 			foreach (KeyValuePair<string, FolderSettings> entry in savedFolderSettings) {
