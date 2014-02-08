@@ -41,13 +41,13 @@ namespace Toolbar {
 		private GUIStyle Style {
 			get {
 				if (style_ == null) {
-					Texture2D orangeBgTex = new Texture2D(1, 1);
-					orangeBgTex.SetPixel(0, 0, new Color(0.4f, 0.4f, 0.4f));
-					orangeBgTex.Apply();
+					Texture2D bgTex = new Texture2D(1, 1);
+					bgTex.SetPixel(0, 0, new Color(0.4f, 0.4f, 0.4f));
+					bgTex.Apply();
 
 					style_ = new GUIStyle(GUI.skin.label);
-					style_.normal.background = orangeBgTex;
-					style_.onNormal.background = orangeBgTex;
+					style_.normal.background = bgTex;
+					style_.onNormal.background = bgTex;
 					style_.margin = new RectOffset(0, 0, 1, 1);
 					style_.padding = new RectOffset(0, 0, 0, 0);
 				}
@@ -59,7 +59,7 @@ namespace Toolbar {
 		}
 
 		public void drawMenuOption() {
-			GUILayout.Label("", Style, GUILayout.Height(1), GUILayout.MaxHeight(1), GUILayout.ExpandWidth(true));
+			GUILayout.Label("", Style, GUILayout.Height(1), GUILayout.MinHeight(1), GUILayout.MaxHeight(1), GUILayout.ExpandWidth(true));
 		}
 	}
 }
