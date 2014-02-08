@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Toolbar")]
-[assembly: AssemblyCopyright("Copyright © 2013 Maik Schreiber")]
+[assembly: AssemblyCopyright("Copyright © 2013-2014 Maik Schreiber")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
