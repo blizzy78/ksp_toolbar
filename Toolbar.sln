@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toolbar", "Toolbar\Toolbar.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestButtons", "TestButtons\TestButtons.csproj", "{BDDFDD67-E023-41EA-B8F1-559996B9ADAE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wrapper", "Wrapper\Wrapper.csproj", "{E258AB2C-E2BB-4ACA-B902-C98582041F69}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{BDDFDD67-E023-41EA-B8F1-559996B9ADAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDDFDD67-E023-41EA-B8F1-559996B9ADAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDDFDD67-E023-41EA-B8F1-559996B9ADAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E258AB2C-E2BB-4ACA-B902-C98582041F69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E258AB2C-E2BB-4ACA-B902-C98582041F69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E258AB2C-E2BB-4ACA-B902-C98582041F69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E258AB2C-E2BB-4ACA-B902-C98582041F69}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
