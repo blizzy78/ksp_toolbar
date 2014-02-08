@@ -189,7 +189,7 @@ namespace Toolbar {
 		private Dictionary<Button, Toolbar> folderButtons = new Dictionary<Button, Toolbar>();
 		private Dictionary<string, FolderSettings> savedFolderSettings = new Dictionary<string, FolderSettings>();
 		private VisibleButtonsSelector visibleButtonsSelector;
-		private List<string> savedVisibleButtons = new List<string>();
+		private HashSet<string> savedVisibleButtons = new HashSet<string>();
 
 		internal Toolbar(Mode mode = Mode.TOOLBAR, Toolbar parentToolbar = null) {
 			this.mode = mode;
@@ -220,6 +220,9 @@ namespace Toolbar {
 				CursorGrabbing.Instance.add(resizable);
 
 				CursorGrabbing.Instance.add(this);
+			} else {
+				showBorder = parentToolbar.showBorder;
+				useKSPSkin_ = parentToolbar.UseKSPSkin;
 			}
 		}
 
@@ -511,7 +514,9 @@ namespace Toolbar {
 		}
 
 		private void drawToolbarBorder() {
-			if (showBorder || !rectLocked || !buttonOrderLocked) {
+			if (showBorder || !rectLocked || !buttonOrderLocked ||
+				((mode == Mode.FOLDER) && !buttons.Any(b => b.EffectivelyUserVisible))) {
+
 				Color oldColor = GUI.color;
 				if (shouldSlideOut() && (displayMode == DisplayMode.VISIBLE) && (dropdownMenu == null)) {
 					GUI.color = autoHideUnimportantButtonAlpha;
@@ -826,7 +831,7 @@ namespace Toolbar {
 				showBorder = settingsNode.get("drawBorder", true);
 				UseKSPSkin = settingsNode.get("useKSPSkin", false);
 				savedButtonOrder = settingsNode.get("buttonOrder", "").Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-				savedVisibleButtons = settingsNode.get("visibleButtons", "").Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+				savedVisibleButtons = new HashSet<string>(settingsNode.get("visibleButtons", "").Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries));
 
 				if (settingsNode.HasNode("folders")) {
 					foreach (ConfigNode folderNode in settingsNode.GetNode("folders").nodes) {
@@ -835,8 +840,6 @@ namespace Toolbar {
 						HashSet<string> buttonIds = new HashSet<string>(folderNode.get("buttons", "").Split(new char[] { ',' }));
 
 						Toolbar folder = createFolder(folderId, toolTip, false);
-						folder.UseKSPSkin = UseKSPSkin;
-						folder.showBorder = showBorder;
 
 						savedFolderSettings[folderId].buttons = buttonIds;
 					}
@@ -873,9 +876,7 @@ namespace Toolbar {
 			settingsNode.overwrite("drawBorder", showBorder.ToString());
 			settingsNode.overwrite("useKSPSkin", UseKSPSkin.ToString());
 			settingsNode.overwrite("buttonOrder", string.Join(",", savedButtonOrder.ToArray()));
-			List<Button> visibleButtons = new List<Button>(buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton) && b.UserVisible));
-			visibleButtons.AddRange(folders.Values.SelectMany(f => f.buttons).Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && b.UserVisible));
-			settingsNode.overwrite("visibleButtons", string.Join(",", visibleButtons.Select(b => b.ns + "." + b.id).ToArray()));
+			settingsNode.overwrite("visibleButtons", string.Join(",", savedVisibleButtons.ToArray()));
 
 			ConfigNode foldersNode = settingsNode.overwriteNode("folders");
 			foreach (KeyValuePair<string, FolderSettings> entry in savedFolderSettings) {
@@ -1267,9 +1268,13 @@ namespace Toolbar {
 
 				visibleButtonsSelector = new VisibleButtonsSelector(buttons);
 				visibleButtonsSelector.OnButtonSelectionChanged += (button) => {
-					Log.info("user changed button visibility: button: {0}.{1}, new visibility: {2}", button.ns, button.id, button.UserVisible);
-					savedVisibleButtons = buttons.Where(b => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton) && b.UserVisible)
-						.Select(b => b.ns + "." + b.id).ToList();
+					string id = button.ns + "." + button.id;
+					Log.info("user changed button visibility: button: {0}, new visibility: {1}", id, button.UserVisible);
+					if (button.UserVisible && !savedVisibleButtons.Contains(id)) {
+						savedVisibleButtons.Add(id);
+					} else if (!button.UserVisible && savedVisibleButtons.Contains(id)) {
+						savedVisibleButtons.Remove(id);
+					}
 					fireChange();
 				};
 				visibleButtonsSelector.OnDestroy += () => {
