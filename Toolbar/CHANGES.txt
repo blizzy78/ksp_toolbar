@@ -1,4 +1,16 @@
-﻿1.5.1, 2014-02-07
+﻿1.5.2, 2014-02-08
+- Removed the popup dialog that notifies about new buttons that became
+  available. Instead, the toolbar will always show the configuration button as
+  long as no other buttons are configured to be visible.
+- Fixed a bug where the toolbar would lose the configured visibility of some
+  buttons.
+- Fixed a bug where a newly-created folder would not respect the "show border"
+  setting of the main toolbar.
+- Plugin authors: Added an official Toolbar Plugin wrapper that can be used to
+  provide Toolbar Plugin support without creating a hard dependency. Check the
+  development forum thread at http://bit.ly/1b1ZXda for details.
+
+1.5.1, 2014-02-07
 - Fixed a bug where the new buttons notification would pop up more often
   than intended.
 - Fixed a bug where folders would not display their contents.
