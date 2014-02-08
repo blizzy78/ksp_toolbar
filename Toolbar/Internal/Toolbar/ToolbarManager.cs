@@ -41,8 +41,6 @@ namespace Toolbar {
 		private ConfigNode settings;
 		private UpdateChecker updateChecker;
 		private bool running = true;
-		private HashSet<string> knownButtonIds = new HashSet<string>();
-		private HashSet<string> savedKnownButtonIds = new HashSet<string>();
 
 		internal ToolbarManager() {
 			Log.trace("ToolbarManager()");
@@ -114,13 +112,6 @@ namespace Toolbar {
 				Log.Level = (LogLevel) int.Parse(root.GetValue("logLevel"));
 			}
 
-			knownButtonIds.Clear();
-			savedKnownButtonIds.Clear();
-			foreach (string id in root.get("knownButtons", "").Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)) {
-				knownButtonIds.Add(id);
-				savedKnownButtonIds.Add(id);
-			}
-
 			if (root.HasNode("toolbars")) {
 				ConfigNode toolbarsNode = root.GetNode("toolbars");
 				if (updateChecker != null) {
@@ -145,13 +136,6 @@ namespace Toolbar {
 			Log.info("saving settings (game scene: {0})", scene);
 
 			ConfigNode root = loadSettings();
-			
-			root.overwrite("knownButtons", string.Join(",", knownButtonIds.ToArray()));
-			savedKnownButtonIds.Clear();
-			foreach (string id in knownButtonIds) {
-				savedKnownButtonIds.Add(id);
-			}
-
 			toolbar.saveSettings(root.getOrCreateNode("toolbars"), scene);
 			root.Save(SETTINGS_FILE);
 		}
@@ -182,15 +166,6 @@ namespace Toolbar {
 			if (running) {
 				Button button = new Button(ns, id, toolbar);
 				toolbar.add(button);
-
-				if (ns != Button.NAMESPACE_INTERNAL) {
-					knownButtonIds.Add(ns + "." + id);
-
-					if (!knownButtonIds.SetEquals(savedKnownButtonIds)) {
-						toolbar.NewButtonKnown = true;
-					}
-				}
-
 				return button;
 			} else {
 				throw new NotSupportedException("cannot add button to stale ToolbarManager instance");

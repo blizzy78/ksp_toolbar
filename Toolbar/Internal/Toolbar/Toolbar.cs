@@ -47,11 +47,6 @@ namespace Toolbar {
 		private const float DEFAULT_HEIGHT_FOLDER = 100;
 		private const long SLIDE_INTERVAL = 100;
 
-		internal bool NewButtonKnown {
-			set;
-			private get;
-		}
-
 		internal event Action onChange;
 		internal event Action onSkinChange;
 
@@ -193,7 +188,6 @@ namespace Toolbar {
 		private Dictionary<string, Toolbar> folders = new Dictionary<string, Toolbar>();
 		private Dictionary<Button, Toolbar> folderButtons = new Dictionary<Button, Toolbar>();
 		private Dictionary<string, FolderSettings> savedFolderSettings = new Dictionary<string, FolderSettings>();
-		private Button configureVisibleButtonsButton;
 		private VisibleButtonsSelector visibleButtonsSelector;
 		private List<string> savedVisibleButtons = new List<string>();
 
@@ -209,6 +203,8 @@ namespace Toolbar {
 				dropdownMenuButton = Button.createToolbarDropdown();
 				dropdownMenuButton.OnClick += (e) => toggleDropdownMenu();
 				buttons.Add(dropdownMenuButton);
+
+				setupConfigureVisibleButtonsButton();
 
 				draggable = new Draggable(rect, PADDING, (pos) => !dropdownMenuButtonContains(pos) && !resizable.HandleRect.Contains(pos));
 				resizable = new Resizable(rect, PADDING, (pos) => !dropdownMenuButtonContains(pos));
@@ -307,20 +303,6 @@ namespace Toolbar {
 				}
 
 				GUI.depth = oldDepth;
-			}
-
-			if (Visible && NewButtonKnown) {
-				if (visibleButtonsSelector == null) {
-					ConfirmDialog.confirm("New Toolbar Buttons Available",
-						"There are new toolbar buttons available.\n\n" +
-						"You can configure the buttons now to make them visible on the toolbar, " +
-						"or do so at a later time by selecting 'Configure Visible Buttons' from the toolbar's drop-down menu.",
-						() => {
-							toggleVisibleButtonsSelector();
-						},
-						"Configure Buttons", "Close");
-				}
-				NewButtonKnown = false;
 			}
 
 			Vector2 mousePos = Utils.getMousePosition();
@@ -675,8 +657,6 @@ namespace Toolbar {
 		}
 
 		internal void update() {
-			setupConfigureVisibleButtonsButton();
-			
 			if (draggable != null) {
 				draggable.update();
 			}
@@ -705,29 +685,24 @@ namespace Toolbar {
 			}
 		}
 
+		/// <summary>
+		/// Set up a button to configure visible buttons if there is currently no button visible,
+		/// but if there are buttons that could be made visible by the player.
+		/// </summary>
 		private void setupConfigureVisibleButtonsButton() {
-			// set up a button to configure visible buttons if there is currently no button visible,
-			// but if there are buttons that could be made visible by the player
 			if (mode == Mode.TOOLBAR) {
-				bool contentsExist = buttons.Any((b) =>
-					!b.Equals(dropdownMenuButton) &&
-					((configureVisibleButtonsButton == null) || !b.Equals(configureVisibleButtonsButton)));
-				bool contentsVisible = buttons.Any((b) =>
-					!b.Equals(dropdownMenuButton) &&
-					((configureVisibleButtonsButton == null) || !b.Equals(configureVisibleButtonsButton)) &&
-					b.EffectivelyUserVisible);
-				if ((contentsVisible || !contentsExist) && (configureVisibleButtonsButton != null)) {
-					configureVisibleButtonsButton.Destroy();
-					configureVisibleButtonsButton = null;
-				} else if (!contentsVisible && contentsExist && (configureVisibleButtonsButton == null)) {
-					configureVisibleButtonsButton = (Button) ToolbarManager.Instance.add(Button.NAMESPACE_INTERNAL, "configureVisibleButtons");
-					configureVisibleButtonsButton.TexturePath = "000_Toolbar/new-button-available";
-					configureVisibleButtonsButton.ToolTip = "Configure Visible Toolbar Buttons";
-					configureVisibleButtonsButton.Important = true;
-					configureVisibleButtonsButton.OnClick += (e) => {
-						toggleVisibleButtonsSelector();
-					};
-				}
+				Button button = new Button(Button.NAMESPACE_INTERNAL, "configureVisibleButtons", this);
+				button.TexturePath = "000_Toolbar/new-button-available";
+				button.ToolTip = "Configure Visible Toolbar Buttons";
+				button.OnClick += (e) => {
+					toggleVisibleButtonsSelector();
+				};
+				button.Visibility = new FunctionVisibility(() => {
+					bool contentsExist = buttons.Any((b) => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton) && b.EffectivelyVisible);
+					bool contentsVisible = buttons.Any((b) => (b.ns != Button.NAMESPACE_INTERNAL) && !b.Equals(dropdownMenuButton) && b.EffectivelyUserVisible);
+					return contentsExist && !contentsVisible;
+				});
+				buttons.Add(button);
 			}
 		}
 
