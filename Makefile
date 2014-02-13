@@ -58,9 +58,10 @@ clean:
 install: build
 	mkdir -p ${KSPDIR}/GameData/000_Toolbar/
 	cp build/Toolbar.dll ${KSPDIR}/GameData/000_Toolbar/
+	cp Toolbar/etc/*.tga ${KSPDIR}/GameData/000_Toolbar/
 
 uninstall: info
-	rm -rf ${KSPDIR}/GameData/Toolbar/Plugins
+	rm -rf ${KSPDIR}/GameData/000_Toolbar
 
 
 .PHONY : all info build package tar.gz zip clean install uninstall
