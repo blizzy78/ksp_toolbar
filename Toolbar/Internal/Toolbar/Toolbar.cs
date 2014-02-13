@@ -346,7 +346,7 @@ namespace Toolbar {
 			long now = DateTime.UtcNow.getSeconds();
 
 			if (rect.contains(Utils.getMousePosition()) ||
-				buttons.Any(b => b.Important) ||
+				buttons.Any(b => b.Important && b.EffectivelyUserVisible) ||
 				folders.Values.Any(f => f.Visible) ||
 				(visibleButtonsSelector != null)) {
 
