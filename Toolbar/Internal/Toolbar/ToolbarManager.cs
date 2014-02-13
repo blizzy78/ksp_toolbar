@@ -34,7 +34,7 @@ namespace Toolbar {
 	public partial class ToolbarManager : MonoBehaviour, IToolbarManager {
 		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
-		internal const int VERSION = 12;
+		internal const int VERSION = 13;
 
 		private RenderingManager renderingManager;
 		private Toolbar toolbar;
