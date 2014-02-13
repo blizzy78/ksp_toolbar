@@ -11,6 +11,8 @@ GIT     := git
 TAR     := tar
 ZIP     := zip
 
+VERSION := $(shell ${GIT} describe --tags --always)
+
 all: build
 
 info:
@@ -22,25 +24,32 @@ info:
 	@echo "  KSP Data: ${KSPDIR}"
 	@echo "================================"
 
-build: info
+build: build/Toolbar.dll
+
+build/%.dll: ${FILES}
 	mkdir -p build
 	${GMCS} -t:library -lib:${MANAGED} \
 		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine \
-		-out:build/Toolbar.dll \
+		-out:$@ \
 		${FILES}
 
-package: build
+package: build ${FILES}
 	mkdir -p package/Toolbar/GameData/000_Toolbar/
 	cp Toolbar/etc/*.tga package/Toolbar/GameData/000_Toolbar/
 	cp build/Toolbar.dll package/Toolbar/GameData/000_Toolbar/
 	cp README.md package/Toolbar/
-	cp Toolbar/LICENSE.txt Toolbar/CHANGES.txt package/Toolbar/
+	cp Toolbar/LICENSE.txt Toolbar/CHANGES.txt \
+		package/Toolbar/GameData/
 
-tar.gz: package
-	${TAR} zcf Toolbar-$(shell ${GIT} describe --tags --long --always).tar.gz package/Toolbar
+tar.gz: package Toolbar-${VERSION}.tar.gz
 
-zip: package
-	${ZIP} -9 -r Toolbar-$(shell ${GIT} describe --tags --long --always).zip package/Toolbar
+%.tar.gz: package/Toolbar/GameData/000_Toolbar/%.dll
+	${TAR} zcf $@ package/Toolbar
+
+tar.gz: package Toolbar-${VERSION}.zip
+
+%.zip: package/Toolbar/GameData/000_Toolbar/%.dll
+	${ZIP} -9 -r $@ package/Toolbar
 
 clean:
 	@echo "Cleaning up build and package directories..."
