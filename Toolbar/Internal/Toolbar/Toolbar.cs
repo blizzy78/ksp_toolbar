@@ -995,10 +995,15 @@ namespace Toolbar {
 
 				dropdownMenu += Separator.Instance;
 
-				Button aboutButton = Button.createMenuOption("About the Toolbar Plugin");
+				Button aboutButton = Button.createMenuOption("About the Toolbar Plugin...");
 				aboutButton.OnClick += (e) => Application.OpenURL(ToolbarManager.FORUM_THREAD_URL);
 				aboutButton.Enabled = regularEntriesEnabled;
 				dropdownMenu += aboutButton;
+
+				Button donateButton = Button.createMenuOption("Donate for the Toolbar Plugin...");
+				donateButton.OnClick += (e) => Application.OpenURL(ToolbarManager.DONATE_URL);
+				donateButton.Enabled = regularEntriesEnabled;
+				dropdownMenu += donateButton;
 
 				dropdownMenu.OnAnyOptionClicked += () => {
 					dropdownMenu.destroy();
