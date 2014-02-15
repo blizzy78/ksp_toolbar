@@ -48,7 +48,7 @@ namespace Toolbar {
 					style_ = new GUIStyle(GUI.skin.label);
 					style_.normal.background = bgTex;
 					style_.onNormal.background = bgTex;
-					style_.margin = new RectOffset(0, 0, 1, 1);
+					style_.margin = new RectOffset(0, 0, 2, 2);
 					style_.padding = new RectOffset(0, 0, 0, 0);
 				}
 				return style_;
