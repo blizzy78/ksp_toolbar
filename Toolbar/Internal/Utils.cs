@@ -35,5 +35,14 @@ namespace Toolbar {
 			Vector3 mousePos = Input.mousePosition;
 			return new Vector2(mousePos.x, Screen.height - mousePos.y).clampToScreen();
 		}
+
+		internal static bool isPauseMenuOpen() {
+			// PauseMenu.isOpen may throw NullReferenceException on occasion, even if HighLogic.LoadedScene==GameScenes.FLIGHT
+			try {
+				return (HighLogic.LoadedScene == GameScenes.FLIGHT) && PauseMenu.isOpen;
+			} catch {
+				return false;
+			}
+		}
 	}
 }

@@ -563,7 +563,7 @@ namespace Toolbar {
 					}
 					button.draw(buttonRect,
 						((Enabled && rectLocked && buttonOrderLocked) || button.Equals(dropdownMenuButton)) &&
-						!isPauseMenuOpen() &&
+						!Utils.isPauseMenuOpen() &&
 						!WindowList.Instance.ModalDialogOpen);
 					GUI.color = oldColor;
 
@@ -590,15 +590,6 @@ namespace Toolbar {
 				currentMouseHoverButton.mouseEnter();
 			}
 			mouseHoverButton = currentMouseHoverButton;
-		}
-
-		private bool isPauseMenuOpen() {
-			// PauseMenu.isOpen may throw NullReferenceException on occasion, even if HighLogic.LoadedScene==GameScenes.FLIGHT
-			try {
-				return (HighLogic.LoadedScene == GameScenes.FLIGHT) && PauseMenu.isOpen;
-			} catch {
-				return false;
-			}
 		}
 
 		private void forceAutoSizeIfButtonVisibilitiesChanged() {
@@ -693,7 +684,7 @@ namespace Toolbar {
 				}
 
 				// auto-close drop-down menu when pause menu is opened
-				if (isPauseMenuOpen()) {
+				if (Utils.isPauseMenuOpen()) {
 					dropdownMenu.destroy();
 					dropdownMenu = null;
 				}
