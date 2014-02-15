@@ -575,7 +575,9 @@ namespace Toolbar {
 				}
 			}
 
-			handleMouseHover(currentMouseHoverButton);
+			if (rectLocked && buttonOrderLocked) {
+				handleMouseHover(currentMouseHoverButton);
+			}
 		}
 
 		private void handleMouseHover(Button currentMouseHoverButton) {
