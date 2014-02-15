@@ -44,7 +44,7 @@ namespace Toolbar {
 			Title = "Toolbar Button Visibility";
 			Dialog = true;
 
-			List<Command> commands = new List<Command>(ToolbarManager.InternalInstance.Commands.Where(c => c.ns != ToolbarManager.NAMESPACE_INTERNAL));
+			List<Command> commands = new List<Command>(ToolbarManager.InternalInstance.Commands.Where(c => !c.IsInternal));
 			commands.Sort((c1, c2) => c1.CompareTo(c2));
 			buttons = new List<Button>();
 			foreach (Command command in commands) {
@@ -66,14 +66,14 @@ namespace Toolbar {
 				GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
 				labelStyle.wordWrap = false;
 
-				string lastNamespace = buttons.First().command.ns;
+				string lastNamespace = buttons.First().Namespace;
 				foreach (Button button in buttons) {
-					if (button.command.ns != lastNamespace) {
+					if (button.Namespace != lastNamespace) {
 						Separator.Instance.drawMenuOption();
 					}
 
 					GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
-					string id = button.command.ns + "." + button.command.id;
+					string id = button.FullId;
 						bool visible = visibleButtonIds.Contains(id);
 						bool selected = GUILayout.Toggle(visible, (string) null);
 						if (selected != visible) {
@@ -89,7 +89,7 @@ namespace Toolbar {
 						GUILayout.FlexibleSpace();
 					GUILayout.EndHorizontal();
 
-					lastNamespace = button.command.ns;
+					lastNamespace = button.Namespace;
 				}
 
 				GUILayout.EndScrollView();

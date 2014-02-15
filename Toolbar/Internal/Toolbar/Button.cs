@@ -39,6 +39,24 @@ namespace Toolbar {
 		private const int DROPDOWN_TEX_HEIGHT = 7;
 		private const int PADDING = 4;
 
+		internal string Namespace {
+			get {
+				return command.Namespace;
+			}
+		}
+
+		internal string FullId {
+			get {
+				return command.FullId;
+			}
+		}
+
+		internal bool IsInternal {
+			get {
+				return command.IsInternal;
+			}
+		}
+
 		private Vector2 size_ = UNSIZED;
 		internal Vector2 Size {
 			get {
@@ -77,7 +95,7 @@ namespace Toolbar {
 						texture_ = GameDatabase.Instance.GetTexture(command.TexturePath, false);
 						if (texture_ != null) {
 							if ((texture_.width > MAX_TEX_WIDTH) || (texture_.height > MAX_TEX_HEIGHT)) {
-								Log.error("button texture exceeds {0}x{1} pixels, ignoring texture: {2}.{3}", MAX_TEX_WIDTH, MAX_TEX_HEIGHT, command.ns, command.id);
+								Log.error("button texture exceeds {0}x{1} pixels, ignoring texture: {2}", MAX_TEX_WIDTH, MAX_TEX_HEIGHT, command.FullId);
 								texture_ = null;
 								command.TexturePath = null;
 							}
@@ -320,7 +338,7 @@ namespace Toolbar {
 
 		private void checkDestroyed() {
 			if (destroyed) {
-				throw new NotSupportedException("button is destroyed: " + command.ns + "." + command.id);
+				throw new NotSupportedException("button is destroyed: " + FullId);
 			}
 		}
 	}

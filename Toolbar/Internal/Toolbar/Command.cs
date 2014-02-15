@@ -145,7 +145,7 @@ namespace Toolbar {
 					try {
 						return (Visibility == null) || Visibility.Visible;
 					} catch (Exception e) {
-						Log.error(e, "error while calling IButton.Visibility.Visible for button {0}.{1}", ns, id);
+						Log.error(e, "error while calling IButton.Visibility.Visible for button {0}", FullId);
 						return false;
 					}
 				} else {
@@ -200,17 +200,21 @@ namespace Toolbar {
 		internal event Action OnChange;
 		internal event Action OnDestroy;
 
-		internal readonly string ns;
-		internal readonly string id;
+		internal readonly string Namespace;
+		internal readonly string Id;
+		internal readonly string FullId;
+		internal readonly bool IsInternal;
 
 		private bool destroyed;
 
-		internal Command(string ns, string id) {
-			checkId(ns, "namespace");
+		internal Command(string @namespace, string id) {
+			checkId(@namespace, "namespace");
 			checkId(id, "ID");
 
-			this.ns = ns;
-			this.id = id;
+			this.Namespace = @namespace;
+			this.Id = id;
+			this.FullId = @namespace + "." + id;
+			this.IsInternal = @namespace == ToolbarManager.NAMESPACE_INTERNAL;
 		}
 
 		public void Destroy() {
@@ -233,7 +237,7 @@ namespace Toolbar {
 				try {
 					OnClick(new ClickEvent(this, Event.current.button));
 				} catch (Exception e) {
-					Log.error(e, "error while handling click event: {0}.{1}", ns, id);
+					Log.error(e, "error while handling click event: {0}", FullId);
 				}
 			}
 		}
@@ -245,7 +249,7 @@ namespace Toolbar {
 				try {
 					OnMouseEnter(new MouseEnterEvent(this));
 				} catch (Exception e) {
-					Log.error(e, "error while handling mouse enter event: {0}.{1}", ns, id);
+					Log.error(e, "error while handling mouse enter event: {0}", FullId);
 				}
 			}
 		}
@@ -257,7 +261,7 @@ namespace Toolbar {
 				try {
 					OnMouseLeave(new MouseLeaveEvent(this));
 				} catch (Exception e) {
-					Log.error(e, "error while handling mouse leave event: {0}.{1}", ns, id);
+					Log.error(e, "error while handling mouse leave event: {0}", FullId);
 				}
 			}
 		}
@@ -276,16 +280,14 @@ namespace Toolbar {
 
 		private void checkDestroyed() {
 			if (destroyed) {
-				throw new NotSupportedException("command is destroyed: " + ns + "." + id);
+				throw new NotSupportedException("command is destroyed: " + FullId);
 			}
 		}
 
 		public int CompareTo(Command other) {
 			checkDestroyed();
 
-			string id = ns + "." + this.id;
-			string otherId = other.ns + "." + other.id;
-			return StringComparer.CurrentCultureIgnoreCase.Compare(id, otherId);
+			return StringComparer.CurrentCultureIgnoreCase.Compare(FullId, other.FullId);
 		}
 	}
 }

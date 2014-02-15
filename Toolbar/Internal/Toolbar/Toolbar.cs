@@ -606,7 +606,7 @@ namespace Toolbar {
 			if ((displayMode == DisplayMode.VISIBLE) || (displayMode == DisplayMode.HIDDEN)) {
 				HashSet<string> newVisibleButtonIds = new HashSet<string>();
 				foreach (Button button in buttons.Where(b => isEffectivelyUserVisible(b))) {
-					newVisibleButtonIds.Add(button.command.ns + "." + button.command.id);
+					newVisibleButtonIds.Add(button.FullId);
 				}
 				if (!newVisibleButtonIds.SetEquals(visibleButtonIds)) {
 					Log.info("button visibilities have changed, forcing auto-size");
@@ -721,8 +721,8 @@ namespace Toolbar {
 					toggleVisibleButtonsSelector();
 				};
 				command.Visibility = new FunctionVisibility(() => {
-					bool contentsExist = ToolbarManager.InternalInstance.Commands.Any(c => (c.ns != ToolbarManager.NAMESPACE_INTERNAL) && c.EffectivelyVisible);
-					bool contentsVisible = buttons.Any(b => (b.command.ns != ToolbarManager.NAMESPACE_INTERNAL) || folderButtons.ContainsKey(b));
+					bool contentsExist = ToolbarManager.InternalInstance.Commands.Any(c => !c.IsInternal && c.EffectivelyVisible);
+					bool contentsVisible = buttons.Any(b => !b.IsInternal || folderButtons.ContainsKey(b));
 					return contentsExist && !contentsVisible;
 				});
 				Button button = new Button(command, this);
@@ -732,21 +732,21 @@ namespace Toolbar {
 
 		internal void add(Button button) {
 			// destroy old button with the same ID
-			Button oldButton = buttons.SingleOrDefault(b => (b.command.ns == button.command.ns) && (b.command.id == button.command.id));
+			Button oldButton = buttons.SingleOrDefault(b => b.FullId == button.FullId);
 			if (oldButton != null) {
 				oldButton.Destroy();
 			}
 			// same with any folders
-			Toolbar folder = folders.Values.SingleOrDefault(f => f.buttons.Any(b => (b.command.ns == button.command.ns) && (b.command.id == button.command.id)));
+			Toolbar folder = folders.Values.SingleOrDefault(f => f.buttons.Any(b => b.FullId == button.FullId));
 			if (folder != null) {
-				oldButton = folder.buttons.SingleOrDefault(b => (b.command.ns == button.command.ns) && (b.command.id == button.command.id));
+				oldButton = folder.buttons.SingleOrDefault(b => b.FullId == button.FullId);
 				if (oldButton != null) {
 					oldButton.Destroy();
 				}
 			}
 
 			// move button to correct folder if necessary
-			string buttonId = button.command.ns + "." + button.command.id;
+			string buttonId = button.FullId;
 			string folderId = savedFolderSettings.Where(kv => kv.Value.buttons.Contains(buttonId)).Select(kv => kv.Key).SingleOrDefault();
 			if ((folderId != null) && folders.ContainsKey(folderId)) {
 				// move to folder
@@ -774,8 +774,8 @@ namespace Toolbar {
 		}
 
 		private int compareButtonsUserOrder(Button b1, Button b2) {
-			string id1 = b1.command.ns + "." + b1.command.id;
-			string id2 = b2.command.ns + "." + b2.command.id;
+			string id1 = b1.FullId;
+			string id2 = b2.FullId;
 			int idx1 = savedButtonOrder.IndexOf(id1);
 			int idx2 = savedButtonOrder.IndexOf(id2);
 			if ((idx1 >= 0) && (idx2 >= 0)) {
@@ -1101,11 +1101,11 @@ namespace Toolbar {
 						buttons.Insert(hoveredButtonIdx, draggedButton);
 					}
 
-					savedButtonOrder = buttons.Where(b => !b.Equals(dropdownMenuButton)).Select(b => b.command.ns + "." + b.command.id).ToList();
+					savedButtonOrder = buttons.Where(b => !b.Equals(dropdownMenuButton)).Select(b => b.FullId).ToList();
 
 					Dictionary<string, FolderSettings> newSavedFolderSettings = new Dictionary<string, FolderSettings>();
 					foreach (KeyValuePair<string, Toolbar> entry in folders) {
-						HashSet<string> folderButtonIds = new HashSet<string>(entry.Value.buttons.Select(b => b.command.ns + "." + b.command.id));
+						HashSet<string> folderButtonIds = new HashSet<string>(entry.Value.buttons.Select(b => b.FullId));
 						newSavedFolderSettings.Add(entry.Key, new FolderSettings() {
 							toolTip = savedFolderSettings[entry.Key].toolTip,
 							buttons = folderButtonIds
@@ -1266,8 +1266,8 @@ namespace Toolbar {
 
 		private bool isEffectivelyUserVisible(Button button) {
 			if (button.command.EffectivelyVisible) {
-				if (button.command.ns != ToolbarManager.NAMESPACE_INTERNAL) {
-					string id = button.command.ns + "." + button.command.id;
+				if (!button.IsInternal) {
+					string id = button.FullId;
 					return (mode == Mode.TOOLBAR) ? savedVisibleButtons.Contains(id) : parentToolbar.savedVisibleButtons.Contains(id);
 				} else {
 					return true;
@@ -1289,11 +1289,11 @@ namespace Toolbar {
 
 			// create buttons according to configured visible buttons
 			HashSet<string> buttonIds = new HashSet<string>(savedVisibleButtons);
-			foreach (Command command in ToolbarManager.InternalInstance.Commands.Where(c => c.ns == ToolbarManager.NAMESPACE_INTERNAL)) {
-				buttonIds.Add(command.ns + "." + command.id);
+			foreach (Command command in ToolbarManager.InternalInstance.Commands.Where(c => c.IsInternal)) {
+				buttonIds.Add(command.FullId);
 			}
 			foreach (string id in buttonIds) {
-				Command command = ToolbarManager.InternalInstance.Commands.SingleOrDefault(c => (c.ns + "." + c.id) == id);
+				Command command = ToolbarManager.InternalInstance.Commands.SingleOrDefault(c => c.FullId == id);
 				if (command != null) {
 					Button button = new Button(command, this);
 					add(button);
@@ -1304,7 +1304,7 @@ namespace Toolbar {
 
 			// move existing buttons according to saved folder contents
 			foreach (Button button in new List<Button>(buttons)) {
-				string buttonId = button.command.ns + "." + button.command.id;
+				string buttonId = button.FullId;
 				string folderId = savedFolderSettings.SingleOrDefault(kv => kv.Value.buttons.Contains(buttonId)).Key;
 				if (folderId != null) {
 					moveButtonToFolder(button, folders[folderId]);
