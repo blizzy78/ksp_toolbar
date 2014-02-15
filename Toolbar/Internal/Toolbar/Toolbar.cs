@@ -703,7 +703,7 @@ namespace Toolbar {
 		/// </summary>
 		private void setupConfigureVisibleButtonsButton() {
 			if (mode == Mode.TOOLBAR) {
-				Log.info("setting up button to configure visible buttons");
+				Log.debug("setting up button to configure visible buttons");
 
 				Command command = new Command(ToolbarManager.NAMESPACE_INTERNAL, "configureVisibleButtons");
 				command.TexturePath = "000_Toolbar/new-button-available";
@@ -1268,7 +1268,7 @@ namespace Toolbar {
 		}
 
 		private void updateVisibleButtons() {
-			Log.info("updating visible buttons");
+			Log.debug("updating visible buttons");
 
 			// destroy all buttons except folder buttons
 			foreach (Button button in new List<Button>(buttons.Where(b => !b.Equals(dropdownMenuButton) && !folderButtons.ContainsKey(b)))) {

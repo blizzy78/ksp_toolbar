@@ -61,6 +61,7 @@ namespace Toolbar {
 		private ConfigNode settings;
 		private UpdateChecker updateChecker;
 		private bool running = true;
+		private ToolbarGameScene gameScene = ToolbarGameScene.LOADING;
 
 		internal ToolbarManager() {
 			Log.trace("ToolbarManager()");
@@ -73,12 +74,10 @@ namespace Toolbar {
 				commands_ = new HashSet<Command>();
 				toolbars = new Dictionary<string, Toolbar>();
 
-				loadSettings(GameScenes.MAINMENU);
+				loadSettings(ToolbarGameScene.MAINMENU);
 
 				updateChecker = new UpdateChecker();
 				updateChecker.OnDone += () => updateChecker = null;
-
-				GameEvents.onGameSceneLoadRequested.Add(gameSceneLoadRequested);
 			} else {
 				Log.warn("ToolbarManager already running, marking this instance as stale");
 				running = false;
@@ -89,8 +88,6 @@ namespace Toolbar {
 			Log.trace("ToolbarManager.OnDestroy()");
 
 			if (running) {
-				GameEvents.onGameSceneLoadRequested.Remove(gameSceneLoadRequested);
-
 				foreach (Toolbar toolbar in toolbars.Values) {
 					toolbar.destroy();
 				}
@@ -108,6 +105,8 @@ namespace Toolbar {
 
 		internal void Update() {
 			if (running) {
+				handleGameSceneChange();
+
 				foreach (Toolbar toolbar in toolbars.Values) {
 					toolbar.update();
 				}
@@ -120,17 +119,25 @@ namespace Toolbar {
 			}
 		}
 
+		private void handleGameSceneChange() {
+			ToolbarGameScene scene = ToolbarGameScenes.getCurrent();
+			if (scene != gameScene) {
+				gameScene = scene;
+				gameSceneChanged(scene);
+			}
+		}
+
 		private void toolbarChanged() {
 			saveSettings();
 		}
 
-		private void gameSceneLoadRequested(GameScenes scene) {
+		private void gameSceneChanged(ToolbarGameScene scene) {
 			if (isRelevantGameScene(scene)) {
 				loadSettings(scene);
 			}
 		}
 
-		private void loadSettings(GameScenes scene) {
+		private void loadSettings(ToolbarGameScene scene) {
 			Log.info("loading settings (game scene: {0})", scene);
 
 			foreach (Toolbar toolbar in toolbars.Values) {
@@ -159,6 +166,7 @@ namespace Toolbar {
 
 			// ensure there is at least one toolbar in the scene
 			if (ToolbarsCount == 0) {
+				Log.info("no toolbars in current game scene, adding default toolbar");
 				addToolbar();
 			}
 
@@ -198,17 +206,17 @@ namespace Toolbar {
 
 					toolbarsNode.RemoveNode("toolbar");
 
-					saveSettings(GameScenes.MAINMENU);
+					saveSettings(ToolbarGameScene.MAINMENU);
 					settings = ConfigNode.Load(SETTINGS_FILE);
 				}
 			}
 		}
 
 		private void saveSettings() {
-			saveSettings(HighLogic.LoadedScene);
+			saveSettings(gameScene);
 		}
 
-		private void saveSettings(GameScenes scene) {
+		private void saveSettings(ToolbarGameScene scene) {
 			Log.info("saving settings (game scene: {0})", scene);
 
 			ConfigNode root = loadSettings();
@@ -222,7 +230,7 @@ namespace Toolbar {
 		}
 
 		private bool showGUI() {
-			if (!isRelevantGameScene(HighLogic.LoadedScene)) {
+			if (!isRelevantGameScene(gameScene)) {
 				return false;
 			}
 
@@ -238,9 +246,9 @@ namespace Toolbar {
 			return false;
 		}
 
-		private bool isRelevantGameScene(GameScenes scene) {
-			return (scene != GameScenes.LOADING) && (scene != GameScenes.LOADINGBUFFER) &&
-				(scene != GameScenes.MAINMENU) && (scene != GameScenes.PSYSTEM) && (scene != GameScenes.CREDITS);
+		private bool isRelevantGameScene(ToolbarGameScene scene) {
+			return (scene != ToolbarGameScene.LOADING) && (scene != ToolbarGameScene.LOADINGBUFFER) &&
+				(scene != ToolbarGameScene.MAINMENU) && (scene != ToolbarGameScene.PSYSTEM) && (scene != ToolbarGameScene.CREDITS);
 		}
 
 		private void fireCommandAdded() {
@@ -250,9 +258,21 @@ namespace Toolbar {
 		}
 
 		internal void destroyToolbar(Toolbar toolbar) {
-			string key = toolbars.Single(kv => kv.Value.Equals(toolbar)).Key;
-			toolbars.Remove(key);
+			string toolbarId = toolbars.Single(kv => kv.Value.Equals(toolbar)).Key;
+			toolbars.Remove(toolbarId);
 			toolbar.destroy();
+
+			if (settings.HasNode("toolbars")) {
+				ConfigNode toolbarsNode = settings.GetNode("toolbars");
+				string scene = gameScene.ToString();
+				if (toolbarsNode.HasNode(scene)) {
+					ConfigNode sceneNode = toolbarsNode.GetNode(scene);
+					if (sceneNode.HasNode(toolbarId)) {
+						sceneNode.RemoveNode(toolbarId);
+						saveSettings();
+					}
+				}
+			}
 		}
 
 		internal void addToolbar() {
