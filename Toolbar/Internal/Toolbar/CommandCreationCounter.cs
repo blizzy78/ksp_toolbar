@@ -29,17 +29,17 @@ using System.Linq;
 using System.Text;
 
 namespace Toolbar {
-	internal class ButtonCreationCounter {
-		internal static readonly ButtonCreationCounter Instance = new ButtonCreationCounter();
+	internal class CommandCreationCounter {
+		internal static readonly CommandCreationCounter Instance = new CommandCreationCounter();
 
 		private Dictionary<string, long> firstCreation = new Dictionary<string, long>();
 		private Dictionary<string, int> creationCounts = new Dictionary<string, int>();
 
-		private ButtonCreationCounter() {
+		private CommandCreationCounter() {
 		}
 
-		internal void add(Button button) {
-			string key = button.FullId;
+		internal void add(Command command) {
+			string key = command.FullId;
 			if (!firstCreation.ContainsKey(key)) {
 				firstCreation.Add(key, DateTime.UtcNow.getSeconds());
 				creationCounts.Add(key, 1);

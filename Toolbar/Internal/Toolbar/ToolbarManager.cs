@@ -277,6 +277,7 @@ namespace Toolbar {
 				};
 
 				commands_.Add(command);
+				CommandCreationCounter.Instance.add(command);
 
 				fireCommandAdded();
 

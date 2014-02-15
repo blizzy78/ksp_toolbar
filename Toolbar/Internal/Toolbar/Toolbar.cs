@@ -756,7 +756,6 @@ namespace Toolbar {
 				button.OnDestroy += buttonDestroyed;
 				buttons.Add(button);
 				sortButtons(buttons, compareButtonsUserOrder);
-				ButtonCreationCounter.Instance.add(button);
 			}
 		}
 
