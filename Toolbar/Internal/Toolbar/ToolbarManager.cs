@@ -32,12 +32,13 @@ using UnityEngine;
 namespace Toolbar {
 	[KSPAddonFixed(KSPAddon.Startup.EveryScene, true, typeof(ToolbarManager))]
 	public partial class ToolbarManager : MonoBehaviour, IToolbarManager {
+		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
 		internal const string DONATE_URL = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PCRP5Y2MUS62A";
 		internal const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
 		internal const int VERSION = 14;
 
-		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
+		internal static ToolbarManager InternalInstance;
 
 		private HashSet<Command> commands_;
 		internal IEnumerable<Command> Commands {
@@ -51,8 +52,6 @@ namespace Toolbar {
 				return toolbars.Count();
 			}
 		}
-
-		internal static ToolbarManager InternalInstance;
 
 		internal event Action OnCommandAdded;
 
@@ -292,9 +291,18 @@ namespace Toolbar {
 			if (running) {
 				Command command = new Command(ns, id);
 
+				Log.info("adding button: {0}", command.FullId);
+
 				command.OnDestroy += () => {
+					Log.info("button destroyed: {0}", command.FullId);
 					commands_.Remove(command);
 				};
+
+				// destroy old command with the same id
+				foreach (Command oldCommand in new HashSet<Command>(commands_.Where(c => c.FullId == command.FullId))) {
+					Log.info("destroying old button with same ID: {0}", oldCommand.FullId);
+					oldCommand.Destroy();
+				}
 
 				commands_.Add(command);
 				CommandCreationCounter.Instance.add(command);

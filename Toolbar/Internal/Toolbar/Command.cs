@@ -34,15 +34,15 @@ namespace Toolbar {
 		private string text_;
 		public string Text {
 			set {
-				checkDestroyed();
+				if (!destroyed) {
+					if (!string.Equals(text_, value)) {
+						text_ = value;
+						if ((text_ != null) && (text_ == "")) {
+							text_ = null;
+						}
 
-				if (!string.Equals(text_, value)) {
-					text_ = value;
-					if ((text_ != null) && (text_ == "")) {
-						text_ = null;
+						fireChange();
 					}
-
-					fireChange();
 				}
 			}
 			get {
@@ -53,12 +53,12 @@ namespace Toolbar {
 		private Color textColor_ = Color.white;
 		public Color TextColor {
 			set {
-				checkDestroyed();
+				if (!destroyed) {
+					if (!value.Equals(textColor_)) {
+						textColor_ = value;
 
-				if (!value.Equals(textColor_)) {
-					textColor_ = value;
-
-					fireChange();
+						fireChange();
+					}
 				}
 			}
 			get {
@@ -69,16 +69,16 @@ namespace Toolbar {
 		private string texturePath_;
 		public string TexturePath {
 			set {
-				checkDestroyed();
+				if (!destroyed) {
+					if ((value != null) && value.Contains('\\')) {
+						throw new ArgumentException("texture path must use forward slash instead of backslash: " + value);
+					}
 
-				if ((value != null) && value.Contains('\\')) {
-					throw new ArgumentException("texture path must use forward slash instead of backslash: " + value);
-				}
+					if (!string.Equals(texturePath_, value)) {
+						texturePath_ = value;
 
-				if (!string.Equals(texturePath_, value)) {
-					texturePath_ = value;
-
-					fireChange();
+						fireChange();
+					}
 				}
 			}
 			get {
@@ -89,15 +89,15 @@ namespace Toolbar {
 		private string toolTip_;
 		public string ToolTip {
 			set {
-				checkDestroyed();
+				if (!destroyed) {
+					if (!string.Equals(toolTip_, value)) {
+						toolTip_ = value;
+						if ((toolTip_ != null) && (toolTip_ == "")) {
+							toolTip_ = null;
+						}
 
-				if (!string.Equals(toolTip_, value)) {
-					toolTip_ = value;
-					if ((toolTip_ != null) && (toolTip_ == "")) {
-						toolTip_ = null;
+						fireChange();
 					}
-
-					fireChange();
 				}
 			}
 			get {
@@ -108,12 +108,12 @@ namespace Toolbar {
 		private bool visible_ = true;
 		public bool Visible {
 			set {
-				checkDestroyed();
+				if (!destroyed) {
+					if (visible_ != value) {
+						visible_ = value;
 
-				if (visible_ != value) {
-					visible_ = value;
-
-					fireChange();
+						fireChange();
+					}
 				}
 			}
 			get {
@@ -124,12 +124,12 @@ namespace Toolbar {
 		private IVisibility visibility_;
 		public IVisibility Visibility {
 			set {
-				checkDestroyed();
+				if (!destroyed) {
+					if (visibility_ != value) {
+						visibility_ = value;
 
-				if (visibility_ != value) {
-					visibility_ = value;
-
-					fireChange();
+						fireChange();
+					}
 				}
 			}
 			get {
@@ -139,13 +139,15 @@ namespace Toolbar {
 
 		public bool EffectivelyVisible {
 			get {
-				checkDestroyed();
-
-				if (Visible && (TexturePath != null)) {
-					try {
-						return (Visibility == null) || Visibility.Visible;
-					} catch (Exception e) {
-						Log.error(e, "error while calling IButton.Visibility.Visible for button {0}", FullId);
+				if (!destroyed) {
+					if (Visible && (TexturePath != null)) {
+						try {
+							return (Visibility == null) || Visibility.Visible;
+						} catch (Exception e) {
+							Log.error(e, "error while calling IButton.Visibility.Visible for button {0}", FullId);
+							return false;
+						}
+					} else {
 						return false;
 					}
 				} else {
@@ -157,12 +159,12 @@ namespace Toolbar {
 		private bool enabled_ = true;
 		public bool Enabled {
 			set {
-				checkDestroyed();
+				if (!destroyed) {
+					if (enabled_ != value) {
+						enabled_ = value;
 
-				if (enabled_ != value) {
-					enabled_ = value;
-
-					fireChange();
+						fireChange();
+					}
 				}
 			}
 			get {
@@ -173,12 +175,12 @@ namespace Toolbar {
 		private bool important_;
 		public bool Important {
 			set {
-				checkDestroyed();
+				if (!destroyed) {
+					if (important_ != value) {
+						important_ = value;
 
-				if (important_ != value) {
-					important_ = value;
-
-					fireChange();
+						fireChange();
+					}
 				}
 			}
 			get {
@@ -188,7 +190,6 @@ namespace Toolbar {
 
 		internal bool IsTextured {
 			get {
-				checkDestroyed();
 				return TexturePath != null;
 			}
 		}
@@ -231,37 +232,37 @@ namespace Toolbar {
 		}
 
 		internal void click() {
-			checkDestroyed();
-
-			if (OnClick != null) {
-				try {
-					OnClick(new ClickEvent(this, Event.current.button));
-				} catch (Exception e) {
-					Log.error(e, "error while handling click event: {0}", FullId);
+			if (!destroyed) {
+				if (OnClick != null) {
+					try {
+						OnClick(new ClickEvent(this, Event.current.button));
+					} catch (Exception e) {
+						Log.error(e, "error while handling click event: {0}", FullId);
+					}
 				}
 			}
 		}
 
 		internal void mouseEnter() {
-			checkDestroyed();
-
-			if (OnMouseEnter != null) {
-				try {
-					OnMouseEnter(new MouseEnterEvent(this));
-				} catch (Exception e) {
-					Log.error(e, "error while handling mouse enter event: {0}", FullId);
+			if (!destroyed) {
+				if (OnMouseEnter != null) {
+					try {
+						OnMouseEnter(new MouseEnterEvent(this));
+					} catch (Exception e) {
+						Log.error(e, "error while handling mouse enter event: {0}", FullId);
+					}
 				}
 			}
 		}
 
 		internal void mouseLeave() {
-			checkDestroyed();
-
-			if (OnMouseLeave != null) {
-				try {
-					OnMouseLeave(new MouseLeaveEvent(this));
-				} catch (Exception e) {
-					Log.error(e, "error while handling mouse leave event: {0}", FullId);
+			if (!destroyed) {
+				if (OnMouseLeave != null) {
+					try {
+						OnMouseLeave(new MouseLeaveEvent(this));
+					} catch (Exception e) {
+						Log.error(e, "error while handling mouse leave event: {0}", FullId);
+					}
 				}
 			}
 		}
@@ -278,15 +279,7 @@ namespace Toolbar {
 			}
 		}
 
-		private void checkDestroyed() {
-			if (destroyed) {
-				throw new NotSupportedException("command is destroyed: " + FullId);
-			}
-		}
-
 		public int CompareTo(Command other) {
-			checkDestroyed();
-
 			return StringComparer.CurrentCultureIgnoreCase.Compare(FullId, other.FullId);
 		}
 	}

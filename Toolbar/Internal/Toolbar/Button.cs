@@ -60,8 +60,6 @@ namespace Toolbar {
 		private Vector2 size_ = UNSIZED;
 		internal Vector2 Size {
 			get {
-				checkDestroyed();
-
 				if (size_.Equals(UNSIZED)) {
 					if (toolbarDropdown) {
 						size_ = new Vector2(DROPDOWN_TEX_WIDTH, DROPDOWN_TEX_HEIGHT);
@@ -172,14 +170,14 @@ namespace Toolbar {
 
 		public event ClickHandler OnClick {
 			add {
-				checkDestroyed();
-
-				command.OnClick += value;
+				if (!destroyed) {
+					command.OnClick += value;
+				}
 			}
 			remove {
-				checkDestroyed();
-
-				command.OnClick -= value;
+				if (!destroyed) {
+					command.OnClick -= value;
+				}
 			}
 		}
 
@@ -239,64 +237,64 @@ namespace Toolbar {
 		}
 
 		internal void draw(Rect rect, bool enabled) {
-			checkDestroyed();
+			if (!destroyed) {
+				bool oldEnabled = GUI.enabled;
+				GUI.enabled = enabled && command.Enabled;
 
-			bool oldEnabled = GUI.enabled;
-			GUI.enabled = enabled && command.Enabled;
+				bool clicked = GUI.Button(rect, Content, Style);
 
-			bool clicked = GUI.Button(rect, Content, Style);
+				GUI.enabled = oldEnabled;
 
-			GUI.enabled = oldEnabled;
-
-			if (clicked) {
-				click();
+				if (clicked) {
+					click();
+				}
 			}
 		}
 
 		internal void drawPlain() {
-			checkDestroyed();
-
-			GUIStyle style = new GUIStyle();
-			style.alignment = TextAnchor.MiddleCenter;
-			GUILayout.Label(Content, style, GUILayout.Width(Size.x), GUILayout.Height(Size.y));
+			if (!destroyed) {
+				GUIStyle style = new GUIStyle();
+				style.alignment = TextAnchor.MiddleCenter;
+				GUILayout.Label(Content, style, GUILayout.Width(Size.x), GUILayout.Height(Size.y));
+			}
 		}
 
 		public void drawMenuOption() {
-			checkDestroyed();
+			if (!destroyed) {
+				bool oldEnabled = GUI.enabled;
+				GUI.enabled = command.Enabled;
 
-			bool oldEnabled = GUI.enabled;
-			GUI.enabled = command.Enabled;
+				bool clicked = GUILayout.Button(command.Text, MenuOptionStyle, GUILayout.ExpandWidth(true));
 
-			bool clicked = GUILayout.Button(command.Text, MenuOptionStyle, GUILayout.ExpandWidth(true));
+				GUI.enabled = oldEnabled;
 
-			GUI.enabled = oldEnabled;
-
-			if (clicked) {
-				click();
+				if (clicked) {
+					click();
+				}
 			}
 		}
 
 		internal void drawToolTip() {
-			checkDestroyed();
-
-			if (showTooltip && (command.ToolTip != null) && (command.ToolTip.Trim().Length > 0)) {
-				Vector2 mousePos = Utils.getMousePosition();
-				Vector2 size = TooltipStyle.CalcSize(new GUIContent(command.ToolTip));
-				Rect rect = new Rect(mousePos.x, mousePos.y + 20, size.x, size.y);
-				float origY = rect.y;
-				rect = rect.clampToScreen();
-				// clamping moved the tooltip up -> reposition above mouse cursor
-				if (rect.y < origY) {
-					rect.y = mousePos.y - size.y - 5;
+			if (!destroyed) {
+				if (showTooltip && (command.ToolTip != null) && (command.ToolTip.Trim().Length > 0)) {
+					Vector2 mousePos = Utils.getMousePosition();
+					Vector2 size = TooltipStyle.CalcSize(new GUIContent(command.ToolTip));
+					Rect rect = new Rect(mousePos.x, mousePos.y + 20, size.x, size.y);
+					float origY = rect.y;
 					rect = rect.clampToScreen();
-				}
+					// clamping moved the tooltip up -> reposition above mouse cursor
+					if (rect.y < origY) {
+						rect.y = mousePos.y - size.y - 5;
+						rect = rect.clampToScreen();
+					}
 
-				int oldDepth = GUI.depth;
-				GUI.depth = -1000;
-				GUILayout.BeginArea(rect);
-				GUILayout.Label(command.ToolTip, TooltipStyle);
-				GUILayout.EndArea();
-				GUI.depth = oldDepth;
+					int oldDepth = GUI.depth;
+					GUI.depth = -1000;
+					GUILayout.BeginArea(rect);
+					GUILayout.Label(command.ToolTip, TooltipStyle);
+					GUILayout.EndArea();
+					GUI.depth = oldDepth;
+				}
 			}
 		}
 
@@ -305,18 +303,18 @@ namespace Toolbar {
 		}
 
 		internal void mouseEnter() {
-			checkDestroyed();
-
-			if (OnMouseEnter != null) {
-				OnMouseEnter();
+			if (!destroyed) {
+				if (OnMouseEnter != null) {
+					OnMouseEnter();
+				}
 			}
 		}
 
 		internal void mouseLeave() {
-			checkDestroyed();
-
-			if (OnMouseLeave != null) {
-				OnMouseLeave();
+			if (!destroyed) {
+				if (OnMouseLeave != null) {
+					OnMouseLeave();
+				}
 			}
 		}
 
@@ -333,12 +331,6 @@ namespace Toolbar {
 		private void fireDestroy() {
 			if (OnDestroy != null) {
 				OnDestroy(new DestroyEvent(this));
-			}
-		}
-
-		private void checkDestroyed() {
-			if (destroyed) {
-				throw new NotSupportedException("button is destroyed: " + FullId);
 			}
 		}
 	}
