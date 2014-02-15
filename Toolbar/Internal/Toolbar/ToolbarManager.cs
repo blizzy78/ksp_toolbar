@@ -35,7 +35,7 @@ namespace Toolbar {
 		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
 		internal const string DONATE_URL = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PCRP5Y2MUS62A";
 		internal const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
-		internal const int VERSION = 1;
+		internal const int VERSION = 14;
 
 		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 

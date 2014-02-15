@@ -1,4 +1,12 @@
-﻿1.5.3, 2014-02-13
+﻿1.6.0, 2014-02-15
+- Added support for multiple toolbars. You can add new toolbars by selecting
+  "Create New Toolbar" from the triangle drop-down menu. Each toolbar has its
+  own separate set of settings, folders, and visible buttons.
+- The map view during flight is now considered a separate game scene. This
+  means that it is now possible to configure different toolbars for the
+  regular flight scene and the flight map scene.
+
+1.5.3, 2014-02-13
 - Fixed a bug where buttons marked as "important" could prevent the toolbar
   from auto-hiding itself, even though those buttons have not been configured
   to be visible.
