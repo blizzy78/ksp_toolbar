@@ -39,7 +39,7 @@ namespace Toolbar {
 		}
 
 		internal void add(Button button) {
-			string key = button.ns + "." + button.id;
+			string key = button.command.ns + "." + button.command.id;
 			if (!firstCreation.ContainsKey(key)) {
 				firstCreation.Add(key, DateTime.UtcNow.getSeconds());
 				creationCounts.Add(key, 1);

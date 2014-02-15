@@ -31,17 +31,25 @@ using UnityEngine;
 
 namespace Toolbar {
 	internal class VisibleButtonsSelector : AbstractWindow {
-		internal event Action<Button> OnButtonSelectionChanged;
+		internal event Action OnButtonSelectionChanged;
 
+		private HashSet<string> visibleButtonIds;
 		private List<Button> buttons;
 		private Vector2 scrollPos;
 
-		internal VisibleButtonsSelector(List<Button> buttons) : base() {
-			this.buttons = buttons;
+		internal VisibleButtonsSelector(HashSet<string> visibleButtonIds) : base() {
+			this.visibleButtonIds = visibleButtonIds;
 
 			Rect = new Rect(300, 300, 0, 0);
 			Title = "Toolbar Button Visibility";
 			Dialog = true;
+
+			List<Command> commands = new List<Command>(ToolbarManager.InternalInstance.Commands.Where(c => c.ns != ToolbarManager.NAMESPACE_INTERNAL));
+			commands.Sort((c1, c2) => c1.CompareTo(c2));
+			buttons = new List<Button>();
+			foreach (Command command in commands) {
+				buttons.Add(new Button(command));
+			}
 		}
 
 		internal override void drawContents() {
@@ -58,25 +66,30 @@ namespace Toolbar {
 				GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
 				labelStyle.wordWrap = false;
 
-				string lastNamespace = buttons.First().ns;
+				string lastNamespace = buttons.First().command.ns;
 				foreach (Button button in buttons) {
-					if (button.ns != lastNamespace) {
+					if (button.command.ns != lastNamespace) {
 						Separator.Instance.drawMenuOption();
 					}
 
 					GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
-						bool visible = button.UserVisible;
+					string id = button.command.ns + "." + button.command.id;
+						bool visible = visibleButtonIds.Contains(id);
 						bool selected = GUILayout.Toggle(visible, (string) null);
 						if (selected != visible) {
-							button.UserVisible = selected;
-							fireButtonSelectionChanged(button);
+							if (selected) {
+								visibleButtonIds.Add(id);
+							} else {
+								visibleButtonIds.Remove(id);
+							}
+							fireButtonSelectionChanged();
 						}
 						button.drawPlain();
-						GUILayout.Label(button.Text ?? button.ToolTip, labelStyle);
+						GUILayout.Label(button.command.Text ?? button.command.ToolTip, labelStyle);
 						GUILayout.FlexibleSpace();
 					GUILayout.EndHorizontal();
 
-					lastNamespace = button.ns;
+					lastNamespace = button.command.ns;
 				}
 
 				GUILayout.EndScrollView();
@@ -93,9 +106,9 @@ namespace Toolbar {
 			GUILayout.EndVertical();
 		}
 
-		private void fireButtonSelectionChanged(Button button) {
+		private void fireButtonSelectionChanged() {
 			if (OnButtonSelectionChanged != null) {
-				OnButtonSelectionChanged(button);
+				OnButtonSelectionChanged();
 			}
 		}
 	}

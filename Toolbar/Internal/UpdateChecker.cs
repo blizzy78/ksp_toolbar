@@ -59,12 +59,15 @@ namespace Toolbar {
 						}
 					}
 
+					if (updateAvailable) {
+						Log.info("update found, adding notification button: {0} vs {1}", www.text, ToolbarManager.VERSION);
+						addUpdateAvailableButton();
+					} else {
+						Log.info("no update found: {0} vs {1}", www.text, ToolbarManager.VERSION);
+					}
+
 					www = null;
 					done = true;
-
-					if (updateAvailable) {
-						addUpdateAvailableButton();
-					}
 
 					if (OnDone != null) {
 						OnDone();
@@ -74,7 +77,7 @@ namespace Toolbar {
 		}
 
 		private void addUpdateAvailableButton() {
-			IButton button = ToolbarManager.Instance.add(Button.NAMESPACE_INTERNAL, "__updateAvailable");
+			IButton button = ToolbarManager.Instance.add(ToolbarManager.NAMESPACE_INTERNAL, "__updateAvailable");
 			button.TexturePath = "000_Toolbar/update-available";
 			button.ToolTip = "Toolbar Plugin Update Available (Right-Click to Dismiss)";
 			button.Important = true;

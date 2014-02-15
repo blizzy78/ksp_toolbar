@@ -74,6 +74,7 @@
     <Compile Include="Internal\Toolbar\FolderSettingsDialog.cs" />
     <Compile Include="Internal\InstallChecker.cs" />
     <Compile Include="Internal\GUI\PopupMenu.cs" />
+    <Compile Include="Internal\Toolbar\Command.cs" />
     <Compile Include="Internal\Toolbar\MouseEnterEvent.cs" />
     <Compile Include="Internal\Toolbar\MouseMoveEvent.cs" />
     <Compile Include="Internal\Toolbar\MouseLeaveEvent.cs" />

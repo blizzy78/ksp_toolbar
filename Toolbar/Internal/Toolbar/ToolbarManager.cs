@@ -32,13 +32,32 @@ using UnityEngine;
 namespace Toolbar {
 	[KSPAddonFixed(KSPAddon.Startup.EveryScene, true, typeof(ToolbarManager))]
 	public partial class ToolbarManager : MonoBehaviour, IToolbarManager {
-		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
 		internal const string DONATE_URL = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PCRP5Y2MUS62A";
-		internal const int VERSION = 13;
+		internal const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
+		internal const int VERSION = 1;
+
+		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
+
+		private HashSet<Command> commands_;
+		internal IEnumerable<Command> Commands {
+			get {
+				return commands_;
+			}
+		}
+
+		internal int ToolbarsCount {
+			get {
+				return toolbars.Count();
+			}
+		}
+
+		internal static ToolbarManager InternalInstance;
+
+		internal event Action OnCommandAdded;
 
 		private RenderingManager renderingManager;
-		private Toolbar toolbar;
+		private Dictionary<string, Toolbar> toolbars;
 		private ConfigNode settings;
 		private UpdateChecker updateChecker;
 		private bool running = true;
@@ -48,12 +67,13 @@ namespace Toolbar {
 
 			if (Instance == null) {
 				Instance = this;
+				InternalInstance = this;
 				GameObject.DontDestroyOnLoad(this);
 
-				loadSettings(GameScenes.MAINMENU);
+				commands_ = new HashSet<Command>();
+				toolbars = new Dictionary<string, Toolbar>();
 
-				toolbar = new Toolbar();
-				toolbar.onChange += toolbarChanged;
+				loadSettings(GameScenes.MAINMENU);
 
 				updateChecker = new UpdateChecker();
 				updateChecker.OnDone += () => updateChecker = null;
@@ -71,20 +91,26 @@ namespace Toolbar {
 			if (running) {
 				GameEvents.onGameSceneLoadRequested.Remove(gameSceneLoadRequested);
 
-				toolbar.destroy();
+				foreach (Toolbar toolbar in toolbars.Values) {
+					toolbar.destroy();
+				}
 			}
 		}
 
 		internal void OnGUI() {
 			if (running && showGUI()) {
-				toolbar.draw();
+				foreach (Toolbar toolbar in toolbars.Values) {
+					toolbar.draw();
+				}
 				WindowList.Instance.draw();
 			}
 		}
 
 		internal void Update() {
 			if (running) {
-				toolbar.update();
+				foreach (Toolbar toolbar in toolbars.Values) {
+					toolbar.update();
+				}
 				if (updateChecker != null) {
 					updateChecker.update();
 				}
@@ -107,21 +133,38 @@ namespace Toolbar {
 		private void loadSettings(GameScenes scene) {
 			Log.info("loading settings (game scene: {0})", scene);
 
-			ConfigNode root = loadSettings();
-
-			if (root.HasValue("logLevel")) {
-				Log.Level = (LogLevel) int.Parse(root.GetValue("logLevel"));
+			foreach (Toolbar toolbar in toolbars.Values) {
+				toolbar.destroy();
 			}
+			toolbars.Clear();
 
+			WindowList.Instance.destroyDialogs();
+
+			bool checkForUpdates = true;
+
+			ConfigNode root = loadSettings();
 			if (root.HasNode("toolbars")) {
 				ConfigNode toolbarsNode = root.GetNode("toolbars");
-				if (updateChecker != null) {
-					updateChecker.CheckForUpdates = toolbarsNode.get("checkForUpdates", true);
-				}
+				Log.Level = (LogLevel) int.Parse(toolbarsNode.get("logLevel", ((int) LogLevel.WARN).ToString()));
+				checkForUpdates = toolbarsNode.get("checkForUpdates", true);
 
-				if (toolbar != null) {
-					toolbar.loadSettings(toolbarsNode, scene);
+				if (toolbarsNode.HasNode(scene.ToString())) {
+					ConfigNode sceneNode = toolbarsNode.GetNode(scene.ToString());
+					foreach (ConfigNode toolbarNode in sceneNode.nodes) {
+						Toolbar toolbar = addToolbar(toolbarNode.name);
+						toolbar.loadSettings(toolbarNode);
+					}
 				}
+			}
+
+			// ensure there is at least one toolbar in the scene
+			if (ToolbarsCount == 0) {
+				addToolbar();
+			}
+
+			if (updateChecker != null) {
+				Log.info("update check {0}", checkForUpdates ? "enabled" : "disabled");
+				updateChecker.CheckForUpdates = checkForUpdates;
 			}
 		}
 
@@ -129,15 +172,52 @@ namespace Toolbar {
 			if (settings == null) {
 				settings = ConfigNode.Load(SETTINGS_FILE) ?? new ConfigNode();
 			}
+			convertSettings();
 			return settings;
 		}
 
+		private void convertSettings() {
+			if (settings.HasNode("toolbars")) {
+				ConfigNode toolbarsNode = settings.GetNode("toolbars");
+				if (toolbarsNode.HasNode("toolbar")) {
+					ConfigNode toolbarNode = toolbarsNode.GetNode("toolbar");
+
+					Log.info("converting settings from old to new format");
+
+					foreach (ConfigNode sceneNode in toolbarNode.nodes) {
+						string scene = sceneNode.name;
+						ConfigNode newSceneNode = toolbarsNode.getOrCreateNode(scene);
+						ConfigNode newToolbarNode = newSceneNode.getOrCreateNode("toolbar");
+						foreach (ConfigNode.Value value in sceneNode.values) {
+							newToolbarNode.AddValue(value.name, value.value);
+						}
+						foreach (ConfigNode childNode in sceneNode.nodes) {
+							newToolbarNode.AddNode(childNode);
+						}
+					}
+
+					toolbarsNode.RemoveNode("toolbar");
+
+					saveSettings(GameScenes.MAINMENU);
+					settings = ConfigNode.Load(SETTINGS_FILE);
+				}
+			}
+		}
+
 		private void saveSettings() {
-			GameScenes scene = HighLogic.LoadedScene;
+			saveSettings(HighLogic.LoadedScene);
+		}
+
+		private void saveSettings(GameScenes scene) {
 			Log.info("saving settings (game scene: {0})", scene);
 
 			ConfigNode root = loadSettings();
-			toolbar.saveSettings(root.getOrCreateNode("toolbars"), scene);
+			ConfigNode toolbarsNode = root.getOrCreateNode("toolbars");
+			ConfigNode sceneNode = toolbarsNode.getOrCreateNode(scene.ToString());
+			foreach (KeyValuePair<string, Toolbar> entry in toolbars) {
+				ConfigNode toolbarNode = sceneNode.getOrCreateNode(entry.Key);
+				entry.Value.saveSettings(toolbarNode);
+			}
 			root.Save(SETTINGS_FILE);
 		}
 
@@ -163,11 +243,44 @@ namespace Toolbar {
 				(scene != GameScenes.MAINMENU) && (scene != GameScenes.PSYSTEM) && (scene != GameScenes.CREDITS);
 		}
 
+		private void fireCommandAdded() {
+			if (OnCommandAdded != null) {
+				OnCommandAdded();
+			}
+		}
+
+		internal void destroyToolbar(Toolbar toolbar) {
+			string key = toolbars.Single(kv => kv.Value.Equals(toolbar)).Key;
+			toolbars.Remove(key);
+			toolbar.destroy();
+		}
+
+		internal void addToolbar() {
+			string toolbarId = "toolbar_" + new System.Random().Next();
+			Toolbar toolbar = addToolbar(toolbarId);
+			toolbar.loadSettings(new ConfigNode());
+		}
+
+		private Toolbar addToolbar(string toolbarId) {
+			Toolbar toolbar = new Toolbar();
+			toolbar.OnChange += toolbarChanged;
+			toolbars.Add(toolbarId, toolbar);
+			return toolbar;
+		}
+
 		public IButton add(string ns, string id) {
 			if (running) {
-				Button button = new Button(ns, id, toolbar);
-				toolbar.add(button);
-				return button;
+				Command command = new Command(ns, id);
+
+				command.OnDestroy += () => {
+					commands_.Remove(command);
+				};
+
+				commands_.Add(command);
+
+				fireCommandAdded();
+
+				return command;
 			} else {
 				throw new NotSupportedException("cannot add button to stale ToolbarManager instance");
 			}
