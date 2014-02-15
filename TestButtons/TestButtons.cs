@@ -14,6 +14,7 @@ class TestButtons : MonoBehaviour {
 	private IButton button5;
 	private IButton button6;
 	private IButton button7;
+	private IButton button8;
 
 	internal TestButtons() {
 		// button that toggles its icon when clicked
@@ -72,6 +73,13 @@ class TestButtons : MonoBehaviour {
 		button7.ToolTip = "Button Visible Only in Flight Scene";
 		button7.Visibility = new GameScenesVisibility(GameScenes.FLIGHT);
 		button7.OnClick += (e) => Debug.Log("button7 clicked");
+
+		// button that is only visible in the flight map
+		button8 = ToolbarManager.Instance.add("test", "button8");
+		button8.TexturePath = "000_Toolbar/icon";
+		button8.ToolTip = "Button Visible Only in Flight Map";
+		button8.Visibility = FlightMapVisibility.Instance;
+		button8.OnClick += (e) => Debug.Log("button8 clicked");
 	}
 
 	internal void OnDestroy() {
@@ -82,5 +90,6 @@ class TestButtons : MonoBehaviour {
 		button5.Destroy();
 		button6.Destroy();
 		button7.Destroy();
+		button8.Destroy();
 	}
 }
