@@ -967,12 +967,10 @@ namespace Toolbar {
 
 				Button aboutButton = Button.createMenuOption("About the Toolbar Plugin...");
 				aboutButton.OnClick += (e) => Application.OpenURL(ToolbarManager.FORUM_THREAD_URL);
-				aboutButton.command.Enabled = regularEntriesEnabled;
 				dropdownMenu += aboutButton;
 
-				Button donateButton = Button.createMenuOption("Make a Donation...");
+				IPopupMenuOption donateButton = new TextureMenuOption(GameDatabase.Instance.GetTexture("000_Toolbar/donate", false), new Vector2(10, 0));
 				donateButton.OnClick += (e) => Application.OpenURL(ToolbarManager.DONATE_URL);
-				donateButton.command.Enabled = regularEntriesEnabled;
 				dropdownMenu += donateButton;
 
 				dropdownMenu.OnAnyOptionClicked += () => {

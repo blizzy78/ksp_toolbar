@@ -49,6 +49,7 @@
     <Compile Include="API\FunctionVisibility.cs" />
     <Compile Include="Internal\FloatCurveXY.cs" />
     <Compile Include="Internal\GUI\CursorGrabbing.cs" />
+    <Compile Include="Internal\GUI\TextureMenuOption.cs" />
     <Compile Include="Internal\GUI\Separator.cs" />
     <Compile Include="Internal\GUI\AbstractWindow.cs" />
     <Compile Include="Internal\GUI\IPopupMenuOption.cs" />
@@ -101,6 +102,7 @@
     <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="etc\donate.tga" />
     <None Include="etc\folder.psd" />
     <None Include="etc\folder.tga" />
     <None Include="etc\move-cursor.psd" />
