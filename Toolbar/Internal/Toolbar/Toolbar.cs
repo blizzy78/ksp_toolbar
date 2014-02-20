@@ -802,14 +802,14 @@ namespace Toolbar {
 			autoHide = toolbarNode.get("autoHide", false);
 			showBorder = toolbarNode.get("drawBorder", true);
 			UseKSPSkin = toolbarNode.get("useKSPSkin", false);
-			savedButtonOrder = toolbarNode.get("buttonOrder", "").Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-			savedVisibleButtons = new HashSet<string>(toolbarNode.get("visibleButtons", "").Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries));
+			savedButtonOrder = toolbarNode.get("buttonOrder", string.Empty).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+			savedVisibleButtons = new HashSet<string>(toolbarNode.get("visibleButtons", string.Empty).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries));
 
 			if (toolbarNode.HasNode("folders")) {
 				foreach (ConfigNode folderNode in toolbarNode.GetNode("folders").nodes) {
 					string folderId = folderNode.name;
-					string toolTip = folderNode.get("toolTip", "");
-					HashSet<string> buttonIds = new HashSet<string>(folderNode.get("buttons", "").Split(new char[] { ',' }));
+					string toolTip = folderNode.get("toolTip", string.Empty);
+					HashSet<string> buttonIds = new HashSet<string>(folderNode.get("buttons", string.Empty).Split(new char[] { ',' }));
 
 					Toolbar folder = createFolder(folderId, toolTip, false);
 
@@ -837,7 +837,7 @@ namespace Toolbar {
 			ConfigNode foldersNode = toolbarNode.overwriteNode("folders");
 			foreach (KeyValuePair<string, FolderSettings> entry in savedFolderSettings) {
 				ConfigNode folderNode = foldersNode.getOrCreateNode(entry.Key);
-				folderNode.overwrite("toolTip", entry.Value.toolTip ?? "");
+				folderNode.overwrite("toolTip", entry.Value.toolTip ?? string.Empty);
 				folderNode.overwrite("buttons", string.Join(",", entry.Value.buttons.ToArray()));
 			}
 			if (foldersNode.CountNodes == 0) {

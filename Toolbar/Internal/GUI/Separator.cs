@@ -59,7 +59,7 @@ namespace Toolbar {
 		}
 
 		public void drawMenuOption() {
-			GUILayout.Label("", Style, GUILayout.Height(1), GUILayout.MinHeight(1), GUILayout.MaxHeight(1), GUILayout.ExpandWidth(true));
+			GUILayout.Label(string.Empty, Style, GUILayout.Height(1), GUILayout.MinHeight(1), GUILayout.MaxHeight(1), GUILayout.ExpandWidth(true));
 		}
 	}
 }

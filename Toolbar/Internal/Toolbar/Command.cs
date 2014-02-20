@@ -37,7 +37,7 @@ namespace Toolbar {
 				if (!destroyed) {
 					if (!string.Equals(text_, value)) {
 						text_ = value;
-						if ((text_ != null) && (text_ == "")) {
+						if ((text_ != null) && (text_ == string.Empty)) {
 							text_ = null;
 						}
 
@@ -92,7 +92,7 @@ namespace Toolbar {
 				if (!destroyed) {
 					if (!string.Equals(toolTip_, value)) {
 						toolTip_ = value;
-						if ((toolTip_ != null) && (toolTip_ == "")) {
+						if ((toolTip_ != null) && (toolTip_ == string.Empty)) {
 							toolTip_ = null;
 						}
 
