@@ -81,6 +81,7 @@
     <Compile Include="Internal\Toolbar\MouseLeaveEvent.cs" />
     <Compile Include="Internal\Toolbar\ToolbarGameScene.cs" />
     <Compile Include="Internal\Toolbar\ToolbarManager.cs" />
+    <Compile Include="Internal\Toolbar\VisibleButtons.cs" />
     <Compile Include="Internal\UpdateChecker.cs" />
     <Compile Include="Internal\GUI\WindowList.cs" />
     <Compile Include="API\IToolbarManager.cs" />

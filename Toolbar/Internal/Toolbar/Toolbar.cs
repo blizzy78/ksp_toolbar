@@ -163,7 +163,7 @@ namespace Toolbar {
 		private Draggable draggable;
 		private Resizable resizable;
 		private List<Button> buttons = new List<Button>();
-		private HashSet<string> visibleButtonIds = new HashSet<string>();
+		private VisibleButtons visibleButtons;
 		private Button dropdownMenuButton;
 		private PopupMenu dropdownMenu;
 		private bool rectLocked = true;
@@ -194,6 +194,8 @@ namespace Toolbar {
 		internal Toolbar(Mode mode = Mode.TOOLBAR, Toolbar parentToolbar = null) {
 			this.mode = mode;
 			this.parentToolbar = parentToolbar;
+
+			visibleButtons = new VisibleButtons(buttons, isEffectivelyUserVisible);
 
 			autoHideUnimportantButtonAlpha.a = 0.4f;
 
@@ -595,13 +597,8 @@ namespace Toolbar {
 		private void forceAutoSizeIfButtonVisibilitiesChanged() {
 			// ignore changes while sliding in/out
 			if ((displayMode == DisplayMode.VISIBLE) || (displayMode == DisplayMode.HIDDEN)) {
-				HashSet<string> newVisibleButtonIds = new HashSet<string>();
-				foreach (Button button in buttons.Where(b => isEffectivelyUserVisible(b))) {
-					newVisibleButtonIds.Add(button.FullId);
-				}
-				if (!newVisibleButtonIds.SetEquals(visibleButtonIds)) {
+				if (visibleButtons.update()) {
 					Log.info("button visibilities have changed, forcing auto-size");
-					visibleButtonIds = newVisibleButtonIds;
 
 					if (SingleRow) {
 						// docked at right screen edge -> keep it that way by moving to screen edge
@@ -669,6 +666,8 @@ namespace Toolbar {
 		}
 
 		internal void update() {
+			visibleButtons.reset();
+
 			if (draggable != null) {
 				draggable.update();
 			}
@@ -746,6 +745,7 @@ namespace Toolbar {
 				// add to toolbar
 				button.OnDestroy += buttonDestroyed;
 				buttons.Add(button);
+				visibleButtons.reset();
 				sortButtons(buttons, compareButtonsUserOrder);
 			}
 		}
@@ -792,9 +792,12 @@ namespace Toolbar {
 
 		private void buttonDestroyed(DestroyEvent e) {
 			remove(e.button);
+			visibleButtons.reset();
 		}
 
 		internal void loadSettings(ConfigNode toolbarNode) {
+			Log.info("loading toolbar settings (toolbar '{0}')", toolbarNode.name);
+
 			rect.x = toolbarNode.get("x", DEFAULT_X);
 			rect.y = toolbarNode.get("y", DEFAULT_Y);
 			rect.width = toolbarNode.get("width", DEFAULT_WIDTH);
@@ -824,6 +827,8 @@ namespace Toolbar {
 		}
 
 		internal void saveSettings(ConfigNode toolbarNode) {
+			Log.info("saving toolbar settings (toolbar '{0}')", toolbarNode.name);
+
 			toolbarNode.overwrite("x", rect.x.ToString("F0"));
 			toolbarNode.overwrite("y", rect.y.ToString("F0"));
 			toolbarNode.overwrite("width", savedMaxWidth.ToString("F0"));
@@ -1103,8 +1108,6 @@ namespace Toolbar {
 
 					fireChange();
 				}
-
-				forceAutoSizeIfButtonVisibilitiesChanged();
 
 				// reset draggables, drop marker, and dragged button
 				hookButtonOrderDraggables(false);
