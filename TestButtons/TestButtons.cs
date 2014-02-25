@@ -67,7 +67,7 @@ class TestButtons : MonoBehaviour {
 		button6.Visibility = new GameScenesVisibility(GameScenes.EDITOR, GameScenes.SPH);
 		button6.OnClick += (e) => Debug.Log("button6 clicked");
 
-		// button that is only visible in the flight scene
+		// button that is only visible in the flight scene and flight map
 		button7 = ToolbarManager.Instance.add("test", "button7");
 		button7.TexturePath = "000_Toolbar/icon";
 		button7.ToolTip = "Button Visible Only in Flight Scene";
