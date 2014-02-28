@@ -49,6 +49,7 @@
     <Compile Include="API\FunctionVisibility.cs" />
     <Compile Include="Internal\FloatCurveXY.cs" />
     <Compile Include="Internal\GUI\CursorGrabbing.cs" />
+    <Compile Include="Internal\GUI\IconPickerDialog.cs" />
     <Compile Include="Internal\GUI\TextureMenuOption.cs" />
     <Compile Include="Internal\GUI\Separator.cs" />
     <Compile Include="Internal\GUI\AbstractWindow.cs" />
@@ -58,7 +59,7 @@
     <Compile Include="API\ClickEvent.cs" />
     <Compile Include="API\ClickHandler.cs" />
     <Compile Include="Internal\Toolbar\CommandCreationCounter.cs" />
-    <Compile Include="Internal\Toolbar\ButtonsSelector.cs" />
+    <Compile Include="Internal\Toolbar\VisibleButtonsSelector.cs" />
     <Compile Include="Internal\Toolbar\ClickEvent.cs" />
     <Compile Include="Internal\GUI\ConfirmDialog.cs" />
     <Compile Include="Internal\Toolbar\DestroyHandler.cs" />

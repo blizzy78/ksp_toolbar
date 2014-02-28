@@ -34,38 +34,73 @@ namespace Toolbar {
 		internal event Action OnOkClicked;
 		internal event Action OnCancelClicked;
 
+		internal string TexturePath {
+			get {
+				return iconPickerCommand.TexturePath;
+			}
+		}
+
 		internal string ToolTip;
 
-		private Rect rect = new Rect(300, 300, Mathf.Max(Screen.width / 4, 350), 0);
+		private Command iconPickerCommand;
+		private Button iconPickerButton;
 
-		internal FolderSettingsDialog(string toolTip) : base() {
+		internal FolderSettingsDialog(string texturePath, string toolTip) : base() {
+			this.ToolTip = toolTip;
+
 			Rect = new Rect(300, 300, Mathf.Max(Screen.width / 4, 350), 0);
 			Title = "Folder Settings";
 			Dialog = true;
 			Modal = true;
 
-			this.ToolTip = toolTip;
+			iconPickerCommand = new Command(ToolbarManager.NAMESPACE_INTERNAL, "openIconPicker");
+			iconPickerCommand.TexturePath = texturePath;
+			iconPickerCommand.OnClick += (e) => {
+				openIconPicker();
+			};
+
+			iconPickerButton = new Button(iconPickerCommand);
+		}
+
+		private void openIconPicker() {
+			IconPickerDialog dlg = new IconPickerDialog("Select Icon", new Vector2(Button.MAX_TEX_WIDTH, Button.MAX_TEX_HEIGHT),
+				(texturePath) => {
+					iconPickerCommand.TexturePath = texturePath;
+				});
+			dlg.OnDestroy += () => {
+				iconPickerCommand.Enabled = true;
+			};
+			iconPickerCommand.Enabled = false;
 		}
 
 		internal override void drawContents() {
 			GUILayout.BeginVertical();
 
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("Button tooltip text:", GUILayout.ExpandWidth(false));
-			ToolTip = GUILayout.TextField(ToolTip, GUILayout.ExpandWidth(true));
-			GUILayout.EndHorizontal();
+				GUI.enabled = iconPickerCommand.Enabled;
 
-			GUILayout.Space(15);
+				GUILayout.BeginHorizontal();
+					GUILayout.Label("Button icon:", GUILayout.ExpandWidth(false));
+					iconPickerButton.drawButton();
+				GUILayout.EndHorizontal();
 
-			GUILayout.BeginHorizontal();
-			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("OK")) {
-				fireButtonClicked(OnOkClicked);
-			}
-			if (GUILayout.Button("Cancel")) {
-				fireButtonClicked(OnCancelClicked);
-			}
-			GUILayout.EndHorizontal();
+				GUILayout.BeginHorizontal();
+					GUILayout.Label("Button tooltip text:", GUILayout.ExpandWidth(false));
+					ToolTip = GUILayout.TextField(ToolTip, GUILayout.ExpandWidth(true));
+				GUILayout.EndHorizontal();
+
+				GUILayout.Space(15);
+
+				GUILayout.BeginHorizontal();
+					GUILayout.FlexibleSpace();
+					if (GUILayout.Button("OK")) {
+						fireButtonClicked(OnOkClicked);
+					}
+					if (GUILayout.Button("Cancel")) {
+						fireButtonClicked(OnCancelClicked);
+					}
+				GUILayout.EndHorizontal();
+
+				GUI.enabled = true;
 
 			GUILayout.EndVertical();
 		}

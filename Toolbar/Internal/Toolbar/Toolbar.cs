@@ -811,10 +811,14 @@ namespace Toolbar {
 			if (toolbarNode.HasNode("folders")) {
 				foreach (ConfigNode folderNode in toolbarNode.GetNode("folders").nodes) {
 					string folderId = folderNode.name;
+					string texturePath = folderNode.get("texturePath", "000_Toolbar/folder");
+					if (!textureExists(texturePath)) {
+						texturePath = "000_Toolbar/folder";
+					}
 					string toolTip = folderNode.get("toolTip", string.Empty);
 					HashSet<string> buttonIds = new HashSet<string>(folderNode.get("buttons", string.Empty).Split(new char[] { ',' }));
 
-					Toolbar folder = createFolder(folderId, toolTip, false);
+					Toolbar folder = createFolder(folderId, texturePath, toolTip, false);
 
 					savedFolderSettings[folderId].buttons = buttonIds;
 				}
@@ -824,6 +828,10 @@ namespace Toolbar {
 
 			updateVisibleButtons();
 			sortButtons(buttons, compareButtonsUserOrder);
+		}
+
+		private bool textureExists(string texturePath) {
+			return GameDatabase.Instance.GetTexture(texturePath, false) != null;
 		}
 
 		internal void saveSettings(ConfigNode toolbarNode) {
@@ -842,6 +850,7 @@ namespace Toolbar {
 			ConfigNode foldersNode = toolbarNode.overwriteNode("folders");
 			foreach (KeyValuePair<string, FolderSettings> entry in savedFolderSettings) {
 				ConfigNode folderNode = foldersNode.getOrCreateNode(entry.Key);
+				folderNode.overwrite("texturePath", entry.Value.texturePath);
 				folderNode.overwrite("toolTip", entry.Value.toolTip ?? string.Empty);
 				folderNode.overwrite("buttons", string.Join(",", entry.Value.buttons.ToArray()));
 			}
@@ -1121,26 +1130,27 @@ namespace Toolbar {
 		}
 
 		private void createFolder() {
-			FolderSettingsDialog folderSettingsDialog = new FolderSettingsDialog("New Folder");
+			FolderSettingsDialog folderSettingsDialog = new FolderSettingsDialog("000_Toolbar/folder", "New Folder");
 			folderSettingsDialog.OnOkClicked += () => {
-				createFolder("folder_" + new System.Random().Next(int.MaxValue), folderSettingsDialog.ToolTip, true);
+				createFolder("folder_" + new System.Random().Next(int.MaxValue), folderSettingsDialog.TexturePath, folderSettingsDialog.ToolTip, true);
 			};
 		}
 
 		private void editFolder(Toolbar folder) {
 			string folderId = folders.Single(kv => kv.Value.Equals(folder)).Key;
-			string toolTip = savedFolderSettings[folderId].toolTip;
-			FolderSettingsDialog folderSettingsDialog = new FolderSettingsDialog(toolTip);
+			FolderSettings folderSettings = savedFolderSettings[folderId];
+			FolderSettingsDialog folderSettingsDialog = new FolderSettingsDialog(folderSettings.texturePath, folderSettings.toolTip);
 			folderSettingsDialog.OnOkClicked += () => {
-				toolTip = folderSettingsDialog.ToolTip;
-				savedFolderSettings[folderId].toolTip = toolTip;
+				folderSettings.texturePath = folderSettingsDialog.TexturePath;
+				folderSettings.toolTip = folderSettingsDialog.ToolTip;
 				Button folderButton = folderButtons.Single(kv => kv.Value.Equals(folder)).Key;
-				folderButton.command.ToolTip = toolTip;
+				folderButton.command.TexturePath = folderSettings.texturePath;
+				folderButton.command.ToolTip = folderSettings.toolTip;
 				fireChange();
 			};
 		}
 
-		private Toolbar createFolder(string id, string toolTip, bool visible) {
+		private Toolbar createFolder(string id, string texturePath, string toolTip, bool visible) {
 			if (visible) {
 				// close all other folders first
 				foreach (Toolbar folder in folders.Values) {
@@ -1153,7 +1163,7 @@ namespace Toolbar {
 			folders.Add(id, newFolder);
 
 			Command folderCommand = new Command(ToolbarManager.NAMESPACE_INTERNAL, id);
-			folderCommand.TexturePath = "000_Toolbar/folder";
+			folderCommand.TexturePath = texturePath;
 			folderCommand.ToolTip = toolTip;
 			Button folderButton = null;
 			folderCommand.OnClick += (e) => {
@@ -1178,6 +1188,7 @@ namespace Toolbar {
 
 			savedFolderSettings.Add(id, new FolderSettings() {
 				buttons = new HashSet<string>(),
+				texturePath = texturePath,
 				toolTip = toolTip
 			});
 

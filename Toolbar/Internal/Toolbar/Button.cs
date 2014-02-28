@@ -33,12 +33,13 @@ namespace Toolbar {
 	internal class Button : IPopupMenuOption {
 		private static readonly Vector2 UNSIZED = new Vector2(float.NaN, float.NaN);
 		private const string TEXTURE_PATH_DROPDOWN = "000_Toolbar/toolbar-dropdown";
-		private const int MAX_TEX_WIDTH = 24;
-		private const int MAX_TEX_HEIGHT = 24;
 		private const int DROPDOWN_TEX_WIDTH = 10;
 		private const int DROPDOWN_TEX_HEIGHT = 7;
 		private const int PADDING = 4;
 
+		internal const int MAX_TEX_WIDTH = 24;
+		internal const int MAX_TEX_HEIGHT = 24;
+		
 		internal string Namespace {
 			get {
 				return command.Namespace;
@@ -126,6 +127,7 @@ namespace Toolbar {
 					style_.focused.textColor = command.TextColor;
 					if (command.IsTextured) {
 						style_.padding = new RectOffset(0, 0, 0, 0);
+						style_.margin = new RectOffset(1, 1, 1, 1);
 					}
 				}
 				return style_;
@@ -246,6 +248,14 @@ namespace Toolbar {
 				GUI.enabled = oldEnabled;
 
 				if (clicked) {
+					click();
+				}
+			}
+		}
+
+		internal void drawButton() {
+			if (!destroyed) {
+				if (GUILayout.Button(Content, Style, GUILayout.Width(Size.x), GUILayout.Height(Size.y))) {
 					click();
 				}
 			}

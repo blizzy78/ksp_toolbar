@@ -31,6 +31,7 @@ using System.Text;
 namespace Toolbar {
 	internal class FolderSettings {
 		internal HashSet<string> buttons;
+		internal string texturePath;
 		internal string toolTip;
 	}
 }
