@@ -1,4 +1,7 @@
-﻿1.6.0, 2014-02-15
+﻿1.6.1, 2014-02-28
+- You can now choose different icons for folder buttons.
+
+1.6.0, 2014-02-15
 - Added support for multiple toolbars. You can add new toolbars by selecting
   "Create New Toolbar" from the triangle drop-down menu. Each toolbar has its
   own separate set of settings, folders, and visible buttons.
