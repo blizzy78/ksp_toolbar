@@ -1,4 +1,14 @@
-﻿1.6.1, 2014-02-28
+﻿1.7.0, 2014-03-03
+- Fixed a bug that could prevent the saving of settings in certain situations.
+- Plugin authors: Added new API to allow to display "drawables." These are any
+  GUI widgets that you wish to display that are tied to a particular button.
+  For example, drawables can be used to display a popup menu (see the
+  PopupMenuDrawable class and the example source code), or an informational
+  small window when hovering over a button. Drawables will always be positioned
+  near the parent toolbar (much like button folders.)
+  This new API is available for users of the official Toolbar wrapper as well.
+
+1.6.1, 2014-02-28
 - You can now choose different icons for folder buttons.
 
 1.6.0, 2014-02-15
