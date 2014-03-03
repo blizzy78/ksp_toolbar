@@ -168,6 +168,15 @@ namespace Toolbar {
 		}
 
 		/// <summary>
+		/// A drawable that is tied to the current button. This can be anything from a popup menu to
+		/// an informational window. Set to null to hide the drawable.
+		/// </summary>
+		IDrawable Drawable {
+			set;
+			get;
+		}
+
+		/// <summary>
 		/// Event handler that can be registered with to receive "on click" events.
 		/// </summary>
 		/// <example>

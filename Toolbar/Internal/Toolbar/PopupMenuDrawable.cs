@@ -30,67 +30,7 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal abstract class AbstractWindow {
-		internal event Action OnDestroy;
-
-		internal Rect Rect = new Rect(0, 0, 0, 0);
-		internal bool Dialog;
-		internal bool Modal;
-		internal bool AutoClampToScreen = true;
-
-		protected string Title;
-		protected GUIStyle GUIStyle;
-		protected GUILayoutOption[] GUILayoutOptions = {};
-		protected bool Draggable = true;
-
-		private readonly int id = new System.Random().Next(int.MaxValue);
-		private EditorLock editorLock;
-		private bool useWindowList;
-
-		internal AbstractWindow(bool useWindowList = true) {
-			this.useWindowList = useWindowList;
-
-			if (useWindowList) {
-				WindowList.Instance.add(this);
-			}
-
-			editorLock = new EditorLock("Toolbar_window_" + id);
-		}
-
-		internal void destroy() {
-			if (useWindowList) {
-				WindowList.Instance.remove(this);
-			}
-
-			editorLock.draw(false);
-
-			if (OnDestroy != null) {
-				OnDestroy();
-			}
-		}
-
-		internal virtual void draw() {
-			if (GUIStyle == null) {
-				GUIStyle = GUI.skin.window;
-			}
-
-			Rect = GUILayout.Window(id, AutoClampToScreen ? Rect.clampToScreen() : Rect, windowId => drawContentsInternal(), Title, GUIStyle, GUILayoutOptions);
-
-			editorLock.draw(Modal || Rect.Contains(Utils.getMousePosition()));
-		}
-
-		internal bool contains(Vector2 pos) {
-			return Rect.Contains(pos);
-		}
-
-		private void drawContentsInternal() {
-			drawContents();
-
-			if (Draggable) {
-				GUI.DragWindow();
-			}
-		}
-
-		internal abstract void drawContents();
+	public partial class PopupMenuDrawable : IDrawable {
+		private PopupMenu menu = new PopupMenu(new Vector2(Screen.width, Screen.height), false);
 	}
 }

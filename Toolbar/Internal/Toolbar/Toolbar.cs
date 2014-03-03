@@ -190,6 +190,7 @@ namespace Toolbar {
 		private Dictionary<string, FolderSettings> savedFolderSettings = new Dictionary<string, FolderSettings>();
 		private VisibleButtonsSelector visibleButtonsSelector;
 		private HashSet<string> savedVisibleButtons = new HashSet<string>();
+		private Dictionary<Button, Vector2> drawableSizes = new Dictionary<Button, Vector2>();
 
 		internal Toolbar(Mode mode = Mode.TOOLBAR, Toolbar parentToolbar = null) {
 			this.mode = mode;
@@ -284,7 +285,7 @@ namespace Toolbar {
 					autoPositionFolder();
 				}
 
-				if (autoHide && (dropdownMenu == null) && AtScreenEdge) {
+				if (autoHide && (dropdownMenu == null) && AtScreenEdge && !buttons.Any(b => b.command.Drawable != null)) {
 					handleAutoHide();
 				}
 
@@ -309,6 +310,10 @@ namespace Toolbar {
 					folder.draw();
 				}
 
+				if (Enabled && rectLocked && buttonOrderLocked && (displayMode == DisplayMode.VISIBLE)) {
+					drawDrawables();
+				}
+
 				if (Enabled && rectLocked && (buttonOrderLocked || (draggedButton == null)) && (dropdownMenu == null) && (displayMode == DisplayMode.VISIBLE)) {
 					drawButtonToolTips();
 				}
@@ -328,30 +333,39 @@ namespace Toolbar {
 
 		private void autoPositionFolder() {
 			// at this point, we should already have a good width/height
+			Vector2 pos = autoPositionAgainstParent(new Vector2(rect.width, rect.height), parentToolbar.rect.Rect, parentToolbar.SingleColumn);
+			rect.x = pos.x;
+			rect.y = pos.y;
+		}
 
-			if (parentToolbar.SingleColumn) {
+		private Vector2 autoPositionAgainstParent(Vector2 size, Rect parentRect, bool parentIsSingleColumn) {
+			Rect result = new Rect(0, 0, size.x, size.y);
+
+			if (parentIsSingleColumn) {
 				// position to right of parent toolbar
-				rect.x = parentToolbar.rect.x + parentToolbar.rect.width + BUTTON_SPACING;
-				float origX = rect.x;
-				rect.y = parentToolbar.rect.y + (parentToolbar.rect.height - rect.height) / 2;
-				rect.clampToScreen(0);
+				result.x = parentRect.x + parentRect.width + BUTTON_SPACING;
+				float origX = result.x;
+				result.y = parentRect.y + (parentRect.height - result.height) / 2;
+				result = result.clampToScreen(0);
 				// clamping to screen moved it to the left -> position to left of parent toolbar
-				if (rect.x < origX) {
-					rect.x = parentToolbar.rect.x - rect.width - BUTTON_SPACING;
-					rect.clampToScreen(0);
+				if (result.x < origX) {
+					result.x = parentRect.x - result.width - BUTTON_SPACING;
+					result = result.clampToScreen(0);
 				}
 			} else {
 				// position above parent toolbar
-				rect.x = parentToolbar.rect.x + (parentToolbar.rect.width - rect.width) / 2;
-				rect.y = parentToolbar.rect.y - rect.height - BUTTON_SPACING;
-				float origY = rect.y;
-				rect.clampToScreen(0);
+				result.x = parentRect.x + (parentRect.width - result.width) / 2;
+				result.y = parentRect.y - result.height - BUTTON_SPACING;
+				float origY = result.y;
+				result = result.clampToScreen(0);
 				// clamping to screen moved it to the bottom -> position below parent toolbar
-				if (rect.y > origY) {
-					rect.y = parentToolbar.rect.y + parentToolbar.rect.height + BUTTON_SPACING;
-					rect.clampToScreen(0);
+				if (result.y > origY) {
+					result.y = parentRect.y + parentRect.height + BUTTON_SPACING;
+					result = result.clampToScreen(0);
 				}
 			}
+
+			return new Vector2(result.x, result.y);
 		}
 
 		private void handleAutoHide() {
@@ -558,12 +572,13 @@ namespace Toolbar {
 					Color oldColor = GUI.color;
 					if (shouldHide && (displayMode != DisplayMode.HIDDEN) &&
 						!button.command.Important &&
+						(button.command.Drawable == null) &&
 						(!folderButtons.ContainsKey(button) || !folderButtons[button].Visible) &&
 						(dropdownMenu == null)) {
 
 						GUI.color = autoHideUnimportantButtonAlpha;
 					}
-					button.draw(buttonRect,
+					button.drawInToolbar(buttonRect,
 						((Enabled && rectLocked && buttonOrderLocked) || button.Equals(dropdownMenuButton)) &&
 						!Utils.isPauseMenuOpen() &&
 						!WindowList.Instance.ModalDialogOpen);
@@ -665,6 +680,43 @@ namespace Toolbar {
 			}
 		}
 
+		private void drawDrawables() {
+			foreach (Button button in buttons) {
+				IDrawable drawable = button.command.Drawable;
+				bool haveOldSize = drawableSizes.ContainsKey(button);
+				if (drawable != null) {
+					Vector2 size;
+					if (haveOldSize) {
+						size = drawableSizes[button];
+					} else {
+						// assume size is the same as the toolbar
+						size = new Vector2(rect.width, rect.height);
+					}
+
+					Vector2 pos;
+					if (haveOldSize) {
+						pos = autoPositionAgainstParent(size, rect.Rect, SingleColumn);
+					} else {
+						// position off-screen for the first time
+						pos = new Vector2(Screen.width, Screen.height);
+					}
+
+					Vector2 newSize = drawable.Draw(pos);
+					if (Event.current.type == EventType.Repaint) {
+						if (!newSize.Equals(size)) {
+							if (haveOldSize) {
+								drawableSizes[button] = newSize;
+							} else {
+								drawableSizes.Add(button, newSize);
+							}
+						}
+					}
+				} else if (haveOldSize) {
+					drawableSizes.Remove(button);
+				}
+			}
+		}
+
 		internal void update() {
 			visibleButtons.reset();
 
@@ -673,6 +725,15 @@ namespace Toolbar {
 			}
 			if (resizable != null) {
 				resizable.update();
+			}
+
+			if (Enabled && rectLocked && buttonOrderLocked && (displayMode == DisplayMode.VISIBLE)) {
+				foreach (Button button in buttons) {
+					IDrawable drawable = button.command.Drawable;
+					if (drawable != null) {
+						drawable.Update();
+					}
+				}
 			}
 
 			if (dropdownMenu != null) {
@@ -792,6 +853,9 @@ namespace Toolbar {
 
 		private void buttonDestroyed(DestroyEvent e) {
 			remove(e.button);
+			if (drawableSizes.ContainsKey(e.button)) {
+				drawableSizes.Remove(e.button);
+			}
 			visibleButtons.reset();
 		}
 
@@ -850,7 +914,7 @@ namespace Toolbar {
 			ConfigNode foldersNode = toolbarNode.overwriteNode("folders");
 			foreach (KeyValuePair<string, FolderSettings> entry in savedFolderSettings) {
 				ConfigNode folderNode = foldersNode.getOrCreateNode(entry.Key);
-				folderNode.overwrite("texturePath", entry.Value.texturePath);
+				folderNode.overwrite("texturePath", entry.Value.texturePath ?? "000_Toolbar/folder");
 				folderNode.overwrite("toolTip", entry.Value.toolTip ?? string.Empty);
 				folderNode.overwrite("buttons", string.Join(",", entry.Value.buttons.ToArray()));
 			}

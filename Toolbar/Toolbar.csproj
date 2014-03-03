@@ -46,7 +46,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API\FunctionDrawable.cs" />
     <Compile Include="API\FunctionVisibility.cs" />
+    <Compile Include="API\IDrawable.cs" />
+    <Compile Include="API\PopupMenuDrawable.cs" />
     <Compile Include="Internal\FloatCurveXY.cs" />
     <Compile Include="Internal\GUI\CursorGrabbing.cs" />
     <Compile Include="Internal\GUI\IconPickerDialog.cs" />
@@ -59,6 +62,7 @@
     <Compile Include="API\ClickEvent.cs" />
     <Compile Include="API\ClickHandler.cs" />
     <Compile Include="Internal\Toolbar\CommandCreationCounter.cs" />
+    <Compile Include="Internal\Toolbar\PopupMenuDrawable.cs" />
     <Compile Include="Internal\Toolbar\VisibleButtonsSelector.cs" />
     <Compile Include="Internal\Toolbar\ClickEvent.cs" />
     <Compile Include="Internal\GUI\ConfirmDialog.cs" />

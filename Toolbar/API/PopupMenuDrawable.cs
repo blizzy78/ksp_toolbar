@@ -30,67 +30,64 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal abstract class AbstractWindow {
-		internal event Action OnDestroy;
-
-		internal Rect Rect = new Rect(0, 0, 0, 0);
-		internal bool Dialog;
-		internal bool Modal;
-		internal bool AutoClampToScreen = true;
-
-		protected string Title;
-		protected GUIStyle GUIStyle;
-		protected GUILayoutOption[] GUILayoutOptions = {};
-		protected bool Draggable = true;
-
-		private readonly int id = new System.Random().Next(int.MaxValue);
-		private EditorLock editorLock;
-		private bool useWindowList;
-
-		internal AbstractWindow(bool useWindowList = true) {
-			this.useWindowList = useWindowList;
-
-			if (useWindowList) {
-				WindowList.Instance.add(this);
+	/// <summary>
+	/// A drawable that draws a popup menu.
+	/// </summary>
+	public partial class PopupMenuDrawable : IDrawable {
+		/// <summary>
+		/// Event handler that can be registered with to receive "any menu option clicked" events.
+		/// </summary>
+		public event Action OnAnyOptionClicked {
+			add {
+				menu.OnAnyOptionClicked += value;
 			}
-
-			editorLock = new EditorLock("Toolbar_window_" + id);
-		}
-
-		internal void destroy() {
-			if (useWindowList) {
-				WindowList.Instance.remove(this);
-			}
-
-			editorLock.draw(false);
-
-			if (OnDestroy != null) {
-				OnDestroy();
+			remove {
+				menu.OnAnyOptionClicked -= value;
 			}
 		}
 
-		internal virtual void draw() {
-			if (GUIStyle == null) {
-				GUIStyle = GUI.skin.window;
-			}
-
-			Rect = GUILayout.Window(id, AutoClampToScreen ? Rect.clampToScreen() : Rect, windowId => drawContentsInternal(), Title, GUIStyle, GUILayoutOptions);
-
-			editorLock.draw(Modal || Rect.Contains(Utils.getMousePosition()));
+		public PopupMenuDrawable() {
+			// clamping is done by Toolbar.drawDrawables()
+			menu.AutoClampToScreen = false;
 		}
 
-		internal bool contains(Vector2 pos) {
-			return Rect.Contains(pos);
+		public void Update() {
+			// nothing to do
 		}
 
-		private void drawContentsInternal() {
-			drawContents();
+		public Vector2 Draw(Vector2 position) {
+			menu.Rect.x = position.x;
+			menu.Rect.y = position.y;
 
-			if (Draggable) {
-				GUI.DragWindow();
-			}
+			// we're not using WindowList, so we need to draw here
+			menu.draw();
+
+			return new Vector2(menu.Rect.width, menu.Rect.height);
 		}
 
-		internal abstract void drawContents();
+		/// <summary>
+		/// Adds a new option to the popup menu.
+		/// </summary>
+		/// <param name="text">The text of the option.</param>
+		/// <returns>A button that can be used to register clicks on the menu option.</returns>
+		public IButton AddOption(string text) {
+			Button option = Button.createMenuOption(text);
+			menu += option;
+			return option.command;
+		}
+
+		/// <summary>
+		/// Adds a separator to the popup menu.
+		/// </summary>
+		public void AddSeparator() {
+			menu += Separator.Instance;
+		}
+
+		/// <summary>
+		/// Destroys this drawable. This must always be called before disposing of this drawable.
+		/// </summary>
+		public void Destroy() {
+			menu.destroy();
+		}
 	}
 }

@@ -30,67 +30,26 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal abstract class AbstractWindow {
-		internal event Action OnDestroy;
+	/// <summary>
+	/// A drawable that is tied to a particular button. This can be anything from a popup menu
+	/// to an informational window.
+	/// </summary>
+	public interface IDrawable {
+		/// <summary>
+		/// Update any information. This is called once per frame.
+		/// </summary>
+		void Update();
 
-		internal Rect Rect = new Rect(0, 0, 0, 0);
-		internal bool Dialog;
-		internal bool Modal;
-		internal bool AutoClampToScreen = true;
-
-		protected string Title;
-		protected GUIStyle GUIStyle;
-		protected GUILayoutOption[] GUILayoutOptions = {};
-		protected bool Draggable = true;
-
-		private readonly int id = new System.Random().Next(int.MaxValue);
-		private EditorLock editorLock;
-		private bool useWindowList;
-
-		internal AbstractWindow(bool useWindowList = true) {
-			this.useWindowList = useWindowList;
-
-			if (useWindowList) {
-				WindowList.Instance.add(this);
-			}
-
-			editorLock = new EditorLock("Toolbar_window_" + id);
-		}
-
-		internal void destroy() {
-			if (useWindowList) {
-				WindowList.Instance.remove(this);
-			}
-
-			editorLock.draw(false);
-
-			if (OnDestroy != null) {
-				OnDestroy();
-			}
-		}
-
-		internal virtual void draw() {
-			if (GUIStyle == null) {
-				GUIStyle = GUI.skin.window;
-			}
-
-			Rect = GUILayout.Window(id, AutoClampToScreen ? Rect.clampToScreen() : Rect, windowId => drawContentsInternal(), Title, GUIStyle, GUILayoutOptions);
-
-			editorLock.draw(Modal || Rect.Contains(Utils.getMousePosition()));
-		}
-
-		internal bool contains(Vector2 pos) {
-			return Rect.Contains(pos);
-		}
-
-		private void drawContentsInternal() {
-			drawContents();
-
-			if (Draggable) {
-				GUI.DragWindow();
-			}
-		}
-
-		internal abstract void drawContents();
+		/// <summary>
+		/// Draws GUI widgets for this drawable. This is the equivalent to the OnGUI() message in
+		/// <see cref="MonoBehaviour"/>.
+		/// </summary>
+		/// <remarks>
+		/// The drawable will be positioned near its parent toolbar according to the drawable's current
+		/// width/height.
+		/// </remarks>
+		/// <param name="position">The left/top position of where to draw this drawable.</param>
+		/// <returns>The current width/height of this drawable.</returns>
+		Vector2 Draw(Vector2 position);
 	}
 }

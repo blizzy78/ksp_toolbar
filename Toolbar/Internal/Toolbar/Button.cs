@@ -238,7 +238,7 @@ namespace Toolbar {
 			return button;
 		}
 
-		internal void draw(Rect rect, bool enabled) {
+		internal void drawInToolbar(Rect rect, bool enabled) {
 			if (!destroyed) {
 				bool oldEnabled = GUI.enabled;
 				GUI.enabled = enabled && command.Enabled;

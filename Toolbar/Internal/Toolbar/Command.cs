@@ -188,6 +188,22 @@ namespace Toolbar {
 			}
 		}
 
+		private IDrawable drawable_;
+		public IDrawable Drawable {
+			set {
+				if (!destroyed) {
+					if (drawable_ != value) {
+						drawable_ = value;
+
+						fireChange();
+					}
+				}
+			}
+			get {
+				return drawable_;
+			}
+		}
+
 		internal bool IsTextured {
 			get {
 				return TexturePath != null;

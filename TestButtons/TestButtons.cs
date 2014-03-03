@@ -15,6 +15,8 @@ class TestButtons : MonoBehaviour {
 	private IButton button6;
 	private IButton button7;
 	private IButton button8;
+	private IButton button9;
+	private IButton button10;
 
 	internal TestButtons() {
 		// button that toggles its icon when clicked
@@ -80,6 +82,62 @@ class TestButtons : MonoBehaviour {
 		button8.ToolTip = "Button Visible Only in Flight Map";
 		button8.Visibility = FlightMapVisibility.Instance;
 		button8.OnClick += (e) => Debug.Log("button8 clicked");
+
+		// button that opens a popup menu on click
+		button9 = ToolbarManager.Instance.add("test", "button9");
+		button9.TexturePath = "000_Toolbar/img_buttonTypeMNode";
+		button9.ToolTip = "Menu Button (Click)";
+		button9.OnClick += (e) => togglePopupMenu(button9);
+
+		// button that opens an informative window on hover
+		bool drawableVisible = false;
+		button10 = ToolbarManager.Instance.add("test", "button10");
+		button10.TexturePath = "000_Toolbar/img_buttonTypeMNode";
+		button10.ToolTip = "Info Button (Hover)";
+		button10.OnMouseEnter += (e) => {
+			if (!drawableVisible) {
+				button10.Drawable = new BoxDrawable();
+			}
+		};
+		button10.OnMouseLeave += (e) => {
+			button10.Drawable = null;
+		};
+	}
+
+	private void togglePopupMenu(IButton button) {
+		if (button.Drawable == null) {
+			createPopupMenu(button);
+		} else {
+			destroyPopupMenu(button);
+		}
+	}
+
+	private void createPopupMenu(IButton button) {
+		// create menu drawable
+		PopupMenuDrawable menu = new PopupMenuDrawable();
+
+		// create menu options
+		IButton option1 = menu.AddOption("Option 1");
+		option1.OnClick += (e2) => Debug.Log("menu option 1 clicked");
+		IButton option2 = menu.AddOption("Option 2");
+		option2.OnClick += (e2) => Debug.Log("menu option 2 clicked");
+		menu.AddSeparator();
+		IButton option3 = menu.AddOption("Option 3");
+		option3.OnClick += (e2) => Debug.Log("menu option 3 clicked");
+
+		// auto-close popup menu when any option is clicked
+		menu.OnAnyOptionClicked += () => destroyPopupMenu(button);
+
+		// hook drawable to button
+		button.Drawable = menu;
+	}
+
+	private void destroyPopupMenu(IButton button) {
+		// PopupMenuDrawable must be destroyed explicitly
+		((PopupMenuDrawable) button.Drawable).Destroy();
+
+		// unhook drawable
+		button.Drawable = null;
 	}
 
 	internal void OnDestroy() {
@@ -91,5 +149,7 @@ class TestButtons : MonoBehaviour {
 		button6.Destroy();
 		button7.Destroy();
 		button8.Destroy();
+		button9.Destroy();
+		button10.Destroy();
 	}
 }

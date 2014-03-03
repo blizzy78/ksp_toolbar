@@ -72,11 +72,9 @@ namespace ToolbarWrapper {
 		public static IToolbarManager Instance {
 			get {
 				if ((toolbarAvailable != false) && (instance_ == null)) {
-					Type type = AssemblyLoader.loadedAssemblies
-						.SelectMany(a => a.assembly.GetExportedTypes())
-						.SingleOrDefault(t => t.FullName == "Toolbar.ToolbarManager");
+					Type type = ToolbarTypes.getType("Toolbar.ToolbarManager");
 					if (type != null) {
-						object realToolbarManager = type.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static).GetValue(null, null);
+						object realToolbarManager = ToolbarTypes.getStaticProperty(type, "Instance").GetValue(null, null);
 						instance_ = new ToolbarManager(realToolbarManager);
 					}
 				}
@@ -242,6 +240,15 @@ namespace ToolbarWrapper {
 		}
 
 		/// <summary>
+		/// A drawable that is tied to the current button. This can be anything from a popup menu to
+		/// an informational window. Set to null to hide the drawable.
+		/// </summary>
+		IDrawable Drawable {
+			set;
+			get;
+		}
+
+		/// <summary>
 		/// Event handler that can be registered with to receive "on click" events.
 		/// </summary>
 		/// <example>
@@ -285,6 +292,29 @@ namespace ToolbarWrapper {
 		/// Should be used when a plugin is stopped to remove leftover buttons.
 		/// </summary>
 		void Destroy();
+	}
+
+	/// <summary>
+	/// A drawable that is tied to a particular button. This can be anything from a popup menu
+	/// to an informational window.
+	/// </summary>
+	public interface IDrawable {
+		/// <summary>
+		/// Update any information. This is called once per frame.
+		/// </summary>
+		void Update();
+
+		/// <summary>
+		/// Draws GUI widgets for this drawable. This is the equivalent to the OnGUI() message in
+		/// <see cref="MonoBehaviour"/>.
+		/// </summary>
+		/// <remarks>
+		/// The drawable will be positioned near its parent toolbar according to the drawable's current
+		/// width/height.
+		/// </remarks>
+		/// <param name="position">The left/top position of where to draw this drawable.</param>
+		/// <returns>The current width/height of this drawable.</returns>
+		Vector2 Draw(Vector2 position);
 	}
 
 	#endregion
@@ -390,12 +420,82 @@ namespace ToolbarWrapper {
 		private PropertyInfo visibleProperty;
 
 		public GameScenesVisibility(params GameScenes[] gameScenes) {
-			Type gameScenesVisibilityType = AssemblyLoader.loadedAssemblies
-				.SelectMany(a => a.assembly.GetExportedTypes())
-				.SingleOrDefault(t => t.FullName == "Toolbar.GameScenesVisibility");
+			Type gameScenesVisibilityType = ToolbarTypes.getType("Toolbar.GameScenesVisibility");
 			realGameScenesVisibility = Activator.CreateInstance(gameScenesVisibilityType, new object[] { gameScenes });
-			visibleProperty = gameScenesVisibilityType.GetProperty("Visible", BindingFlags.Public | BindingFlags.Instance);
+			visibleProperty = ToolbarTypes.getProperty(gameScenesVisibilityType, "Visible");
 			this.gameScenes = gameScenes;
+		}
+	}
+
+	#endregion
+
+	#region drawable
+
+	/// <summary>
+	/// A drawable that draws a popup menu.
+	/// </summary>
+	public partial class PopupMenuDrawable : IDrawable {
+		/// <summary>
+		/// Event handler that can be registered with to receive "any menu option clicked" events.
+		/// </summary>
+		public event Action OnAnyOptionClicked {
+			add {
+				onAnyOptionClickedEvent.AddEventHandler(realPopupMenuDrawable, value);
+			}
+			remove {
+				onAnyOptionClickedEvent.RemoveEventHandler(realPopupMenuDrawable, value);
+			}
+		}
+
+		private object realPopupMenuDrawable;
+		private MethodInfo updateMethod;
+		private MethodInfo drawMethod;
+		private MethodInfo addOptionMethod;
+		private MethodInfo addSeparatorMethod;
+		private MethodInfo destroyMethod;
+		private EventInfo onAnyOptionClickedEvent;
+
+		public PopupMenuDrawable() {
+			Type popupMenuDrawableType = ToolbarTypes.getType("Toolbar.PopupMenuDrawable");
+			realPopupMenuDrawable = Activator.CreateInstance(popupMenuDrawableType, null);
+			updateMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "Update");
+			drawMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "Draw");
+			addOptionMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "AddOption");
+			addSeparatorMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "AddSeparator");
+			destroyMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "Destroy");
+			onAnyOptionClickedEvent = ToolbarTypes.getEvent(popupMenuDrawableType, "OnAnyOptionClicked");
+		}
+
+		public void Update() {
+			updateMethod.Invoke(realPopupMenuDrawable, null);
+		}
+
+		public Vector2 Draw(Vector2 position) {
+			return (Vector2) drawMethod.Invoke(realPopupMenuDrawable, new object[] { position });
+		}
+
+		/// <summary>
+		/// Adds a new option to the popup menu.
+		/// </summary>
+		/// <param name="text">The text of the option.</param>
+		/// <returns>A button that can be used to register clicks on the menu option.</returns>
+		public IButton AddOption(string text) {
+			object realButton = addOptionMethod.Invoke(realPopupMenuDrawable, new object[] { text });
+			return new Button(realButton, new ToolbarTypes());
+		}
+
+		/// <summary>
+		/// Adds a separator to the popup menu.
+		/// </summary>
+		public void AddSeparator() {
+			addSeparatorMethod.Invoke(realPopupMenuDrawable, null);
+		}
+
+		/// <summary>
+		/// Destroys this drawable. This must always be called before disposing of this drawable.
+		/// </summary>
+		public void Destroy() {
+			destroyMethod.Invoke(realPopupMenuDrawable, null);
 		}
 	}
 
@@ -410,28 +510,17 @@ namespace ToolbarWrapper {
 		private object realToolbarManager;
 		private MethodInfo addMethod;
 		private Dictionary<object, IButton> buttons = new Dictionary<object, IButton>();
-		private Type iButtonType;
-		private Type functionVisibilityType;
+		private ToolbarTypes types = new ToolbarTypes();
 
 		private ToolbarManager(object realToolbarManager) {
 			this.realToolbarManager = realToolbarManager;
 
-			Type iToolbarManagerType = AssemblyLoader.loadedAssemblies
-				.SelectMany(a => a.assembly.GetExportedTypes())
-				.SingleOrDefault(t => t.FullName == "Toolbar.IToolbarManager");
-			addMethod = iToolbarManagerType.GetMethod("add", BindingFlags.Public | BindingFlags.Instance);
-
-			iButtonType = AssemblyLoader.loadedAssemblies
-				.SelectMany(a => a.assembly.GetExportedTypes())
-				.SingleOrDefault(t => t.FullName == "Toolbar.IButton");
-			functionVisibilityType = AssemblyLoader.loadedAssemblies
-				.SelectMany(a => a.assembly.GetExportedTypes())
-				.SingleOrDefault(t => t.FullName == "Toolbar.FunctionVisibility");
+			addMethod = ToolbarTypes.getMethod(types.iToolbarManagerType, "add");
 		}
 
 		public IButton add(string ns, string id) {
 			object realButton = addMethod.Invoke(realToolbarManager, new object[] { ns, id });
-			IButton button = new Button(realButton, iButtonType, functionVisibilityType);
+			IButton button = new Button(realButton, types);
 			buttons.Add(realButton, button);
 			return button;
 		}
@@ -439,103 +528,79 @@ namespace ToolbarWrapper {
 
 	internal class Button : IButton {
 		private object realButton;
-		private PropertyInfo textProperty;
-		private PropertyInfo textColorProperty;
-		private PropertyInfo texturePathProperty;
-		private PropertyInfo toolTipProperty;
-		private PropertyInfo visibleProperty;
-		private PropertyInfo visibilityProperty;
-		private Type functionVisibilityType;
-		private PropertyInfo effectivelyVisibleProperty;
-		private PropertyInfo enabledProperty;
-		private PropertyInfo importantProperty;
-		private EventInfo onClickEvent;
+		private ToolbarTypes types;
 		private Delegate realClickHandler;
-		private EventInfo onMouseEnterEvent;
 		private Delegate realMouseEnterHandler;
-		private EventInfo onMouseLeaveEvent;
 		private Delegate realMouseLeaveHandler;
-		private MethodInfo destroyMethod;
 
-		internal Button(object realButton, Type iButtonType, Type functionVisibilityType) {
+		internal Button(object realButton, ToolbarTypes types) {
 			this.realButton = realButton;
-			this.functionVisibilityType = functionVisibilityType;
+			this.types = types;
 
-			textProperty = iButtonType.GetProperty("Text", BindingFlags.Public | BindingFlags.Instance);
-			textColorProperty = iButtonType.GetProperty("TextColor", BindingFlags.Public | BindingFlags.Instance);
-			texturePathProperty = iButtonType.GetProperty("TexturePath", BindingFlags.Public | BindingFlags.Instance);
-			toolTipProperty = iButtonType.GetProperty("ToolTip", BindingFlags.Public | BindingFlags.Instance);
-			visibleProperty = iButtonType.GetProperty("Visible", BindingFlags.Public | BindingFlags.Instance);
-			visibilityProperty = iButtonType.GetProperty("Visibility", BindingFlags.Public | BindingFlags.Instance);
-			effectivelyVisibleProperty = iButtonType.GetProperty("EffectivelyVisible", BindingFlags.Public | BindingFlags.Instance);
-			enabledProperty = iButtonType.GetProperty("Enabled", BindingFlags.Public | BindingFlags.Instance);
-			importantProperty = iButtonType.GetProperty("Important", BindingFlags.Public | BindingFlags.Instance);
-			onClickEvent = iButtonType.GetEvent("OnClick", BindingFlags.Public | BindingFlags.Instance);
-			onMouseEnterEvent = iButtonType.GetEvent("OnMouseEnter", BindingFlags.Public | BindingFlags.Instance);
-			onMouseLeaveEvent = iButtonType.GetEvent("OnMouseLeave", BindingFlags.Public | BindingFlags.Instance);
-			destroyMethod = iButtonType.GetMethod("Destroy", BindingFlags.Public | BindingFlags.Instance);
-
-			realClickHandler = attachEventHandler(onClickEvent, "clicked", realButton);
-			realMouseEnterHandler = attachEventHandler(onMouseEnterEvent, "mouseEntered", realButton);
-			realMouseLeaveHandler = attachEventHandler(onMouseLeaveEvent, "mouseLeft", realButton);
+			realClickHandler = attachEventHandler(types.button.onClickEvent, "clicked", realButton);
+			realMouseEnterHandler = attachEventHandler(types.button.onMouseEnterEvent, "mouseEntered", realButton);
+			realMouseLeaveHandler = attachEventHandler(types.button.onMouseLeaveEvent, "mouseLeft", realButton);
 		}
 
 		private Delegate attachEventHandler(EventInfo @event, string methodName, object realButton) {
 			MethodInfo method = GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
 			Delegate d = Delegate.CreateDelegate(@event.EventHandlerType, this, method);
-			@event.GetAddMethod().Invoke(realButton, new object[] { d });
+			@event.AddEventHandler(realButton, d);
 			return d;
 		}
 
 		public string Text {
 			set {
-				textProperty.SetValue(realButton, value, null);
+				types.button.textProperty.SetValue(realButton, value, null);
 			}
 			get {
-				return (string) textProperty.GetValue(realButton, null);
+				return (string) types.button.textProperty.GetValue(realButton, null);
 			}
 		}
 
 		public Color TextColor {
 			set {
-				textColorProperty.SetValue(realButton, value, null);
+				types.button.textColorProperty.SetValue(realButton, value, null);
 			}
 			get {
-				return (Color) textColorProperty.GetValue(realButton, null);
+				return (Color) types.button.textColorProperty.GetValue(realButton, null);
 			}
 		}
 
 		public string TexturePath {
 			set {
-				texturePathProperty.SetValue(realButton, value, null);
+				types.button.texturePathProperty.SetValue(realButton, value, null);
 			}
 			get {
-				return (string) texturePathProperty.GetValue(realButton, null);
+				return (string) types.button.texturePathProperty.GetValue(realButton, null);
 			}
 		}
 
 		public string ToolTip {
 			set {
-				toolTipProperty.SetValue(realButton, value, null);
+				types.button.toolTipProperty.SetValue(realButton, value, null);
 			}
 			get {
-				return (string) toolTipProperty.GetValue(realButton, null);
+				return (string) types.button.toolTipProperty.GetValue(realButton, null);
 			}
 		}
 
 		public bool Visible {
 			set {
-				visibleProperty.SetValue(realButton, value, null);
+				types.button.visibleProperty.SetValue(realButton, value, null);
 			}
 			get {
-				return (bool) visibleProperty.GetValue(realButton, null);
+				return (bool) types.button.visibleProperty.GetValue(realButton, null);
 			}
 		}
 
 		public IVisibility Visibility {
 			set {
-				object functionVisibility = Activator.CreateInstance(functionVisibilityType, new object[] { new Func<bool>(() => value.Visible) });
-				visibilityProperty.SetValue(realButton, functionVisibility, null);
+				object functionVisibility = null;
+				if (value != null) {
+					functionVisibility = Activator.CreateInstance(types.functionVisibilityType, new object[] { new Func<bool>(() => value.Visible) });
+				}
+				types.button.visibilityProperty.SetValue(realButton, functionVisibility, null);
 				visibility_ = value;
 			}
 			get {
@@ -546,27 +611,45 @@ namespace ToolbarWrapper {
 
 		public bool EffectivelyVisible {
 			get {
-				return (bool) effectivelyVisibleProperty.GetValue(realButton, null);
+				return (bool) types.button.effectivelyVisibleProperty.GetValue(realButton, null);
 			}
 		}
 
 		public bool Enabled {
 			set {
-				enabledProperty.SetValue(realButton, value, null);
+				types.button.enabledProperty.SetValue(realButton, value, null);
 			}
 			get {
-				return (bool) enabledProperty.GetValue(realButton, null);
+				return (bool) types.button.enabledProperty.GetValue(realButton, null);
 			}
 		}
 
 		public bool Important {
 			set {
-				importantProperty.SetValue(realButton, value, null);
+				types.button.importantProperty.SetValue(realButton, value, null);
 			}
 			get {
-				return (bool) importantProperty.GetValue(realButton, null);
+				return (bool) types.button.importantProperty.GetValue(realButton, null);
 			}
 		}
+
+		public IDrawable Drawable {
+			set {
+				object functionDrawable = null;
+				if (value != null) {
+					functionDrawable = Activator.CreateInstance(types.functionDrawableType, new object[] {
+						new Action(() => value.Update()),
+						new Func<Vector2, Vector2>((pos) => value.Draw(pos))
+					});
+				}
+				types.button.drawableProperty.SetValue(realButton, functionDrawable, null);
+				drawable_ = value;
+			}
+			get {
+				return drawable_;
+			}
+		}
+		private IDrawable drawable_;
 
 		public event ClickHandler OnClick;
 
@@ -593,19 +676,15 @@ namespace ToolbarWrapper {
 		}
 
 		public void Destroy() {
-			detachEventHandler(onClickEvent, realClickHandler, realButton);
-			detachEventHandler(onMouseEnterEvent, realMouseEnterHandler, realButton);
-			detachEventHandler(onMouseLeaveEvent, realMouseLeaveHandler, realButton);
+			detachEventHandler(types.button.onClickEvent, realClickHandler, realButton);
+			detachEventHandler(types.button.onMouseEnterEvent, realMouseEnterHandler, realButton);
+			detachEventHandler(types.button.onMouseLeaveEvent, realMouseLeaveHandler, realButton);
 
-			destroyMethod.Invoke(realButton, null);
+			types.button.destroyMethod.Invoke(realButton, null);
 		}
 
 		private void detachEventHandler(EventInfo @event, Delegate d, object realButton) {
-			@event.GetRemoveMethod().Invoke(realButton, new object[] { d });
-		}
-
-		private Delegate createDelegate(Type eventHandlerType, string methodName) {
-			return Delegate.CreateDelegate(GetType(), GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance));
+			@event.RemoveEventHandler(realButton, d);
 		}
 	}
 
@@ -632,6 +711,81 @@ namespace ToolbarWrapper {
 	public partial class MouseLeaveEvent : MouseMoveEvent {
 		internal MouseLeaveEvent(IButton button)
 			: base(button) {
+		}
+	}
+
+	internal class ToolbarTypes {
+		internal readonly Type iToolbarManagerType;
+		internal readonly Type functionVisibilityType;
+		internal readonly Type functionDrawableType;
+		internal readonly ButtonTypes button;
+
+		internal ToolbarTypes() {
+			iToolbarManagerType = getType("Toolbar.IToolbarManager");
+			functionVisibilityType = getType("Toolbar.FunctionVisibility");
+			functionDrawableType = getType("Toolbar.FunctionDrawable");
+
+			Type iButtonType = getType("Toolbar.IButton");
+			button = new ButtonTypes(iButtonType);
+		}
+
+		internal static Type getType(string name) {
+			return AssemblyLoader.loadedAssemblies
+				.SelectMany(a => a.assembly.GetExportedTypes())
+				.SingleOrDefault(t => t.FullName == name);
+		}
+
+		internal static PropertyInfo getProperty(Type type, string name) {
+			return type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+		}
+
+		internal static PropertyInfo getStaticProperty(Type type, string name) {
+			return type.GetProperty(name, BindingFlags.Public | BindingFlags.Static);
+		}
+
+		internal static EventInfo getEvent(Type type, string name) {
+			return type.GetEvent(name, BindingFlags.Public | BindingFlags.Instance);
+		}
+
+		internal static MethodInfo getMethod(Type type, string name) {
+			return type.GetMethod(name, BindingFlags.Public | BindingFlags.Instance);
+		}
+	}
+
+	internal class ButtonTypes {
+		internal readonly Type iButtonType;
+		internal readonly PropertyInfo textProperty;
+		internal readonly PropertyInfo textColorProperty;
+		internal readonly PropertyInfo texturePathProperty;
+		internal readonly PropertyInfo toolTipProperty;
+		internal readonly PropertyInfo visibleProperty;
+		internal readonly PropertyInfo visibilityProperty;
+		internal readonly PropertyInfo effectivelyVisibleProperty;
+		internal readonly PropertyInfo enabledProperty;
+		internal readonly PropertyInfo importantProperty;
+		internal readonly PropertyInfo drawableProperty;
+		internal readonly EventInfo onClickEvent;
+		internal readonly EventInfo onMouseEnterEvent;
+		internal readonly EventInfo onMouseLeaveEvent;
+		internal readonly MethodInfo destroyMethod;
+
+		internal ButtonTypes(Type iButtonType) {
+			this.iButtonType = iButtonType;
+
+			textProperty = ToolbarTypes.getProperty(iButtonType, "Text");
+			textColorProperty = ToolbarTypes.getProperty(iButtonType, "TextColor");
+			texturePathProperty = ToolbarTypes.getProperty(iButtonType, "TexturePath");
+			toolTipProperty = ToolbarTypes.getProperty(iButtonType, "ToolTip");
+			visibleProperty = ToolbarTypes.getProperty(iButtonType, "Visible");
+			visibilityProperty = ToolbarTypes.getProperty(iButtonType, "Visibility");
+			effectivelyVisibleProperty = ToolbarTypes.getProperty(iButtonType, "EffectivelyVisible");
+			enabledProperty = ToolbarTypes.getProperty(iButtonType, "Enabled");
+			importantProperty = ToolbarTypes.getProperty(iButtonType, "Important");
+			drawableProperty = ToolbarTypes.getProperty(iButtonType, "Drawable");
+			onClickEvent = ToolbarTypes.getEvent(iButtonType, "OnClick");
+			onMouseEnterEvent = ToolbarTypes.getEvent(iButtonType, "OnMouseEnter");
+			onMouseLeaveEvent = ToolbarTypes.getEvent(iButtonType, "OnMouseLeave");
+			destroyMethod = ToolbarTypes.getMethod(iButtonType, "Destroy");
 		}
 	}
 

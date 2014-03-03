@@ -36,7 +36,7 @@ namespace Toolbar {
 		private bool stylesInitialized;
 		private List<IPopupMenuOption> options = new List<IPopupMenuOption>();
 
-		internal PopupMenu(Vector2 position) : base() {
+		internal PopupMenu(Vector2 position, bool useWindowList = true) : base(useWindowList) {
 			Rect = new Rect(position.x, position.y, 0, 0);
 			Draggable = false;
 			Dialog = true;

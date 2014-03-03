@@ -45,6 +45,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BoxDrawable.cs" />
     <Compile Include="FlightMapVisibility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestButtons.cs" />

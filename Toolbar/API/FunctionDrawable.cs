@@ -30,67 +30,21 @@ using System.Text;
 using UnityEngine;
 
 namespace Toolbar {
-	internal abstract class AbstractWindow {
-		internal event Action OnDestroy;
+	public class FunctionDrawable : IDrawable {
+		private Action updateAction;
+		private Func<Vector2, Vector2> drawFunction;
 
-		internal Rect Rect = new Rect(0, 0, 0, 0);
-		internal bool Dialog;
-		internal bool Modal;
-		internal bool AutoClampToScreen = true;
-
-		protected string Title;
-		protected GUIStyle GUIStyle;
-		protected GUILayoutOption[] GUILayoutOptions = {};
-		protected bool Draggable = true;
-
-		private readonly int id = new System.Random().Next(int.MaxValue);
-		private EditorLock editorLock;
-		private bool useWindowList;
-
-		internal AbstractWindow(bool useWindowList = true) {
-			this.useWindowList = useWindowList;
-
-			if (useWindowList) {
-				WindowList.Instance.add(this);
-			}
-
-			editorLock = new EditorLock("Toolbar_window_" + id);
+		public FunctionDrawable(Action updateAction, Func<Vector2, Vector2> drawFunction) {
+			this.updateAction = updateAction;
+			this.drawFunction = drawFunction;
 		}
 
-		internal void destroy() {
-			if (useWindowList) {
-				WindowList.Instance.remove(this);
-			}
-
-			editorLock.draw(false);
-
-			if (OnDestroy != null) {
-				OnDestroy();
-			}
+		public void Update() {
+			updateAction();
 		}
 
-		internal virtual void draw() {
-			if (GUIStyle == null) {
-				GUIStyle = GUI.skin.window;
-			}
-
-			Rect = GUILayout.Window(id, AutoClampToScreen ? Rect.clampToScreen() : Rect, windowId => drawContentsInternal(), Title, GUIStyle, GUILayoutOptions);
-
-			editorLock.draw(Modal || Rect.Contains(Utils.getMousePosition()));
+		public Vector2 Draw(Vector2 position) {
+			return drawFunction(position);
 		}
-
-		internal bool contains(Vector2 pos) {
-			return Rect.Contains(pos);
-		}
-
-		private void drawContentsInternal() {
-			drawContents();
-
-			if (Draggable) {
-				GUI.DragWindow();
-			}
-		}
-
-		internal abstract void drawContents();
 	}
 }
