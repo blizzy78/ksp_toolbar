@@ -1,4 +1,7 @@
-﻿1.7.0, 2014-03-03
+﻿1.7.1, 2014-04-02
+- Updated for KSP 0.23.5.
+
+1.7.0, 2014-03-03
 - Fixed a bug that could prevent the saving of settings in certain situations.
 - Plugin authors: Added new API to allow to display "drawables." These are any
   GUI widgets that you wish to display that are tied to a particular button.
