@@ -52,12 +52,10 @@ namespace Toolbar {
 			const int major = 0;
 			const int minor = 23;
 			const int revision = 5;
-			const int build = 464;
 
 			return (Versioning.version_major == major) &&
 				(Versioning.version_minor == minor) &&
-				(Versioning.Revision == revision) &&
-				(Versioning.BuildID == build);
+				(Versioning.Revision == revision);
 
 			/*-----------------------------------------------*\
 			| IMPLEMENTERS SHOULD NOT EDIT BEYOND THIS POINT! |
