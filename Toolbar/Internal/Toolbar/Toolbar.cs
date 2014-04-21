@@ -339,33 +339,57 @@ namespace Toolbar {
 		}
 
 		private Vector2 autoPositionAgainstParent(Vector2 size, Rect parentRect, bool parentIsSingleColumn) {
-			Rect result = new Rect(0, 0, size.x, size.y);
+			Vector2 posRight = new Vector2(parentRect.x + parentRect.width + BUTTON_SPACING, parentRect.y + (parentRect.height - size.y) / 2);
+			Vector2 posLeft = new Vector2(parentRect.x - size.x - BUTTON_SPACING, posRight.y);
+			Vector2 posAbove = new Vector2(parentRect.x + (parentRect.width - size.x) / 2, parentRect.y - size.y - BUTTON_SPACING);
+			Vector2 posBelow = new Vector2(posAbove.x, parentRect.y + parentRect.height + BUTTON_SPACING);
 
-			if (parentIsSingleColumn) {
-				// position to right of parent toolbar
-				result.x = parentRect.x + parentRect.width + BUTTON_SPACING;
-				float origX = result.x;
-				result.y = parentRect.y + (parentRect.height - result.height) / 2;
-				result = result.clampToScreen(0);
-				// clamping to screen moved it to the left -> position to left of parent toolbar
-				if (result.x < origX) {
-					result.x = parentRect.x - result.width - BUTTON_SPACING;
-					result = result.clampToScreen(0);
+			bool canUseRight = !isOffScreenOrBlockingImportantGUI(posRight, size);
+			bool canUseLeft = !isOffScreenOrBlockingImportantGUI(posLeft, size);
+			bool canUseAbove = !isOffScreenOrBlockingImportantGUI(posAbove, size);
+			bool canUseBelow = !isOffScreenOrBlockingImportantGUI(posBelow, size);
+
+			Vector2 pos;
+			if (!canUseRight && !canUseLeft && !canUseAbove && !canUseBelow) {
+				// all blocked, use default
+				pos = parentIsSingleColumn ? posRight : posAbove;
+			} else if (parentIsSingleColumn) {
+				// right > left > above > below
+				if (canUseRight) {
+					pos = posRight;
+				} else if (canUseLeft) {
+					pos = posLeft;
+				} else if (canUseAbove) {
+					pos = posAbove;
+				} else {
+					pos = posBelow;
 				}
 			} else {
-				// position above parent toolbar
-				result.x = parentRect.x + (parentRect.width - result.width) / 2;
-				result.y = parentRect.y - result.height - BUTTON_SPACING;
-				float origY = result.y;
-				result = result.clampToScreen(0);
-				// clamping to screen moved it to the bottom -> position below parent toolbar
-				if (result.y > origY) {
-					result.y = parentRect.y + parentRect.height + BUTTON_SPACING;
-					result = result.clampToScreen(0);
+				// above > below > right > left
+				if (canUseAbove) {
+					pos = posAbove;
+				} else if (canUseBelow) {
+					pos = posBelow;
+				} else if (canUseRight) {
+					pos = posRight;
+				} else {
+					pos = posLeft;
 				}
 			}
 
-			return new Vector2(result.x, result.y);
+			Rect r = new Rect(pos.x, pos.y, size.x, size.y);
+			r = r.clampToScreen();
+			return new Vector2(r.x, r.y);
+		}
+
+		private bool isOffScreenOrBlockingImportantGUI(Vector2 pos, Vector2 size) {
+			Rect r = new Rect(pos.x, pos.y, size.x, size.y);
+			if (!r.intersectsImportantGUI()) {
+				r = r.clampToScreen();
+				return (r.x != pos.x) || (r.y != pos.y);
+			} else {
+				return true;
+			}
 		}
 
 		private void handleAutoHide() {

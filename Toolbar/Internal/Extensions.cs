@@ -90,5 +90,25 @@ namespace Toolbar {
 		internal static long getSeconds(this DateTime date) {
 			return date.Ticks / 10000;
 		}
+
+		internal static bool intersectsImportantGUI(this Rect rect) {
+			return rect.intersectsAltimeter() || rect.intersectsNavBall();
+		}
+
+		private static bool intersectsAltimeter(this Rect rect) {
+			Rect altimeterRect = new Rect((Screen.width - 245) / 2, 0, 245, 66);
+			return rect.intersects(altimeterRect);
+		}
+
+		private static bool intersectsNavBall(this Rect rect) {
+			Rect navBallUpperRect = new Rect((Screen.width - 175) / 2, Screen.height - 151 - 38, 175, 38);
+			Rect navBallLowerRect = new Rect((Screen.width - 215) / 2, Screen.height - 151, 215, 151);
+			return rect.intersects(navBallUpperRect) || rect.intersects(navBallLowerRect);
+		}
+
+		private static bool intersects(this Rect rect, Rect r) {
+			return (r.x <= (rect.x + rect.width - 1)) && (r.y <= (rect.y + rect.height - 1)) &&
+				((r.x + r.width - 1) >= rect.x) && ((r.y + r.height - 1) >= rect.y);
+		}
 	}
 }
