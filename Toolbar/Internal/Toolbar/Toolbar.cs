@@ -39,6 +39,20 @@ namespace Toolbar {
 			VISIBLE, HIDDEN, SLIDING_IN, SLIDING_OUT
 		}
 
+		internal enum RelativePosition {
+			DEFAULT, ABOVE, BELOW, LEFT, RIGHT
+		}
+
+		private struct AutoPositionResult {
+			internal RelativePosition relativePosition;
+			internal Vector2 position;
+
+			internal AutoPositionResult(RelativePosition relativePosition, Vector2 position) {
+				this.relativePosition = relativePosition;
+				this.position = position;
+			}
+		}
+
 		private const float BUTTON_SPACING = 1;
 		private const float PADDING = 3;
 		private const float DEFAULT_X = 300;
@@ -49,6 +63,7 @@ namespace Toolbar {
 
 		internal event Action OnChange;
 		internal event Action OnSkinChange;
+		internal event Action OnVisibleChange;
 
 		private delegate void ButtonPositionCalculatedHandler(Button button, Vector2 position);
 
@@ -64,6 +79,8 @@ namespace Toolbar {
 					}
 
 					visible_ = value;
+
+					fireVisibleChange();
 				}
 			}
 			get {
@@ -191,10 +208,13 @@ namespace Toolbar {
 		private VisibleButtonsSelector visibleButtonsSelector;
 		private HashSet<string> savedVisibleButtons = new HashSet<string>();
 		private Dictionary<Button, Vector2> drawableSizes = new Dictionary<Button, Vector2>();
+		private Dictionary<string, RelativePosition> lastChildPosition = new Dictionary<string, RelativePosition>();
+		private RelativePosition relativePosition;
 
-		internal Toolbar(Mode mode = Mode.TOOLBAR, Toolbar parentToolbar = null) {
+		internal Toolbar(Mode mode = Mode.TOOLBAR, Toolbar parentToolbar = null, RelativePosition preferredRelativePosition = RelativePosition.DEFAULT) {
 			this.mode = mode;
 			this.parentToolbar = parentToolbar;
+			this.relativePosition = preferredRelativePosition;
 
 			visibleButtons = new VisibleButtons(buttons, isEffectivelyUserVisible);
 
@@ -273,8 +293,7 @@ namespace Toolbar {
 		}
 
 		internal void draw() {
-			// only show toolbar if there is at least one visible button
-			// that is not the drop-down menu button
+			// only show toolbar if there is at least one visible button that is not the drop-down menu button
 			if (Visible &&
 				((mode == Mode.FOLDER) || buttons.Any((b) => !b.Equals(dropdownMenuButton) && isEffectivelyUserVisible(b)))) {
 
@@ -282,7 +301,7 @@ namespace Toolbar {
 				autoSize();
 
 				if (mode == Mode.FOLDER) {
-					autoPositionFolder();
+					relativePosition = autoPositionFolder(relativePosition);
 				}
 
 				if (autoHide && (dropdownMenu == null) && AtScreenEdge && !buttons.Any(b => b.command.Drawable != null)) {
@@ -331,14 +350,15 @@ namespace Toolbar {
 			}
 		}
 
-		private void autoPositionFolder() {
+		private RelativePosition autoPositionFolder(RelativePosition preferredPosition) {
 			// at this point, we should already have a good width/height
-			Vector2 pos = autoPositionAgainstParent(new Vector2(rect.width, rect.height), parentToolbar.rect.Rect, parentToolbar.SingleColumn);
-			rect.x = pos.x;
-			rect.y = pos.y;
+			AutoPositionResult result = autoPositionAgainstParent(new Vector2(rect.width, rect.height), parentToolbar.rect.Rect, parentToolbar.SingleColumn, preferredPosition);
+			rect.x = result.position.x;
+			rect.y = result.position.y;
+			return result.relativePosition;
 		}
 
-		private Vector2 autoPositionAgainstParent(Vector2 size, Rect parentRect, bool parentIsSingleColumn) {
+		private AutoPositionResult autoPositionAgainstParent(Vector2 size, Rect parentRect, bool parentIsSingleColumn, RelativePosition preferredPosition) {
 			Vector2 posRight = new Vector2(parentRect.x + parentRect.width + BUTTON_SPACING, parentRect.y + (parentRect.height - size.y) / 2);
 			Vector2 posLeft = new Vector2(parentRect.x - size.x - BUTTON_SPACING, posRight.y);
 			Vector2 posAbove = new Vector2(parentRect.x + (parentRect.width - size.x) / 2, parentRect.y - size.y - BUTTON_SPACING);
@@ -349,37 +369,76 @@ namespace Toolbar {
 			bool canUseAbove = !isOffScreenOrBlockingImportantGUI(posAbove, size);
 			bool canUseBelow = !isOffScreenOrBlockingImportantGUI(posBelow, size);
 
-			Vector2 pos;
+			// switch preferred position to the opposite side if blocked
+			if ((preferredPosition == RelativePosition.ABOVE) && !canUseAbove) {
+				preferredPosition = RelativePosition.BELOW;
+			} else if ((preferredPosition == RelativePosition.BELOW) && !canUseBelow) {
+				preferredPosition = RelativePosition.ABOVE;
+			} else if ((preferredPosition == RelativePosition.LEFT) && !canUseLeft) {
+				preferredPosition = RelativePosition.RIGHT;
+			} else if ((preferredPosition == RelativePosition.RIGHT) && !canUseRight) {
+				preferredPosition = RelativePosition.LEFT;
+			}
+
+			RelativePosition finalPosition;
+
 			if (!canUseRight && !canUseLeft && !canUseAbove && !canUseBelow) {
-				// all blocked, use default
-				pos = parentIsSingleColumn ? posRight : posAbove;
+				// all blocked, use preferred
+				finalPosition = preferredPosition;
+			} else if (((preferredPosition == RelativePosition.ABOVE) && canUseAbove) ||
+				((preferredPosition == RelativePosition.BELOW) && canUseBelow) ||
+				((preferredPosition == RelativePosition.LEFT) && canUseLeft) ||
+				((preferredPosition == RelativePosition.RIGHT) && canUseRight)) {
+
+				// preferred position is good to go
+				finalPosition = preferredPosition;
 			} else if (parentIsSingleColumn) {
-				// right > left > above > below
+				// default positioning for single column: right > left > above > below
 				if (canUseRight) {
-					pos = posRight;
+					finalPosition = RelativePosition.RIGHT;
 				} else if (canUseLeft) {
-					pos = posLeft;
+					finalPosition = RelativePosition.LEFT;
 				} else if (canUseAbove) {
-					pos = posAbove;
+					finalPosition = RelativePosition.ABOVE;
 				} else {
-					pos = posBelow;
+					finalPosition = RelativePosition.BELOW;
 				}
 			} else {
-				// above > below > right > left
+				// default positioning: above > below > right > left
 				if (canUseAbove) {
-					pos = posAbove;
+					finalPosition = RelativePosition.ABOVE;
 				} else if (canUseBelow) {
-					pos = posBelow;
+					finalPosition = RelativePosition.BELOW;
 				} else if (canUseRight) {
-					pos = posRight;
+					finalPosition = RelativePosition.RIGHT;
 				} else {
-					pos = posLeft;
+					finalPosition = RelativePosition.LEFT;
 				}
+			}
+
+			Vector2 pos;
+			switch (finalPosition) {
+				case RelativePosition.ABOVE:
+					pos = posAbove;
+					break;
+				case RelativePosition.BELOW:
+					pos = posBelow;
+					break;
+				case RelativePosition.LEFT:
+					pos = posLeft;
+					break;
+				case RelativePosition.RIGHT:
+					pos = posRight;
+					break;
+				default:
+					throw new Exception("unknown final position: " + finalPosition);
 			}
 
 			Rect r = new Rect(pos.x, pos.y, size.x, size.y);
 			r = r.clampToScreen();
-			return new Vector2(r.x, r.y);
+			pos = new Vector2(r.x, r.y);
+
+			return new AutoPositionResult(finalPosition, pos);
 		}
 
 		private bool isOffScreenOrBlockingImportantGUI(Vector2 pos, Vector2 size) {
@@ -719,7 +778,15 @@ namespace Toolbar {
 
 					Vector2 pos;
 					if (haveOldSize) {
-						pos = autoPositionAgainstParent(size, rect.Rect, SingleColumn);
+						bool haveLastChildPosition = lastChildPosition.ContainsKey(button.command.FullId);
+						RelativePosition relativePosition = haveLastChildPosition ? lastChildPosition[button.command.FullId] : RelativePosition.DEFAULT;
+						AutoPositionResult result = autoPositionAgainstParent(size, rect.Rect, SingleColumn, relativePosition);
+						if (haveLastChildPosition) {
+							lastChildPosition[button.command.FullId] = result.relativePosition;
+						} else {
+							lastChildPosition.Add(button.command.FullId, result.relativePosition);
+						}
+						pos = result.position;
 					} else {
 						// position off-screen for the first time
 						pos = new Vector2(Screen.width, Screen.height);
@@ -956,6 +1023,12 @@ namespace Toolbar {
 		private void fireSkinChange() {
 			if (OnSkinChange != null) {
 				OnSkinChange();
+			}
+		}
+
+		private void fireVisibleChange() {
+			if (OnVisibleChange != null) {
+				OnVisibleChange();
 			}
 		}
 
@@ -1246,7 +1319,8 @@ namespace Toolbar {
 				}
 			}
 
-			Toolbar newFolder = new Toolbar(Mode.FOLDER, this);
+			RelativePosition relativePosition = lastChildPosition.ContainsKey(id) ? lastChildPosition[id] : RelativePosition.DEFAULT;
+			Toolbar newFolder = new Toolbar(Mode.FOLDER, this, relativePosition);
 			newFolder.Visible = visible;
 			folders.Add(id, newFolder);
 
@@ -1279,6 +1353,16 @@ namespace Toolbar {
 				texturePath = texturePath,
 				toolTip = toolTip
 			});
+
+			newFolder.OnVisibleChange += () => {
+				if (!newFolder.Visible) {
+					if (lastChildPosition.ContainsKey(id)) {
+						lastChildPosition[id] = newFolder.relativePosition;
+					} else {
+						lastChildPosition.Add(id, newFolder.relativePosition);
+					}
+				}
+			};
 
 			return newFolder;
 		}
