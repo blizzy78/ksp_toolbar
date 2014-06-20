@@ -32,7 +32,7 @@ using UnityEngine;
 namespace Toolbar {
 	[KSPAddonFixed(KSPAddon.Startup.EveryScene, true, typeof(ToolbarManager))]
 	public partial class ToolbarManager : MonoBehaviour, IToolbarManager {
-		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
+		internal static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
 		internal const string DONATE_URL = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PCRP5Y2MUS62A";
 		internal const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
@@ -175,7 +175,7 @@ namespace Toolbar {
 			}
 		}
 
-		private ConfigNode loadSettings() {
+		internal ConfigNode loadSettings() {
 			if (settings == null) {
 				settings = ConfigNode.Load(SETTINGS_FILE) ?? new ConfigNode();
 			}
