@@ -1,4 +1,12 @@
-﻿1.7.1, 2014-04-02
+﻿1.7.2, 2014-06-22
+- Folders and "drawables" (which are provided by third-party plugins) are now
+  prevented from blocking the nav ball and altimeter.
+- Folders and "drawables" will now open in the same spot as they opened the
+  last time (as long as they fit on screen.) This should be helpful for third-
+  party plugin developers that provide "drawables" that may change their size
+  while being displayed.
+
+1.7.1, 2014-04-02
 - Updated for KSP 0.23.5.
 
 1.7.0, 2014-03-03
