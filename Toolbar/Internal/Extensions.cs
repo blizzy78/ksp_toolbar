@@ -78,7 +78,7 @@ namespace Toolbar {
 
 		internal static T get<T>(this ConfigNode configNode, string name, T defaultValue) {
 			if (configNode.HasValue(name)) {
-				Type type = defaultValue.GetType();
+				Type type = typeof(T);
 				TypeConverter converter = TypeDescriptor.GetConverter(type);
 				string value = configNode.GetValue(name);
 				return (T) converter.ConvertFromInvariantString(value);
