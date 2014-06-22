@@ -17,6 +17,8 @@ class TestButtons : MonoBehaviour {
 	private IButton button8;
 	private IButton button9;
 	private IButton button10;
+	private IButton button11;
+	private BoxDrawable boxDrawable;
 
 	internal TestButtons() {
 		// button that toggles its icon when clicked
@@ -102,6 +104,35 @@ class TestButtons : MonoBehaviour {
 		button10.OnMouseLeave += (e) => {
 			button10.Drawable = null;
 		};
+
+		// button that opens an informative window on click
+		bool drawable2Visible = false;
+		button11 = ToolbarManager.Instance.add("test", "button11");
+		button11.TexturePath = "000_Toolbar/img_buttonTypeMNode";
+		button11.ToolTip = "Info Button (Click)";
+		button11.OnClick += (e) => {
+			switch (e.MouseButton) {
+				case 0:
+					if (!drawable2Visible) {
+						boxDrawable = new BoxDrawable();
+						button11.Drawable = boxDrawable;
+					} else {
+						boxDrawable = null;
+						button11.Drawable = null;
+					}
+					drawable2Visible = !drawable2Visible;
+					break;
+
+				case 1:
+					if (boxDrawable != null) {
+						boxDrawable.changeSize();
+					}
+					break;
+			}
+		};
+		button10.OnMouseLeave += (e) => {
+			button10.Drawable = null;
+		};
 	}
 
 	private void togglePopupMenu(IButton button) {
@@ -151,5 +182,6 @@ class TestButtons : MonoBehaviour {
 		button8.Destroy();
 		button9.Destroy();
 		button10.Destroy();
+		button11.Destroy();
 	}
 }

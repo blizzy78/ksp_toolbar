@@ -6,9 +6,13 @@ using Toolbar;
 using UnityEngine;
 
 internal class BoxDrawable : IDrawable {
-	// random size for testing purposes
-	private int width = new System.Random().Next(200) + 50;
-	private int height = new System.Random().Next(200) + 50;
+	private int width;
+	private int height;
+
+	internal BoxDrawable() {
+		// random size for testing purposes
+		changeSize();
+	}
 
 	public void Update() {
 		// nothing to do
@@ -26,5 +30,10 @@ internal class BoxDrawable : IDrawable {
 		GUILayout.EndArea();
 
 		return new Vector2(width, height);
+	}
+
+	internal void changeSize() {
+		width = new System.Random().Next(200) + 50;
+		height = new System.Random().Next(200) + 50;
 	}
 }
