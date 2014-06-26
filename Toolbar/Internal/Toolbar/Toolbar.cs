@@ -359,33 +359,53 @@ namespace Toolbar {
 		}
 
 		private AutoPositionResult autoPositionAgainstParent(Vector2 size, Rect parentRect, bool parentIsSingleColumn, RelativePosition preferredPosition) {
-			Vector2 posRight = new Vector2(parentRect.x + parentRect.width + BUTTON_SPACING, parentRect.y + (parentRect.height - size.y) / 2);
-			Vector2 posLeft = new Vector2(parentRect.x - size.x - BUTTON_SPACING, posRight.y);
+			Vector2 posLeft = new Vector2(parentRect.x - size.x - BUTTON_SPACING, parentRect.y + (parentRect.height - size.y) / 2);
+			Vector2 posRight = new Vector2(parentRect.x + parentRect.width + BUTTON_SPACING, posLeft.y);
 			Vector2 posAbove = new Vector2(parentRect.x + (parentRect.width - size.x) / 2, parentRect.y - size.y - BUTTON_SPACING);
 			Vector2 posBelow = new Vector2(posAbove.x, parentRect.y + parentRect.height + BUTTON_SPACING);
 
-			bool canUseRight = !isOffScreenOrBlockingImportantGUI(posRight, size);
-			bool canUseLeft = !isOffScreenOrBlockingImportantGUI(posLeft, size);
-			bool canUseAbove = !isOffScreenOrBlockingImportantGUI(posAbove, size);
-			bool canUseBelow = !isOffScreenOrBlockingImportantGUI(posBelow, size);
+			// figure out potential positions based on blocking important GUI
+			bool canUseLeft = !isBlockingImportantGUI(posLeft, size);
+			bool canUseRight = !isBlockingImportantGUI(posRight, size);
+			bool canUseAbove = !isBlockingImportantGUI(posAbove, size);
+			bool canUseBelow = !isBlockingImportantGUI(posBelow, size);
+
+			// all blocked, let's ignore blocking things
+			if (!canUseLeft && !canUseRight && !canUseAbove && !canUseBelow) {
+				canUseLeft = true;
+				canUseRight = true;
+				canUseAbove = true;
+				canUseBelow = true;
+			}
+
+			// figure out potential positions based on being off-screen
+			canUseLeft = canUseLeft && !isOffScreenX(posLeft, size);
+			canUseRight = canUseRight && !isOffScreenX(posRight, size);
+			canUseAbove = canUseAbove && !isOffScreenY(posAbove, size);
+			canUseBelow = canUseBelow && !isOffScreenY(posBelow, size);
+
+			// all off-screen, let's position it anywhere
+			if (!canUseLeft && !canUseRight && !canUseAbove && !canUseBelow) {
+				canUseLeft = true;
+				canUseRight = true;
+				canUseAbove = true;
+				canUseBelow = true;
+			}
 
 			// switch preferred position to the opposite side if blocked
-			if ((preferredPosition == RelativePosition.ABOVE) && !canUseAbove) {
-				preferredPosition = RelativePosition.BELOW;
-			} else if ((preferredPosition == RelativePosition.BELOW) && !canUseBelow) {
-				preferredPosition = RelativePosition.ABOVE;
-			} else if ((preferredPosition == RelativePosition.LEFT) && !canUseLeft) {
+			if ((preferredPosition == RelativePosition.LEFT) && !canUseLeft && canUseRight) {
 				preferredPosition = RelativePosition.RIGHT;
-			} else if ((preferredPosition == RelativePosition.RIGHT) && !canUseRight) {
+			} else if ((preferredPosition == RelativePosition.RIGHT) && !canUseRight && canUseLeft) {
 				preferredPosition = RelativePosition.LEFT;
+			} else if ((preferredPosition == RelativePosition.ABOVE) && !canUseAbove && canUseBelow) {
+				preferredPosition = RelativePosition.BELOW;
+			} else if ((preferredPosition == RelativePosition.BELOW) && !canUseBelow && canUseAbove) {
+				preferredPosition = RelativePosition.ABOVE;
 			}
 
 			RelativePosition finalPosition;
 
-			if (!canUseRight && !canUseLeft && !canUseAbove && !canUseBelow) {
-				// all blocked, use preferred
-				finalPosition = preferredPosition;
-			} else if (((preferredPosition == RelativePosition.ABOVE) && canUseAbove) ||
+			if (((preferredPosition == RelativePosition.ABOVE) && canUseAbove) ||
 				((preferredPosition == RelativePosition.BELOW) && canUseBelow) ||
 				((preferredPosition == RelativePosition.LEFT) && canUseLeft) ||
 				((preferredPosition == RelativePosition.RIGHT) && canUseRight)) {
@@ -441,14 +461,21 @@ namespace Toolbar {
 			return new AutoPositionResult(finalPosition, pos);
 		}
 
-		private bool isOffScreenOrBlockingImportantGUI(Vector2 pos, Vector2 size) {
+		private bool isOffScreenX(Vector2 pos, Vector2 size) {
 			Rect r = new Rect(pos.x, pos.y, size.x, size.y);
-			if (!r.intersectsImportantGUI()) {
-				r = r.clampToScreen();
-				return (r.x != pos.x) || (r.y != pos.y);
-			} else {
-				return true;
-			}
+			r = r.clampToScreen();
+			return r.x != pos.x;
+		}
+
+		private bool isOffScreenY(Vector2 pos, Vector2 size) {
+			Rect r = new Rect(pos.x, pos.y, size.x, size.y);
+			r = r.clampToScreen();
+			return r.y != pos.y;
+		}
+
+		private bool isBlockingImportantGUI(Vector2 pos, Vector2 size) {
+			Rect r = new Rect(pos.x, pos.y, size.x, size.y);
+			return r.intersectsImportantGUI();
 		}
 
 		private void handleAutoHide() {
@@ -779,8 +806,11 @@ namespace Toolbar {
 					Vector2 pos;
 					if (haveOldSize) {
 						bool haveLastChildPosition = lastChildPosition.ContainsKey(button.command.FullId);
-						RelativePosition relativePosition = haveLastChildPosition ? lastChildPosition[button.command.FullId] : RelativePosition.DEFAULT;
-						AutoPositionResult result = autoPositionAgainstParent(size, rect.Rect, SingleColumn, relativePosition);
+						RelativePosition preferredPosition = haveLastChildPosition ? lastChildPosition[button.command.FullId] : RelativePosition.DEFAULT;
+						AutoPositionResult result = autoPositionAgainstParent(size, rect.Rect, SingleColumn, preferredPosition);
+						if (result.relativePosition != preferredPosition) {
+							Log.debug("switched drawable position from {0} to {1}", preferredPosition, result.relativePosition);
+						}
 						if (haveLastChildPosition) {
 							lastChildPosition[button.command.FullId] = result.relativePosition;
 						} else {
@@ -802,8 +832,13 @@ namespace Toolbar {
 							}
 						}
 					}
-				} else if (haveOldSize) {
-					drawableSizes.Remove(button);
+				} else {
+					if (haveOldSize) {
+						drawableSizes.Remove(button);
+					}
+					if (lastChildPosition.ContainsKey(button.command.FullId)) {
+						lastChildPosition.Remove(button.command.FullId);
+					}
 				}
 			}
 		}
