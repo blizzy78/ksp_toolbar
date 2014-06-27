@@ -987,7 +987,6 @@ namespace Toolbar {
 					resizable.Enabled = !rectLocked;
 
 					if (rectLocked) {
-						fireChange();
 						if ((shareMapPos && HighLogic.LoadedSceneIsFlight) || (shareEditorPos && HighLogic.LoadedSceneIsEditor)) {
 							string scene = HighLogic.LoadedSceneIsEditor ? (HighLogic.LoadedScene == GameScenes.EDITOR ? "SPH" : "EDITOR") : (MapView.MapIsEnabled ? "FLIGHT" : "FLIGHTMAP");
 							ConfigNode root = ToolbarManager.InternalInstance.loadSettings();
@@ -997,13 +996,13 @@ namespace Toolbar {
 									ConfigNode sceneNode = toolbarsNode.GetNode(scene);
 									if (sceneNode.HasNode()) {
 										ConfigNode toolbarNode = sceneNode.nodes[0];
-										if (toolbarNode.HasValue("x")) { toolbarNode.SetValue("x", rect.x.ToString()); } else { toolbarNode.AddValue("x", rect.x.ToString()); }
-										if (toolbarNode.HasValue("y")) { toolbarNode.SetValue("y", rect.y.ToString()); } else { toolbarNode.AddValue("y", rect.y.ToString()); }
-										root.Save(ToolbarManager.SETTINGS_FILE);
+										toolbarNode.overwrite("x", rect.x.ToString());
+										toolbarNode.overwrite("y", rect.y.ToString());
 									}
 								}
 							}
 						}
+						fireChange();
 					} else {
 						autoHide = false;
 						foreach (Toolbar folder in folders.Values) {
@@ -1076,9 +1075,7 @@ namespace Toolbar {
 								ConfigNode sceneNode = toolbarsNode.GetNode(scene);
 								if (sceneNode.HasNode()) {
 									ConfigNode toolbarNode = sceneNode.nodes[0];
-									if (toolbarNode.HasValue(varname)) { toolbarNode.SetValue(varname, varvalue); }
-									else { toolbarNode.AddValue(varname, varvalue); }
-									root.Save(ToolbarManager.SETTINGS_FILE);
+									toolbarNode.overwrite(varname, varvalue);
 								}
 							}
 						}
