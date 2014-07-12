@@ -47,6 +47,12 @@ namespace Toolbar {
 			}
 		}
 
+		private bool ShowGUI {
+			get {
+				return !uiHidden && isRelevantGameScene(gameScene);
+			}
+		}
+
 		internal int ToolbarsCount {
 			get {
 				return toolbars.Count();
@@ -55,12 +61,12 @@ namespace Toolbar {
 
 		internal event Action OnCommandAdded;
 
-		private RenderingManager renderingManager;
 		private Dictionary<string, Toolbar> toolbars;
 		private ConfigNode settings;
 		private UpdateChecker updateChecker;
 		private bool running = true;
 		private ToolbarGameScene gameScene = ToolbarGameScene.LOADING;
+		private bool uiHidden;
 
 		internal ToolbarManager() {
 			Log.trace("ToolbarManager()");
@@ -77,6 +83,9 @@ namespace Toolbar {
 
 				updateChecker = new UpdateChecker();
 				updateChecker.OnDone += () => updateChecker = null;
+
+				GameEvents.onHideUI.Add(onHideUI);
+				GameEvents.onShowUI.Add(onShowUI);
 			} else {
 				Log.warn("ToolbarManager already running, marking this instance as stale");
 				running = false;
@@ -86,6 +95,9 @@ namespace Toolbar {
 		internal void OnDestroy() {
 			Log.trace("ToolbarManager.OnDestroy()");
 
+			GameEvents.onHideUI.Remove(onHideUI);
+			GameEvents.onShowUI.Remove(onShowUI);
+
 			if (running) {
 				foreach (Toolbar toolbar in toolbars.Values) {
 					toolbar.destroy();
@@ -94,7 +106,7 @@ namespace Toolbar {
 		}
 
 		internal void OnGUI() {
-			if (running && showGUI()) {
+			if (running && ShowGUI) {
 				foreach (Toolbar toolbar in toolbars.Values) {
 					toolbar.draw();
 				}
@@ -112,7 +124,7 @@ namespace Toolbar {
 				if (updateChecker != null) {
 					updateChecker.update();
 				}
-				if (showGUI()) {
+				if (ShowGUI) {
 					CursorGrabbing.Instance.update();
 				}
 			}
@@ -228,21 +240,12 @@ namespace Toolbar {
 			root.Save(SETTINGS_FILE);
 		}
 
-		private bool showGUI() {
-			if (!isRelevantGameScene(gameScene)) {
-				return false;
-			}
+		private void onHideUI() {
+			uiHidden = true;
+		}
 
-			if (renderingManager == null) {
-				renderingManager = (RenderingManager) GameObject.FindObjectOfType(typeof(RenderingManager));
-			}
-
-			if (renderingManager != null) {
-				GameObject o = renderingManager.uiElementsToDisable.FirstOrDefault();
-				return (o == null) || o.activeSelf;
-			}
-
-			return false;
+		private void onShowUI() {
+			uiHidden = false;
 		}
 
 		private bool isRelevantGameScene(ToolbarGameScene scene) {
