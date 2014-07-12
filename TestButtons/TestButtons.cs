@@ -18,6 +18,7 @@ class TestButtons : MonoBehaviour {
 	private IButton button9;
 	private IButton button10;
 	private IButton button11;
+	private IButton button12;
 	private BoxDrawable boxDrawable;
 
 	internal TestButtons() {
@@ -130,9 +131,11 @@ class TestButtons : MonoBehaviour {
 					break;
 			}
 		};
-		button10.OnMouseLeave += (e) => {
-			button10.Drawable = null;
-		};
+
+		// button that has a nonexistent texture (plugin installed incorrectly etc.)
+		button12 = ToolbarManager.Instance.add("test", "button12");
+		button12.TexturePath = "000_Toolbar/nonexistent";
+		button12.ToolTip = "Broken Button";
 	}
 
 	private void togglePopupMenu(IButton button) {
@@ -183,5 +186,6 @@ class TestButtons : MonoBehaviour {
 		button9.Destroy();
 		button10.Destroy();
 		button11.Destroy();
+		button12.Destroy();
 	}
 }

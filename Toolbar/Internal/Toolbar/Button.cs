@@ -95,17 +95,15 @@ namespace Toolbar {
 						if (texture_ != null) {
 							if ((texture_.width > MAX_TEX_WIDTH) || (texture_.height > MAX_TEX_HEIGHT)) {
 								Log.error("button texture exceeds {0}x{1} pixels, ignoring texture: {2}", MAX_TEX_WIDTH, MAX_TEX_HEIGHT, command.FullId);
-								texture_ = null;
-								command.TexturePath = null;
+								texture_ = BrokenButtonTexture;
 							}
 						} else {
 							Log.error("button texture not found: {0}", command.TexturePath);
-							command.TexturePath = null;
+							texture_ = BrokenButtonTexture;
 						}
 					} catch (Exception e) {
 						Log.error(e, "error while loading button texture: {0}", command.TexturePath);
-						texture_ = null;
-						command.TexturePath = null;
+						texture_ = BrokenButtonTexture;
 					}
 				}
 				return texture_;
@@ -180,6 +178,22 @@ namespace Toolbar {
 				if (!destroyed) {
 					command.OnClick -= value;
 				}
+			}
+		}
+
+		private static Texture2D brokenButtonTexture_;
+		private Texture2D BrokenButtonTexture {
+			get {
+				if (brokenButtonTexture_ == null) {
+					brokenButtonTexture_ = new Texture2D(MAX_TEX_WIDTH, MAX_TEX_HEIGHT);
+					Color[] colors = new Color[MAX_TEX_WIDTH * MAX_TEX_HEIGHT];
+					for (int i = 0; i < colors.Length; i++) {
+						colors[i] = XKCDColors.Purple;
+					}
+					brokenButtonTexture_.SetPixels(0, 0, MAX_TEX_WIDTH, MAX_TEX_HEIGHT, colors);
+					brokenButtonTexture_.Apply();
+				}
+				return brokenButtonTexture_;
 			}
 		}
 
