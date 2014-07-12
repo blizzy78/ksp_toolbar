@@ -266,9 +266,9 @@ namespace Toolbar {
 					rect.height = minHeight;
 				}
 			} else {
+				savedMaxWidth = rect.width;
 				rect.width = getMinWidthForButtons();
 				rect.height = getMinHeightForButtons();
-				savedMaxWidth = rect.width;
 				fireChange();
 			}
 		}
