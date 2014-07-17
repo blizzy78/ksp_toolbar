@@ -650,7 +650,7 @@ namespace Toolbar {
 		}
 
 		private void drawToolbarBorder() {
-			if (showBorder || !rectLocked || !buttonOrderLocked ||
+			if (showBorder || !rectLocked || !buttonOrderLocked || (displayMode == DisplayMode.HIDDEN) ||
 				((mode == Mode.FOLDER) && !buttons.Any(b => isEffectivelyUserVisible(b)))) {
 
 				Color oldColor = GUI.color;
