@@ -44,7 +44,7 @@ namespace Toolbar {
 					.Select(a => Uri.UnescapeDataString(rootUri.MakeRelativeUri(new Uri(a.path)).ToString().Replace('/', Path.DirectorySeparatorChar)));
 				PopupDialog.SpawnPopupDialog("Incorrect Toolbar Plugin Installation",
 					"The Toolbar Plugin has been installed incorrectly and will not function properly. All Toolbar Plugin files " +
-					"should be located in GameData" + Path.DirectorySeparatorChar + "000_Toolbar. (case sensitive) \n\n" +
+					"should be located in GameData" + Path.DirectorySeparatorChar + "000_Toolbar (case sensitive.) \n\n" +
 					"Do not move any files from inside the Toolbar Plugin folder.\n\n" +
 					"Incorrect path(s):\n\n" + string.Join("\n", badPaths.ToArray()),
 					"OK", false, HighLogic.Skin);

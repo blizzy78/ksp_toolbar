@@ -51,7 +51,7 @@ namespace Toolbar {
 
 			const int major = 0;
 			const int minor = 24;
-			const int revision = 0;
+			const int revision = 1;
 
 			return (Versioning.version_major == major) &&
 				(Versioning.version_minor == minor) &&
