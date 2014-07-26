@@ -60,10 +60,10 @@ namespace Toolbar {
 		}
 
 		internal event Action OnCommandAdded;
+		internal readonly UpdateChecker UpdateChecker;
 
 		private Dictionary<string, Toolbar> toolbars;
 		private ConfigNode settings;
-		private UpdateChecker updateChecker;
 		private bool running = true;
 		private ToolbarGameScene gameScene = ToolbarGameScene.LOADING;
 		private bool uiHidden;
@@ -79,10 +79,9 @@ namespace Toolbar {
 				commands_ = new HashSet<Command>();
 				toolbars = new Dictionary<string, Toolbar>();
 
-				loadSettings(ToolbarGameScene.MAINMENU);
+				UpdateChecker = new UpdateChecker();
 
-				updateChecker = new UpdateChecker();
-				updateChecker.OnDone += () => updateChecker = null;
+				loadSettings(ToolbarGameScene.MAINMENU);
 
 				GameEvents.onHideUI.Add(onHideUI);
 				GameEvents.onShowUI.Add(onShowUI);
@@ -94,6 +93,8 @@ namespace Toolbar {
 
 		internal void OnDestroy() {
 			Log.trace("ToolbarManager.OnDestroy()");
+
+			saveSettings(ToolbarGameScene.MAINMENU);
 
 			GameEvents.onHideUI.Remove(onHideUI);
 			GameEvents.onShowUI.Remove(onShowUI);
@@ -121,9 +122,7 @@ namespace Toolbar {
 				foreach (Toolbar toolbar in toolbars.Values) {
 					toolbar.update();
 				}
-				if (updateChecker != null) {
-					updateChecker.update();
-				}
+				UpdateChecker.update();
 				if (ShowGUI) {
 					CursorGrabbing.Instance.update();
 				}
@@ -166,6 +165,12 @@ namespace Toolbar {
 				Log.Level = (LogLevel) int.Parse(toolbarsNode.get("logLevel", ((int) LogLevel.WARN).ToString()));
 				checkForUpdates = toolbarsNode.get("checkForUpdates", true);
 
+				string[] kspVersions = toolbarsNode.get("kspVersions", string.Empty).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+				if (kspVersions.Length > 0) {
+					UpdateChecker.KspVersions = kspVersions;
+					UpdateChecker.KspVersionsFromConfig = true;
+				}
+
 				if (toolbarsNode.HasNode(scene.ToString())) {
 					ConfigNode sceneNode = toolbarsNode.GetNode(scene.ToString());
 					foreach (ConfigNode toolbarNode in sceneNode.nodes) {
@@ -181,10 +186,8 @@ namespace Toolbar {
 				addToolbar();
 			}
 
-			if (updateChecker != null) {
-				Log.info("update check {0}", checkForUpdates ? "enabled" : "disabled");
-				updateChecker.CheckForUpdates = checkForUpdates;
-			}
+			Log.info("update check {0}", checkForUpdates ? "enabled" : "disabled");
+			UpdateChecker.CheckForUpdates = checkForUpdates;
 		}
 
 		private ConfigNode loadSettings() {
@@ -232,6 +235,14 @@ namespace Toolbar {
 
 			ConfigNode root = loadSettings();
 			ConfigNode toolbarsNode = root.getOrCreateNode("toolbars");
+
+			if (UpdateChecker.Done &&
+				(UpdateChecker.KspVersions != null) &&
+				(UpdateChecker.KspVersions.Length > 0)) {
+
+				toolbarsNode.overwrite("kspVersions", string.Join(",", UpdateChecker.KspVersions));
+			}
+
 			ConfigNode sceneNode = toolbarsNode.getOrCreateNode(scene.ToString());
 			foreach (KeyValuePair<string, Toolbar> entry in toolbars) {
 				ConfigNode toolbarNode = sceneNode.getOrCreateNode(entry.Key);
