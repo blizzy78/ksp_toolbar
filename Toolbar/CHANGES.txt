@@ -1,8 +1,15 @@
-﻿1.7.5, 2014-07-25
-- Updated for KSP 0.24.1
+﻿1.7.6, 2014-07-26
+- In addition to the automatic update check, the plugin now also gets KSP versions
+  from the update check server. In case the currently running KSP version is one of
+  those versions, the plugin will not complain about being incompatible with this
+  KSP version. This saves both players' and plugin authors' time.
+- Updated for KSP 0.24.2.
+
+1.7.5, 2014-07-25
+- Updated for KSP 0.24.1.
 
 1.7.4, 2014-07-17
-- Updated for KSP 0.24.0
+- Updated for KSP 0.24.0.
 
 1.7.3, 2014-06-26
 - Improved positioning of folders and "drawables." This also fixes a bug that
