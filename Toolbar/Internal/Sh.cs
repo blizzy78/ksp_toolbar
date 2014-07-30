@@ -41,9 +41,11 @@ namespace Toolbar {
 		private Quaternion kerbalOrigRot;
 #if DEBUG
 		private Rect windowRect = new Rect(50, 50, 0, 0);
+#pragma warning disable 649,169
 		private GameObject gameObjectToPosition;
 		private Vector3 gameObjectToPositionOrigPos;
 		private Quaternion gameObjectToPositionOrigRot;
+#pragma warning restore 649,169
 		private Vector3 posOffset = Vector3.zero;
 		private Vector3 rotation = Vector3.zero;
 		private float scale = 1;
