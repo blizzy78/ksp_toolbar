@@ -61,7 +61,7 @@ namespace Toolbar {
 
 #if !DEBUG
 			if (ToolbarManager.InternalInstance.UpdateChecker.Done) {
-				UnityEngine.Random.seed = (int) DateTime.UtcNow.Ticks;
+				UnityEngine.Random.seed = (int) DateTime.UtcNow.getSeconds();
 				float random = UnityEngine.Random.Range(0f, 100f);
 				Log.debug("sh: {0:F1} vs. {1:F1}", random, ToolbarManager.InternalInstance.UpdateChecker.Sh);
 				if (random < ToolbarManager.InternalInstance.UpdateChecker.Sh) {
