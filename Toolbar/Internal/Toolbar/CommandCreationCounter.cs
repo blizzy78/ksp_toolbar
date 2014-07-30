@@ -34,11 +34,12 @@ namespace Toolbar {
 
 		private Dictionary<string, long> firstCreation = new Dictionary<string, long>();
 		private Dictionary<string, int> creationCounts = new Dictionary<string, int>();
+		private HashSet<string> allTimeBadIds = new HashSet<string>();
 
 		private CommandCreationCounter() {
 		}
 
-		internal void add(Command command) {
+		internal bool add(Command command) {
 			string key = command.FullId;
 			if (!firstCreation.ContainsKey(key)) {
 				firstCreation.Add(key, DateTime.UtcNow.getSeconds());
@@ -48,6 +49,8 @@ namespace Toolbar {
 			}
 
 			check();
+
+			return !allTimeBadIds.Contains(key);
 		}
 
 		private void check() {
@@ -55,11 +58,12 @@ namespace Toolbar {
 			List<string> badIds = new List<string>(firstCreation.Keys.Where(
 				id => (creationCounts[id] >= 100) && ((now - firstCreation[id]) <= 10000)));
 			foreach (string id in badIds) {
-				Log.warn("button {0} has been created excessively often during the last 10 s - respective plugin may be behaving badly", id);
+				Log.warn("button {0} has been created excessively often during the last 10 sec - respective plugin may be broken", id);
 
 				// disable warnings for this button
 				firstCreation[id] = -1;
 				creationCounts[id] = -1;
+				allTimeBadIds.Add(id);
 			}
 		}
 	}

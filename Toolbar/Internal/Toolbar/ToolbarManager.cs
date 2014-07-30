@@ -310,6 +310,9 @@ namespace Toolbar {
 		public IButton add(string ns, string id) {
 			if (running) {
 				Command command = new Command(ns, id);
+				if (!CommandCreationCounter.Instance.add(command)) {
+					throw new Exception("button has been created excessively often, respective plugin may be broken: " + command.FullId);
+				}
 
 				Log.info("adding button: {0}", command.FullId);
 
@@ -325,7 +328,6 @@ namespace Toolbar {
 				}
 
 				commands_.Add(command);
-				CommandCreationCounter.Instance.add(command);
 
 				fireCommandAdded();
 
