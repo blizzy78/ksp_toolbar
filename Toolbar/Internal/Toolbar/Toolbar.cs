@@ -1393,11 +1393,7 @@ namespace Toolbar {
 
 			newFolder.OnVisibleChange += () => {
 				if (!newFolder.Visible) {
-					if (lastChildPosition.ContainsKey(id)) {
-						lastChildPosition[id] = newFolder.relativePosition;
-					} else {
-						lastChildPosition.Add(id, newFolder.relativePosition);
-					}
+					lastChildPosition.addOrUpdate(id, newFolder.relativePosition);
 				}
 			};
 

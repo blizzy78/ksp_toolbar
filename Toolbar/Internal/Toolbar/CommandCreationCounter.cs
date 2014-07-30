@@ -41,11 +41,8 @@ namespace Toolbar {
 
 		internal bool add(Command command) {
 			string key = command.FullId;
-			if (!firstCreation.ContainsKey(key)) {
+			if (!creationCounts.addOrUpdate(key, 1, c => c + 1)) {
 				firstCreation.Add(key, DateTime.UtcNow.getSeconds());
-				creationCounts.Add(key, 1);
-			} else if (creationCounts[key] >= 0) {
-				creationCounts[key]++;
 			}
 
 			check();

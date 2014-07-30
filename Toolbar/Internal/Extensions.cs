@@ -110,5 +110,37 @@ namespace Toolbar {
 			return (r.x <= (rect.x + rect.width - 1)) && (r.y <= (rect.y + rect.height - 1)) &&
 				((r.x + r.width - 1) >= rect.x) && ((r.y + r.height - 1) >= rect.y);
 		}
+
+		internal static bool addOrUpdate<K, V>(this Dictionary<K, V> dict, K key, V value) {
+			if (dict.ContainsKey(key)) {
+				if (value != null) {
+					dict[key] = value;
+				} else {
+					dict.Remove(key);
+				}
+				return true;
+			} else {
+				if (value != null) {
+					dict.Add(key, value);
+				}
+				return false;
+			}
+		}
+
+		internal static bool addOrUpdate<K, V>(this Dictionary<K, V> dict, K key, V valueToAdd, Func<V, V> updateFunc) {
+			if (dict.ContainsKey(key)) {
+				if (updateFunc != null) {
+					dict[key] = updateFunc(dict[key]);
+				} else {
+					dict.Remove(key);
+				}
+				return true;
+			} else {
+				if (valueToAdd != null) {
+					dict.Add(key, valueToAdd);
+				}
+				return false;
+			}
+		}
 	}
 }
