@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright (c) 2013-2014, Maik Schreiber
 All rights reserved.
 
@@ -222,7 +222,7 @@ namespace Toolbar {
 		internal readonly string FullId;
 		internal readonly bool IsInternal;
 
-		private bool destroyed;
+		internal bool destroyed;
 
 		internal Command(string @namespace, string id) {
 			checkId(@namespace, "namespace");
@@ -232,7 +232,14 @@ namespace Toolbar {
 			this.Id = id;
 			this.FullId = @namespace + "." + id;
 			this.IsInternal = @namespace == ToolbarManager.NAMESPACE_INTERNAL;
+
+            this.OnChange += updateAppLauncher;
 		}
+
+        private void updateAppLauncher()
+        {
+            ToolbarManager.InternalInstance.updateAppLauncherButton(this);
+        }
 
 		public void Destroy() {
 			if (!destroyed) {

@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright (c) 2013-2014, Maik Schreiber
 All rights reserved.
 
@@ -59,7 +59,8 @@ namespace Toolbar {
 			}
 		}
 
-		internal event Action OnCommandAdded;
+        internal event Action OnCommandAdded;
+        internal event Action OnSceneChanged;
 		internal readonly UpdateChecker UpdateChecker;
 
 		private Dictionary<string, Toolbar> toolbars;
@@ -67,6 +68,9 @@ namespace Toolbar {
 		private bool running = true;
 		private ToolbarGameScene gameScene = ToolbarGameScene.LOADING;
 		private bool uiHidden;
+
+        internal ApplicationLauncher appLauncher;
+        private Dictionary<Command, ApplicationLauncherButton> appLauncherButtons;
 
 		internal ToolbarManager() {
 			Log.trace("ToolbarManager()");
@@ -78,6 +82,7 @@ namespace Toolbar {
 
 				commands_ = new HashSet<Command>();
 				toolbars = new Dictionary<string, Toolbar>();
+                appLauncherButtons = new Dictionary<Command, ApplicationLauncherButton>();
 
 				UpdateChecker = new UpdateChecker();
 
@@ -85,11 +90,93 @@ namespace Toolbar {
 
 				GameEvents.onHideUI.Add(onHideUI);
 				GameEvents.onShowUI.Add(onShowUI);
+                GameEvents.onGUIApplicationLauncherReady.Add(onAppLauncherReady);
+                GameEvents.onGUIApplicationLauncherDestroyed.Add(onAppLauncherDestroy);
 			} else {
 				Log.warn("ToolbarManager already running, marking this instance as stale");
 				running = false;
 			}
 		}
+
+        private void onAppLauncherReady()
+        {
+            Log.trace("ToolbarManager.onAppLauncherReady()");
+
+            appLauncher = ApplicationLauncher.Instance;
+
+            Command[] keys = new Command[appLauncherButtons.Count];
+            appLauncherButtons.Keys.CopyTo(keys, 0);
+            foreach (Command command in keys)
+                removeAppLauncherButton(command);
+            
+            foreach (Command command in Commands)
+                addAppLauncherButton(command);
+        }
+
+        private bool removeAppLauncherButton(Command command)
+        {
+            Log.trace("ToolbarManager.removeAppLauncherButton()");
+
+            ApplicationLauncherButton button;
+            if (!appLauncherButtons.TryGetValue(command, out button))
+                return false;
+            Log.info("Removing command {0}.{1} from` the app launcher", command.Namespace, command.Id);
+            appLauncher.RemoveModApplication(button);
+            appLauncherButtons.Remove(command);
+            return true;
+        }
+
+        private bool addAppLauncherButton(Command command)
+        {
+            Log.trace("ToolbarManager.addAppLauncherButton()");
+
+            if (appLauncher == null || command.destroyed || command.IsInternal || !command.EffectivelyVisible)
+                return false;
+            
+            Log.info("Adding command {0}.{1} to the app launcher", command.Namespace, command.Id);
+            
+            ApplicationLauncher.AppScenes scenes = ApplicationLauncher.AppScenes.ALWAYS;
+            Texture texture = GameDatabase.Instance.GetTexture(command.TexturePath, false);
+            ApplicationLauncherButton button = appLauncher.AddModApplication(command.click, command.click, command.mouseEnter, command.mouseLeave, null, null, scenes, texture);
+            
+            appLauncherButtons.Add(command, button);
+            
+            return true;
+        }
+
+        internal bool updateAppLauncherButton(Command command)
+        {
+            Log.trace("ToolbarManager.updateAppLauncherButton()");
+            
+            if (!Commands.Contains(command) || command.destroyed || command.IsInternal)
+                return false;
+
+            ApplicationLauncherButton button;
+            if (!appLauncherButtons.TryGetValue(command, out button))
+            {
+                if (!command.EffectivelyVisible)
+                    return false;
+                addAppLauncherButton(command);
+            }
+            else
+            {
+                if (command.EffectivelyVisible)
+                {
+                    button.SetTexture(GameDatabase.Instance.GetTexture(command.TexturePath, false));
+                }
+                else
+                {
+                    removeAppLauncherButton(command);
+                }
+            }
+            
+            return true;
+        }
+
+        private void onAppLauncherDestroy()
+        {
+            Log.trace("ToolbarManager.onAppLauncherDestroy()");
+        }
 
 		internal void OnDestroy() {
 			Log.trace("ToolbarManager.OnDestroy()");
@@ -134,6 +221,8 @@ namespace Toolbar {
 			if (scene != gameScene) {
 				gameScene = scene;
 				gameSceneChanged(scene);
+                if (OnSceneChanged != null)
+                    OnSceneChanged();
 			}
 		}
 
