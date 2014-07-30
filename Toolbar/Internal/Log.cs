@@ -43,7 +43,12 @@ namespace Toolbar {
 	internal static class Log {
 		private const string CATEGORY = "Toolbar";
 
-		internal static LogLevel Level = LogLevel.WARN;
+		internal static LogLevel Level =
+#if DEBUG
+			LogLevel.INFO;
+#else
+			LogLevel.WARN;
+#endif
 
 		internal static void trace(string message, params object[] @params) {
 			log(LogLevel.TRACE, null, message, @params);

@@ -162,7 +162,13 @@ namespace Toolbar {
 			ConfigNode root = loadSettings();
 			if (root.HasNode("toolbars")) {
 				ConfigNode toolbarsNode = root.GetNode("toolbars");
-				Log.Level = (LogLevel) int.Parse(toolbarsNode.get("logLevel", ((int) LogLevel.WARN).ToString()));
+				Log.Level = (LogLevel) int.Parse(toolbarsNode.get("logLevel", ((int)
+#if DEBUG
+						LogLevel.INFO
+#else
+						LogLevel.WARN
+#endif
+					).ToString()));
 				checkForUpdates = toolbarsNode.get("checkForUpdates", true);
 
 				string[] kspVersions = toolbarsNode.get("kspVersions", string.Empty).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
