@@ -24,7 +24,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -34,11 +34,15 @@ using UnityEngine;
 namespace Toolbar {
 	[KSPAddonFixed(KSPAddon.Startup.MainMenu, false, typeof(Sh))]
 	internal class Sh : MonoBehaviour {
+#if !DEBUG
 		private static bool done;
+#endif
 
 		private GameObject kerbal;
 		private Vector3 kerbalOrigPos;
 		private Quaternion kerbalOrigRot;
+		private Vector3 oldGravity;
+		private bool didSpot;
 #if DEBUG
 		private Rect windowRect = new Rect(50, 50, 0, 0);
 #pragma warning disable 649,169
@@ -52,9 +56,11 @@ namespace Toolbar {
 #endif
 
 		internal void Start() {
+#if !DEBUG
 			if (done) {
 				return;
 			}
+#endif
 
 			kerbal = GameObject.Find("kbEVA@idle");
 			if (kerbal == null) {
@@ -69,8 +75,8 @@ namespace Toolbar {
 				if (random < ToolbarManager.InternalInstance.UpdateChecker.Sh) {
 #endif
 					sh();
-					done = true;
 #if !DEBUG
+					done = true;
 				}
 			}
 #endif
@@ -128,11 +134,32 @@ namespace Toolbar {
 				rcsBlock2.SetActive(true);
 			}
 
+			oldGravity = Physics.gravity;
+			Physics.gravity = new Vector3(0, -9.81f, 0);
+
 #if DEBUG
-			//gameObjectToPosition = kerbal2;
+			//gameObjectToPosition = spot;
 			//gameObjectToPositionOrigPos = gameObjectToPosition.transform.position;
 			//gameObjectToPositionOrigRot = gameObjectToPosition.transform.rotation;
 #endif
+		}
+
+		private IEnumerator doSpot() {
+			yield return new WaitForSeconds(2);
+
+			GameObject spot = GameDatabase.Instance.GetModel("Squad/Parts/Utility/spotLight1/model");
+			if (spot != null) {
+				spot.transform.position = new Vector3(16.5f, 10, 15f);
+				spot.transform.rotation = Quaternion.Euler(45, -45, 0);
+				spot.transform.localScale = Vector3.one * 3f;
+				spot.AddComponent<Rigidbody>();
+				spot.rigidbody.angularVelocity = new Vector3(3.5f, 0, 0);
+				spot.SetActive(true);
+			}
+		}
+
+		private void OnDestroy() {
+			Physics.gravity = oldGravity;
 		}
 
 		private
@@ -173,7 +200,7 @@ namespace Toolbar {
 			GUILayout.BeginVertical();
 
 			GUILayout.BeginHorizontal();
-			posOffset.x = GUILayout.HorizontalSlider(posOffset.x, -1000, 1000, GUILayout.Width(400));
+			posOffset.x = GUILayout.HorizontalSlider(posOffset.x, -10, 10, GUILayout.Width(400));
 			GUILayout.Label(string.Format("x: {0:F2}", gameObjectToPosition.transform.position.x));
 			GUILayout.EndHorizontal();
 
@@ -183,7 +210,7 @@ namespace Toolbar {
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			posOffset.z = GUILayout.HorizontalSlider(posOffset.z, -500, 500, GUILayout.Width(400));
+			posOffset.z = GUILayout.HorizontalSlider(posOffset.z, -10, 10, GUILayout.Width(400));
 			GUILayout.Label(string.Format("z: {0:F2}", gameObjectToPosition.transform.position.z));
 			GUILayout.EndHorizontal();
 
@@ -211,14 +238,21 @@ namespace Toolbar {
 
 			GUI.DragWindow();
 		}
+#endif
 
 		private void Update() {
+			if (!didSpot && (Camera.main.transform.position.x >= 10)) {
+				didSpot = true;
+				StartCoroutine(doSpot());
+			}
+
+#if DEBUG
 			if (gameObjectToPosition != null) {
 				gameObjectToPosition.transform.position = gameObjectToPositionOrigPos + posOffset;
 				gameObjectToPosition.transform.rotation = Quaternion.Euler(rotation);
 				gameObjectToPosition.transform.localScale = Vector3.one * scale;
 			}
-		}
 #endif
+		}
 	}
 }
