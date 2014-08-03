@@ -82,31 +82,35 @@ namespace Toolbar {
 				UpdateChecker = new UpdateChecker();
 
 				loadSettings(ToolbarGameScene.MAINMENU);
-
-				GameEvents.onHideUI.Add(onHideUI);
-				GameEvents.onShowUI.Add(onShowUI);
 			} else {
 				Log.warn("ToolbarManager already running, marking this instance as stale");
 				running = false;
 			}
 		}
 
-		internal void OnDestroy() {
+		private void Start() {
+			if (running) {
+				GameEvents.onHideUI.Add(onHideUI);
+				GameEvents.onShowUI.Add(onShowUI);
+			}
+		}
+
+		private void OnDestroy() {
 			Log.trace("ToolbarManager.OnDestroy()");
 
-			saveSettings(ToolbarGameScene.MAINMENU);
-
-			GameEvents.onHideUI.Remove(onHideUI);
-			GameEvents.onShowUI.Remove(onShowUI);
-
 			if (running) {
+				saveSettings(ToolbarGameScene.MAINMENU);
+
+				GameEvents.onHideUI.Remove(onHideUI);
+				GameEvents.onShowUI.Remove(onShowUI);
+
 				foreach (Toolbar toolbar in toolbars.Values) {
 					toolbar.destroy();
 				}
 			}
 		}
 
-		internal void OnGUI() {
+		private void OnGUI() {
 			if (running && ShowGUI) {
 				foreach (Toolbar toolbar in toolbars.Values) {
 					toolbar.draw();
@@ -115,7 +119,7 @@ namespace Toolbar {
 			}
 		}
 
-		internal void Update() {
+		private void Update() {
 			if (running) {
 				handleGameSceneChange();
 

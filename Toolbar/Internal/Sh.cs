@@ -55,7 +55,7 @@ namespace Toolbar {
 		private float scale = 1;
 #endif
 
-		internal void Start() {
+		private void Start() {
 #if !DEBUG
 			if (done) {
 				return;
