@@ -34,6 +34,7 @@ using UnityEngine;
 namespace Toolbar {
 	[KSPAddonFixed(KSPAddon.Startup.MainMenu, false, typeof(Sh))]
 	internal class Sh : MonoBehaviour {
+		private bool doIt;
 #if !DEBUG
 		private static bool done;
 #endif
@@ -53,6 +54,8 @@ namespace Toolbar {
 		private Vector3 posOffset = Vector3.zero;
 		private Vector3 rotation = Vector3.zero;
 		private float scale = 1;
+		private Vector2 changeObjectScrollPos = Vector2.zero;
+		private bool changeObjectMode;
 #endif
 
 		private void Start() {
@@ -61,6 +64,8 @@ namespace Toolbar {
 				return;
 			}
 #endif
+
+			oldGravity = Physics.gravity;
 
 			kerbal = GameObject.Find("kbEVA@idle");
 			if (kerbal == null) {
@@ -74,6 +79,9 @@ namespace Toolbar {
 				Log.debug("sh: {0:F1} vs. {1:F1}", random, ToolbarManager.InternalInstance.UpdateChecker.Sh);
 				if (random < ToolbarManager.InternalInstance.UpdateChecker.Sh) {
 #endif
+					Physics.gravity = new Vector3(0, -9.81f, 0);
+			
+					doIt = true;
 					sh();
 #if !DEBUG
 					done = true;
@@ -134,13 +142,8 @@ namespace Toolbar {
 				rcsBlock2.SetActive(true);
 			}
 
-			oldGravity = Physics.gravity;
-			Physics.gravity = new Vector3(0, -9.81f, 0);
-
 #if DEBUG
-			//gameObjectToPosition = spot;
-			//gameObjectToPositionOrigPos = gameObjectToPosition.transform.position;
-			//gameObjectToPositionOrigRot = gameObjectToPosition.transform.rotation;
+			changeGameObjectToPosition(kerbal);
 #endif
 		}
 
@@ -149,17 +152,36 @@ namespace Toolbar {
 
 			GameObject spot = GameDatabase.Instance.GetModel("Squad/Parts/Utility/spotLight1/model");
 			if (spot != null) {
-				spot.transform.position = new Vector3(16.5f, 10, 15f);
+				spot.transform.position = new Vector3(16.5f, 12, 15f);
 				spot.transform.rotation = Quaternion.Euler(45, -45, 0);
 				spot.transform.localScale = Vector3.one * 3f;
 				spot.AddComponent<Rigidbody>();
-				spot.rigidbody.angularVelocity = new Vector3(3.5f, 0, 0);
+				spot.rigidbody.angularVelocity = new Vector3(3.7f, 0, 0);
 				spot.SetActive(true);
 			}
 		}
 
 		private void OnDestroy() {
 			Physics.gravity = oldGravity;
+		}
+
+		private
+#if DEBUG
+			GameObject
+#else
+			void
+#endif
+			doObject(string modelPath, Vector3 position, Quaternion rotation) {
+
+			GameObject o = GameDatabase.Instance.GetModel(modelPath);
+			if (o != null) {
+				o.transform.position = position;
+				o.transform.rotation = rotation;
+				o.SetActive(true);
+			}
+#if DEBUG
+			return o;
+#endif
 		}
 
 		private
@@ -191,59 +213,79 @@ namespace Toolbar {
 
 #if DEBUG
 		private void OnGUI() {
-			if (gameObjectToPosition != null) {
-				windowRect = GUILayout.Window(1, windowRect, id => drawWindow(), "Positioning");
-			}
+			windowRect = GUILayout.Window(1, windowRect, id => drawWindow(), "Setup");
 		}
 
 		private void drawWindow() {
 			GUILayout.BeginVertical();
 
 			GUILayout.BeginHorizontal();
-			posOffset.x = GUILayout.HorizontalSlider(posOffset.x, -10, 10, GUILayout.Width(400));
-			GUILayout.Label(string.Format("x: {0:F2}", gameObjectToPosition.transform.position.x));
+			GUILayout.Label("Object:", GUILayout.Width(80));
+			GUILayout.Label((gameObjectToPosition != null) ? gameObjectToPosition.name : "(none)", GUILayout.ExpandWidth(false));
+			if (GUILayout.Button(!changeObjectMode ? "Change" : "Cancel", GUILayout.ExpandWidth(false))) {
+				changeObjectMode = !changeObjectMode;
+			}
+			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
 
-			GUILayout.BeginHorizontal();
-			posOffset.y = GUILayout.HorizontalSlider(posOffset.y, -10, 10, GUILayout.Width(400));
-			GUILayout.Label(string.Format("y: {0:F2}", gameObjectToPosition.transform.position.y));
-			GUILayout.EndHorizontal();
+			if (changeObjectMode) {
+				GUILayout.Label(string.Empty, GUILayout.Width(80));
+				changeObjectScrollPos = GUILayout.BeginScrollView(changeObjectScrollPos, false, true, GUILayout.Height(350), GUILayout.ExpandWidth(true));
+				GUILayout.BeginVertical();
+				foreach (GameObject o in FindObjectsOfType(typeof(GameObject)).OrderBy(o => o.name)) {
+					GUILayout.BeginHorizontal();
+					if (GUILayout.Button(o.name, GUILayout.Width(300))) {
+						changeGameObjectToPosition(o);
+						changeObjectMode = false;
+					}
+					if (GUILayout.Button(o.activeSelf ? "Deactivate" : "Activate")) {
+						o.SetActive(!o.activeSelf);
+					}
+					GUILayout.EndHorizontal();
+				}
+				GUILayout.EndVertical();
+				GUILayout.EndScrollView();
+			}
 
-			GUILayout.BeginHorizontal();
-			posOffset.z = GUILayout.HorizontalSlider(posOffset.z, -10, 10, GUILayout.Width(400));
-			GUILayout.Label(string.Format("z: {0:F2}", gameObjectToPosition.transform.position.z));
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			rotation.z = GUILayout.HorizontalSlider(rotation.z, -179, 180, GUILayout.Width(400));
-			GUILayout.Label(string.Format("rotZ: {0:F0}", rotation.z));
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			rotation.x = GUILayout.HorizontalSlider(rotation.x, -179, 180, GUILayout.Width(400));
-			GUILayout.Label(string.Format("rotX: {0:F0}", rotation.x));
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			rotation.y = GUILayout.HorizontalSlider(rotation.y, -179, 180, GUILayout.Width(400));
-			GUILayout.Label(string.Format("rotY: {0:F0}", rotation.y));
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			scale = GUILayout.HorizontalSlider(scale, 1, 200, GUILayout.Width(400));
-			GUILayout.Label(string.Format("scale: {0:F0}", scale));
-			GUILayout.EndHorizontal();
+			if (gameObjectToPosition != null) {
+				posOffset.x = slider("x", posOffset.x, -10, 10, (x) => gameObjectToPosition.transform.position.x);
+				posOffset.y = slider("y", posOffset.y, -10, 10, (y) => gameObjectToPosition.transform.position.y);
+				posOffset.z = slider("z", posOffset.z, -10, 10, (z) => gameObjectToPosition.transform.position.z);
+				rotation.x = slider("rotX", rotation.x, -179, 180);
+				rotation.y = slider("rotY", rotation.y, -179, 180);
+				rotation.z = slider("rotZ", rotation.z, -179, 180);
+				scale = slider("scale", scale, 1, 10);
+			}
 
 			GUILayout.EndVertical();
 
 			GUI.DragWindow();
 		}
+
+		private float slider(string label, float current, float min, float max, Func<float, float> currentDisplayFunc = null) {
+			GUILayout.BeginHorizontal();
+			float currentDisplay = (currentDisplayFunc != null) ? currentDisplayFunc(current) : current;
+			GUILayout.Label(string.Format("{0}: {1:F2}", label, currentDisplay), GUILayout.Width(80));
+			current = GUILayout.HorizontalSlider(current, min, max, GUILayout.Width(400), GUILayout.ExpandWidth(true));
+			GUILayout.EndHorizontal();
+			return current;
+		}
+
+		private void changeGameObjectToPosition(GameObject o) {
+			if (o != null) {
+				gameObjectToPosition = o;
+				gameObjectToPositionOrigPos = gameObjectToPosition.transform.position;
+				gameObjectToPositionOrigRot = gameObjectToPosition.transform.rotation;
+			}
+		}
 #endif
 
 		private void Update() {
-			if (!didSpot && (Camera.main.transform.position.x >= 10)) {
-				didSpot = true;
-				StartCoroutine(doSpot());
+			if (doIt) {
+				if (!didSpot && (Camera.main.transform.position.x >= 10)) {
+					didSpot = true;
+					StartCoroutine(doSpot());
+				}
 			}
 
 #if DEBUG
