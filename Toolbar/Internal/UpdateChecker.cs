@@ -38,7 +38,6 @@ namespace Toolbar {
 		internal string[] KspVersions = null;
 		internal bool KspVersionsFromConfig;
 		internal int Sh = 0;
-		internal bool Donate;
 
 		private WWW www;
 
@@ -75,12 +74,6 @@ namespace Toolbar {
 							KspVersionsFromConfig = false;
 							try {
 								Sh = int.Parse(lines[2]);
-							} catch (Exception) {
-								// ignore
-							}
-							try {
-								int donate = int.Parse(lines[3]);
-								Donate = donate == 1;
 							} catch (Exception) {
 								// ignore
 							}

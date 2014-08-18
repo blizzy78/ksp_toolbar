@@ -1179,12 +1179,6 @@ namespace Toolbar {
 				aboutButton.OnClick += (e) => Application.OpenURL(ToolbarManager.FORUM_THREAD_URL);
 				dropdownMenu += aboutButton;
 
-				if (ToolbarManager.InternalInstance.UpdateChecker.Donate) {
-					IPopupMenuOption donateButton = new TextureMenuOption(GameDatabase.Instance.GetTexture("000_Toolbar/donate", false), new Vector2(10, 0));
-					donateButton.OnClick += (e) => Application.OpenURL(ToolbarManager.DONATE_URL);
-					dropdownMenu += donateButton;
-				}
-
 				dropdownMenu.OnAnyOptionClicked += () => {
 					dropdownMenu.destroy();
 					dropdownMenu = null;

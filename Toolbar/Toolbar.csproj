@@ -113,7 +113,6 @@
     <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="etc\donate.tga" />
     <None Include="etc\folder.psd" />
     <None Include="etc\folder.tga" />
     <None Include="etc\move-cursor.psd" />
