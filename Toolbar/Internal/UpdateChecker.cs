@@ -60,12 +60,13 @@ namespace Toolbar {
 				if (www.isDone) {
 					try {
 						bool updateAvailable = false;
+						int version = -1;
 						if (String.IsNullOrEmpty(www.error)) {
 							string text = www.text.Replace("\r", string.Empty);
 							Log.debug("version text: {0}", text);
 							string[] lines = text.Split(new char[] { '\n' }, StringSplitOptions.None);
 							try {
-								int version = int.Parse(lines[0]);
+								version = int.Parse(lines[0]);
 								updateAvailable = version > ToolbarManager.VERSION;
 							} catch (Exception) {
 								// ignore
@@ -80,10 +81,10 @@ namespace Toolbar {
 						}
 
 						if (updateAvailable) {
-							Log.info("update found, adding notification button: {0} vs {1}", www.text, ToolbarManager.VERSION);
+							Log.info("update found, adding notification button: {0} vs {1}", version, ToolbarManager.VERSION);
 							addUpdateAvailableButton();
 						} else {
-							Log.info("no update found: {0} vs {1}", www.text, ToolbarManager.VERSION);
+							Log.info("no update found: {0} vs {1}", version, ToolbarManager.VERSION);
 						}
 					} finally {
 						www = null;

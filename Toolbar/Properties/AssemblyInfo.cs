@@ -33,6 +33,6 @@ using System.Runtime.InteropServices;
 // übernehmen, indem Sie "*" eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.7.6.0")]
+[assembly: AssemblyFileVersion("1.7.7.0")]
 
 [assembly: KSPAssembly("Toolbar", 1, 0)]
