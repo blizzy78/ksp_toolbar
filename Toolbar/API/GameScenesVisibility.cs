@@ -35,7 +35,7 @@ namespace Toolbar {
 	/// <example>
 	/// <code>
 	/// IButton button = ...
-	/// button.Visibility = new GameScenesVisibility(GameScenes.EDITOR, GameScenes.SPH);
+	/// button.Visibility = new GameScenesVisibility(GameScenes.EDITOR);
 	/// </code>
 	/// </example>
 	/// <seealso cref="IButton.Visibility"/>
