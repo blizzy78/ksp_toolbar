@@ -69,7 +69,7 @@ class TestButtons : MonoBehaviour {
 		button6 = ToolbarManager.Instance.add("test", "button6");
 		button6.TexturePath = "000_Toolbar/img_buttonTypeMNode";
 		button6.ToolTip = "Button Visible Only in Editors";
-		button6.Visibility = new GameScenesVisibility(GameScenes.EDITOR, GameScenes.SPH);
+		button6.Visibility = new GameScenesVisibility(GameScenes.EDITOR);
 		button6.OnClick += (e) => Debug.Log("button6 clicked");
 
 		// button that is only visible in the flight scene and flight map
