@@ -39,7 +39,6 @@ namespace Toolbar {
 		EDITOR,
 		FLIGHT,
 		TRACKSTATION,
-		SPH,
 		PSYSTEM,
 
 		FLIGHTMAP
@@ -67,8 +66,6 @@ namespace Toolbar {
 					return MapView.MapIsEnabled ? ToolbarGameScene.FLIGHTMAP : ToolbarGameScene.FLIGHT;
 				case GameScenes.TRACKSTATION:
 					return ToolbarGameScene.TRACKSTATION;
-				case GameScenes.SPH:
-					return ToolbarGameScene.SPH;
 				case GameScenes.PSYSTEM:
 					return ToolbarGameScene.PSYSTEM;
 

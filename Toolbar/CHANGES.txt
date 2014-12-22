@@ -1,4 +1,7 @@
-﻿1.7.7, 2014-10-09
+﻿1.7.8, 2014-12-22
+- Updated for KSP 0.90.0.
+
+1.7.7, 2014-10-09
 - Fixed a bug in the KSP compatibility check.
 
 1.7.6, 2014-07-26

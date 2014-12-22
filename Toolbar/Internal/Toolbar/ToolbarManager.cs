@@ -35,7 +35,7 @@ namespace Toolbar {
 		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
 		internal const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
-		internal const int VERSION = 23;
+		internal const int VERSION = 24;
 
 		internal static ToolbarManager InternalInstance;
 
@@ -174,12 +174,6 @@ namespace Toolbar {
 					).ToString()));
 				checkForUpdates = toolbarsNode.get("checkForUpdates", true);
 
-				string[] kspVersions = toolbarsNode.get("kspVersions", string.Empty).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-				if (kspVersions.Length > 0) {
-					UpdateChecker.KspVersions = kspVersions;
-					UpdateChecker.KspVersionsFromConfig = true;
-				}
-
 				if (toolbarsNode.HasNode(scene.ToString())) {
 					ConfigNode sceneNode = toolbarsNode.GetNode(scene.ToString());
 					foreach (ConfigNode toolbarNode in sceneNode.nodes) {
@@ -244,13 +238,6 @@ namespace Toolbar {
 
 			ConfigNode root = loadSettings();
 			ConfigNode toolbarsNode = root.getOrCreateNode("toolbars");
-
-			if (UpdateChecker.Done &&
-				(UpdateChecker.KspVersions != null) &&
-				(UpdateChecker.KspVersions.Length > 0)) {
-
-				toolbarsNode.overwrite("kspVersions", string.Join(",", UpdateChecker.KspVersions));
-			}
 
 			ConfigNode sceneNode = toolbarsNode.getOrCreateNode(scene.ToString());
 			foreach (KeyValuePair<string, Toolbar> entry in toolbars) {
