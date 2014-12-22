@@ -31,13 +31,10 @@ using UnityEngine;
 
 namespace Toolbar {
 	internal class UpdateChecker {
-		private const string VERSION_URL = "http://blizzy.de/toolbar/version2.txt";
+		private const string VERSION_URL = "http://blizzy.de/toolbar/version.txt";
 
 		internal bool CheckForUpdates;
 		internal bool Done;
-		internal string[] KspVersions = null;
-		internal bool KspVersionsFromConfig;
-		internal int Sh = 0;
 
 		private WWW www;
 
@@ -68,13 +65,6 @@ namespace Toolbar {
 							try {
 								version = int.Parse(lines[0]);
 								updateAvailable = version > ToolbarManager.VERSION;
-							} catch (Exception) {
-								// ignore
-							}
-							KspVersions = lines[1].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-							KspVersionsFromConfig = false;
-							try {
-								Sh = int.Parse(lines[2]);
 							} catch (Exception) {
 								// ignore
 							}

@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\Programme\KSP_0_24_2_64_dev\GameData\000_Toolbar\</OutputPath>
+    <OutputPath>..\..\..\..\Programme\KSP_0_90_0_32_dev\GameData\000_Toolbar\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,18 +25,20 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\Programme\KSP_0_24_2_64_dev\GameData\000_Toolbar\</OutputPath>
+    <OutputPath>..\..\..\..\Programme\KSP_0_90_0_32_dev\GameData\000_Toolbar\</OutputPath>
     <DefineConstants>
     </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\Programme\KSP_0_24_2_64_dev\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+    <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Programme\KSP_0_90_0_32_dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\..\..\Programme\KSP_0_24_2_64_dev\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Programme\KSP_0_90_0_32_dev\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -44,8 +46,9 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\Programme\KSP_0_24_2_64_dev\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
+    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Programme\KSP_0_90_0_32_dev\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -61,7 +64,6 @@
     <Compile Include="Internal\GUI\Separator.cs" />
     <Compile Include="Internal\GUI\AbstractWindow.cs" />
     <Compile Include="Internal\GUI\IPopupMenuOption.cs" />
-    <Compile Include="Internal\Sh.cs" />
     <Compile Include="Internal\Log.cs" />
     <Compile Include="Internal\Toolbar\Button.cs" />
     <Compile Include="API\ClickEvent.cs" />
@@ -110,27 +112,27 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CHANGES.txt" />
+    <Content Include="etc\folder.png" />
+    <Content Include="etc\move-cursor.png" />
+    <Content Include="etc\new-button-available.png" />
+    <Content Include="etc\resize-cursor.png" />
+    <Content Include="etc\toolbar-dropdown.png" />
+    <Content Include="etc\update-available.png" />
     <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="etc\folder.psd" />
-    <None Include="etc\folder.tga" />
     <None Include="etc\move-cursor.psd" />
-    <None Include="etc\move-cursor.tga" />
     <None Include="etc\new-button-available.psd" />
-    <None Include="etc\new-button-available.tga" />
     <None Include="etc\resize-cursor.psd" />
-    <None Include="etc\resize-cursor.tga" />
     <None Include="etc\toolbar-dropdown.psd" />
-    <None Include="etc\toolbar-dropdown.tga" />
     <None Include="etc\update-available.psd" />
-    <None Include="etc\update-available.tga" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /Y $(ProjectDir)etc\*.tga $(TargetDir)
-xcopy /Y D:\bZ\blender\ksp_april_fools\model\* $(TargetDir)</PostBuildEvent>
+    <PostBuildEvent>xcopy /Y $(ProjectDir)etc\*.png $(TargetDir)
+del $(TargetDir)*.pdb $(TargetDir)UnityEngine.dll $(TargetDir)Assembly-CSharp*.dll $(TargetDir)Mono.*.dll $(TargetDir)TDx*.dll</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>del /Q /S $(TargetDir)</PreBuildEvent>
