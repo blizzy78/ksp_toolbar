@@ -35,7 +35,7 @@ namespace Toolbar {
 		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
 		internal const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
-		internal const int VERSION = 24;
+		internal const int VERSION = 25;
 
 		internal static ToolbarManager InternalInstance;
 
