@@ -50,10 +50,11 @@ namespace Toolbar
     {
         public static bool IsCompatible()
         {
-            /*-----------------------------------------------*\
+			/*-----------------------------------------------*\
             |    BEGIN IMPLEMENTATION-SPECIFIC EDITS HERE.    |
             \*-----------------------------------------------*/
 
+#if COMPAT_CHECK
 			string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			string file = Path.Combine(dir, "version.txt");
 			if (!File.Exists(file)) {
@@ -74,11 +75,14 @@ namespace Toolbar
 
 			Log.warn("KSP version is incompatible: {0}", currentKspVersion);
 			return false;
+#else
+			return true;
+#endif
 
-            /*-----------------------------------------------*\
+			/*-----------------------------------------------*\
             | IMPLEMENTERS SHOULD NOT EDIT BEYOND THIS POINT! |
             \*-----------------------------------------------*/
-        }
+		}
 
         public static bool IsUnityCompatible()
         {
