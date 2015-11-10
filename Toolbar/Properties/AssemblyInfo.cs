@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Toolbar")]
-[assembly: AssemblyCopyright("Copyright © 2013-2014 Maik Schreiber")]
+[assembly: AssemblyCopyright("Copyright © 2013-2015 Maik Schreiber")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -33,6 +33,6 @@ using System.Runtime.InteropServices;
 // übernehmen, indem Sie "*" eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.7.9.0")]
+[assembly: AssemblyFileVersion("1.7.10.0")]
 
 [assembly: KSPAssembly("Toolbar", 1, 0)]
