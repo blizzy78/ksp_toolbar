@@ -186,6 +186,8 @@ namespace Toolbar {
 		private bool rectLocked = true;
 		private bool buttonOrderLocked = true;
 		private bool autoHide;
+		private bool shareMapPos = false;
+		private bool shareEditorPos = false;
 		private DisplayMode displayMode = DisplayMode.VISIBLE;
 		private long slideInOrOutStartTime;
 		private FloatCurveXY slideInOrOutCurve;
@@ -993,6 +995,8 @@ namespace Toolbar {
 			rect.width = toolbarNode.get("width", DEFAULT_WIDTH);
 			rect.height = toolbarNode.get("height", 0f);
 			autoHide = toolbarNode.get("autoHide", false);
+			shareEditorPos = toolbarNode.get("shareEditorPos", false);
+			shareMapPos = toolbarNode.get("shareMapPos", false);
 			showBorder = toolbarNode.get("drawBorder", true);
 			UseKSPSkin = toolbarNode.get("useKSPSkin", false);
 			savedButtonOrder = toolbarNode.get("buttonOrder", string.Empty).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -1032,6 +1036,8 @@ namespace Toolbar {
 			toolbarNode.overwrite("width", savedMaxWidth.ToString("F0"));
 			toolbarNode.overwrite("height", rect.height.ToString("F0"));
 			toolbarNode.overwrite("autoHide", autoHide.ToString());
+			toolbarNode.overwrite("shareEditorPos", shareEditorPos.ToString());
+			toolbarNode.overwrite("shareMapPos", shareMapPos.ToString());
 			toolbarNode.overwrite("drawBorder", showBorder.ToString());
 			toolbarNode.overwrite("useKSPSkin", UseKSPSkin.ToString());
 			toolbarNode.overwrite("buttonOrder", string.Join(",", savedButtonOrder.ToArray()));
@@ -1089,6 +1095,21 @@ namespace Toolbar {
 					resizable.Enabled = !rectLocked;
 
 					if (rectLocked) {
+						if ((shareMapPos && HighLogic.LoadedSceneIsFlight) || (shareEditorPos && HighLogic.LoadedSceneIsEditor)) {
+							string scene = HighLogic.LoadedSceneIsEditor ? (HighLogic.LoadedScene == GameScenes.EDITOR ? "SPH" : "EDITOR") : (MapView.MapIsEnabled ? "FLIGHT" : "FLIGHTMAP");
+							ConfigNode root = ToolbarManager.InternalInstance.loadSettings();
+							if (root.HasNode("toolbars")) {
+								ConfigNode toolbarsNode = root.GetNode("toolbars");
+								if (toolbarsNode.HasNode(scene)) {
+									ConfigNode sceneNode = toolbarsNode.GetNode(scene);
+									if (sceneNode.HasNode()) {
+										ConfigNode toolbarNode = sceneNode.nodes[0];
+										toolbarNode.overwrite("x", rect.x.ToString());
+										toolbarNode.overwrite("y", rect.y.ToString());
+									}
+								}
+							}
+						}
 						fireChange();
 					} else {
 						autoHide = false;
@@ -1143,6 +1164,35 @@ namespace Toolbar {
 				toggleDrawBorderButton.command.Enabled = regularEntriesEnabled;
 				dropdownMenu += toggleDrawBorderButton;
 
+				if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor) {
+					string buttonText = HighLogic.LoadedSceneIsFlight ?
+						(shareMapPos ? "Don't share MapView and InFlight position" : "Share MapView and InFlight position") :
+						(shareEditorPos ? "Don't share Editor positions" : "Share Editor positions");
+					Button toggleShareMapPosButton = Button.createMenuOption(buttonText);
+
+					toggleShareMapPosButton.OnClick += (e) => {
+						if (HighLogic.LoadedSceneIsFlight) { shareMapPos = !shareMapPos; }
+						else { shareEditorPos = !shareEditorPos; }
+						string scene = HighLogic.LoadedSceneIsEditor ? (HighLogic.LoadedScene == GameScenes.EDITOR ? "SPH" : "EDITOR") : (MapView.MapIsEnabled ? "FLIGHT" : "FLIGHTMAP");
+						string varname = HighLogic.LoadedSceneIsEditor ? "shareEditorPos" : "shareMapPos";
+						string varvalue = HighLogic.LoadedSceneIsEditor ? shareEditorPos.ToString() : shareMapPos.ToString();
+						ConfigNode root = ToolbarManager.InternalInstance.loadSettings();
+						if (root.HasNode("toolbars")) {
+							ConfigNode toolbarsNode = root.GetNode("toolbars");
+							if (toolbarsNode.HasNode(scene)) {
+								ConfigNode sceneNode = toolbarsNode.GetNode(scene);
+								if (sceneNode.HasNode()) {
+									ConfigNode toolbarNode = sceneNode.nodes[0];
+									toolbarNode.overwrite(varname, varvalue);
+								}
+							}
+						}
+						fireChange();
+					};
+					toggleShareMapPosButton.command.Enabled = true; //regularEntriesEnabled && (shareMapPos || AtScreenEdge);
+					dropdownMenu += toggleShareMapPosButton;
+				}
+				
 				Button toggleKSPSkinButton = Button.createMenuOption(UseKSPSkin ? "Use Unity 'Smoke' Skin" : "Use KSP Skin");
 				toggleKSPSkinButton.OnClick += (e) => {
 					UseKSPSkin = !UseKSPSkin;
