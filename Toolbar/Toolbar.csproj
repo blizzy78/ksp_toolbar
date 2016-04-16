@@ -56,7 +56,6 @@
     <Compile Include="API\FunctionVisibility.cs" />
     <Compile Include="API\IDrawable.cs" />
     <Compile Include="API\PopupMenuDrawable.cs" />
-    <Compile Include="Internal\CompatibilityChecker.cs" />
     <Compile Include="Internal\FloatCurveXY.cs" />
     <Compile Include="Internal\GUI\CursorGrabbing.cs" />
     <Compile Include="Internal\GUI\IconPickerDialog.cs" />
