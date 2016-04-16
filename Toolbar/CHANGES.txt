@@ -1,4 +1,7 @@
-﻿1.7.10, 2015-11-10
+﻿1.7.11
+- Updated for KSP 1.1.0.
+
+1.7.10, 2015-11-10
 - Updated for KSP 1.0.5.
 - Disabled KSP compatibility check for the time being.
 
