@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2013-2015, Maik Schreiber
+Copyright (c) 2013-2016, Maik Schreiber
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,

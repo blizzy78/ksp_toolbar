@@ -33,9 +33,9 @@ namespace Toolbar {
 	[KSPAddonFixed(KSPAddon.Startup.EveryScene, true, typeof(ToolbarManager))]
 	public partial class ToolbarManager : MonoBehaviour, IToolbarManager {
 		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
-		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/threads/60863";
+		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/index.php?/topic/55420-105-toolbar-1710-common-api-for-draggableresizable-buttons-toolbar/";
 		internal const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
-		internal const int VERSION = 26;
+		internal const int VERSION = 27;
 
 		internal static ToolbarManager InternalInstance;
 
