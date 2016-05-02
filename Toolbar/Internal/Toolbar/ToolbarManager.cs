@@ -35,7 +35,6 @@ namespace Toolbar {
 		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/toolbar-settings.dat";
 		internal const string FORUM_THREAD_URL = "http://forum.kerbalspaceprogram.com/index.php?/topic/55420-105-toolbar-1710-common-api-for-draggableresizable-buttons-toolbar/";
 		internal const string NAMESPACE_INTERNAL = "__TOOLBAR_INTERNAL";
-		internal const int VERSION = 27;
 
 		internal static ToolbarManager InternalInstance;
 
@@ -59,7 +58,6 @@ namespace Toolbar {
 		}
 
 		internal event Action OnCommandAdded;
-		internal readonly UpdateChecker UpdateChecker;
 
 		private Dictionary<string, Toolbar> toolbars;
 		private ConfigNode settings;
@@ -77,8 +75,6 @@ namespace Toolbar {
 
 				commands_ = new HashSet<Command>();
 				toolbars = new Dictionary<string, Toolbar>();
-
-				UpdateChecker = new UpdateChecker();
 
 				loadSettings(ToolbarGameScene.MAINMENU);
 			} else {
@@ -125,7 +121,6 @@ namespace Toolbar {
 				foreach (Toolbar toolbar in toolbars.Values) {
 					toolbar.update();
 				}
-				UpdateChecker.update();
 				if (ShowGUI) {
 					CursorGrabbing.Instance.update();
 				}
@@ -188,9 +183,6 @@ namespace Toolbar {
 				Log.info("no toolbars in current game scene, adding default toolbar");
 				addToolbar();
 			}
-
-			Log.info("update check {0}", checkForUpdates ? "enabled" : "disabled");
-			UpdateChecker.CheckForUpdates = checkForUpdates;
 		}
 
 		private ConfigNode loadSettings() {

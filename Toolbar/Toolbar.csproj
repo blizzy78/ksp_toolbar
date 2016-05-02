@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\Programme\KSP_1_1_0_dev\GameData\000_Toolbar\</OutputPath>
+    <OutputPath>..\..\..\..\Programme\KSP_1_1_2_dev\GameData\000_Toolbar\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,7 +25,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\Programme\KSP_1_1_0_dev\GameData\000_Toolbar\</OutputPath>
+    <OutputPath>..\..\..\..\Programme\KSP_1_1_2_dev\GameData\000_Toolbar\</OutputPath>
     <DefineConstants>
     </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -33,13 +33,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\Programme\KSP_1_1_0_dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\Programme\KSP_1_1_2_dev\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\..\..\Programme\KSP_1_1_0_dev\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>..\..\..\..\Programme\KSP_1_1_2_dev\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="KSPUtil">
-      <HintPath>..\..\..\..\Programme\KSP_1_1_0_dev\KSP_Data\Managed\KSPUtil.dll</HintPath>
+      <HintPath>..\..\..\..\Programme\KSP_1_1_2_dev\KSP_x64_Data\Managed\KSPUtil.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -48,7 +48,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\Programme\KSP_1_1_0_dev\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\Programme\KSP_1_1_2_dev\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -93,7 +93,6 @@
     <Compile Include="Internal\Toolbar\ToolbarGameScene.cs" />
     <Compile Include="Internal\Toolbar\ToolbarManager.cs" />
     <Compile Include="Internal\Toolbar\VisibleButtons.cs" />
-    <Compile Include="Internal\UpdateChecker.cs" />
     <Compile Include="Internal\GUI\WindowList.cs" />
     <Compile Include="API\IToolbarManager.cs" />
     <Compile Include="API\IVisibility.cs" />
@@ -112,6 +111,7 @@
   <ItemGroup>
     <Content Include="CHANGES.txt" />
     <Content Include="etc\folder.png" />
+    <Content Include="etc\MiniAVC.dll" />
     <Content Include="etc\move-cursor.png" />
     <Content Include="etc\new-button-available.png" />
     <Content Include="etc\resize-cursor.png" />
@@ -125,12 +125,15 @@
     <None Include="etc\new-button-available.psd" />
     <None Include="etc\resize-cursor.psd" />
     <None Include="etc\toolbar-dropdown.psd" />
+    <None Include="etc\Toolbar.version" />
     <None Include="etc\update-available.psd" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /Y $(ProjectDir)etc\*.png $(TargetDir)
+xcopy /Y $(ProjectDir)etc\Toolbar.version $(TargetDir)
+xcopy /Y $(ProjectDir)etc\MiniAVC.dll $(TargetDir)
 del $(TargetDir)*.pdb $(TargetDir)UnityEngine.dll $(TargetDir)Assembly-CSharp*.dll $(TargetDir)Mono.*.dll $(TargetDir)TDx*.dll $(TargetDir)TrackIRUnity.dll $(TargetDir)KSPAssets.dll $(TargetDir)KSPUtil.dll $(TargetDir)SaveUpgradePipeline.Core.dll $(TargetDir)UnityEngine.xml $(TargetDir)UnityEngine.UI.dll $(TargetDir)Vectrosity.dll</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
