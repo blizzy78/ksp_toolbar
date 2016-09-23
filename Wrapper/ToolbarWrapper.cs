@@ -726,13 +726,18 @@ namespace ToolbarWrapper {
 		}
 
 		internal static Type getType(string name) {
-		        AssemblyLoader.loadedAssemblies.TypeOperation(t =>
-		        {
-		            if (t.FullName == name)
-		                return t;
-		        });
-		        
-		        throw new ArgumentException(string.Format("Couldn't find type '{0}'!", name);
+			Type type = null;
+			AssemblyLoader.loadedAssemblies.TypeOperation(t =>
+			{
+				if (t.FullName == name)
+					type = t;
+			});
+			
+			if (type != null)
+			{
+				return type;
+			}
+			throw new ArgumentException(string.Format("Couldn't find type '{0}'!", name));
 		}
 
 		internal static PropertyInfo getProperty(Type type, string name) {
