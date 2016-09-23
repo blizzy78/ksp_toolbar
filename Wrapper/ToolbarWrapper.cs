@@ -726,10 +726,13 @@ namespace ToolbarWrapper {
 		}
 
 		internal static Type getType(string name) {
-			return AssemblyLoader.loadedAssemblies
-				.Where(a => !a.assembly.IsDynamic)
-				.SelectMany(a => a.assembly.GetExportedTypes())
-				.SingleOrDefault(t => t.FullName == name);
+		        AssemblyLoader.loadedAssemblies.TypeOperation(t =>
+		        {
+		            if (t.FullName == name)
+		                return t;
+		        });
+		        
+		        throw new ArgumentException(string.Format("Couldn't find type '{0}'!", name);
 		}
 
 		internal static PropertyInfo getProperty(Type type, string name) {
