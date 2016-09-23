@@ -727,6 +727,7 @@ namespace ToolbarWrapper {
 
 		internal static Type getType(string name) {
 			return AssemblyLoader.loadedAssemblies
+				.Where(a => !a.assembly.IsDynamic)
 				.SelectMany(a => a.assembly.GetExportedTypes())
 				.SingleOrDefault(t => t.FullName == name);
 		}
