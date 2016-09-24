@@ -737,7 +737,7 @@ namespace ToolbarWrapper {
 			{
 				return type;
 			}
-			throw new ArgumentException(string.Format("Couldn't find type '{0}'!", name));
+			return null;
 		}
 
 		internal static PropertyInfo getProperty(Type type, string name) {
