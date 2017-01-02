@@ -1,0 +1,14 @@
+{
+  "NAME": "KSP Toolbar",
+  "URL": "https://raw.githubusercontent.com/blizzy78/ksp_toolbar/master/Toolbar.version",
+  "VERSION": {
+    "MAJOR": 1,
+    "MINOR": 7,
+    "PATCH": 1
+  },
+  "KSP_VERSION": {
+    "MAJOR": 0,
+    "MINOR": 23,
+    "PATCH": 5
+  }
+}
